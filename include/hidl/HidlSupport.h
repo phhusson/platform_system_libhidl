@@ -194,6 +194,7 @@ public:
     bool operator==(const hidl_version& other) {
         return (mMajor == other.get_major() && mMinor == other.get_minor());
     }
+
     uint16_t get_major() const { return mMajor; }
     uint16_t get_minor() const { return mMinor; }
 
@@ -220,8 +221,40 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
     return hidl_version(major,minor);
 }
 
+#define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
+    static ::android::sp<I##INTERFACE> getService(                                       \
+            const ::android::String16 &serviceName,                                      \
+            const hidl_version &version);                                                \
+    status_t registerAsService(                                                            \
+            const ::android::String16& serviceName,                                      \
+            const hidl_version &version);
+
+#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE)                                    \
+    ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
+            const ::android::String16 &serviceName,                                      \
+            const hidl_version &version /* TODO get version from IFoo directly */)       \
+    {                                                                                    \
+        sp<I##INTERFACE> iface;                                                          \
+        const sp<IServiceManager> sm = defaultServiceManager();                          \
+        if (sm != nullptr) {                                                             \
+            sp<IBinder> binderIface = sm->getService(serviceName, version);              \
+            iface = IHw##INTERFACE::asInterface(binderIface);                            \
+        }                                                                                \
+        /* TODO: if we don't have a binder interface, try to instantiate default */      \
+        return iface;                                                                    \
+    }                                                                                    \
+    status_t I##INTERFACE::registerAsService(                                              \
+            const ::android::String16& serviceName,                                      \
+            const hidl_version &version)                                                 \
+    {                                                                                    \
+        sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
+        const sp<IServiceManager> sm = defaultServiceManager();                          \
+        return sm->addService(serviceName, binderIface, version);                        \
+    }
+
 }  // namespace hardware
 }  // namespace android
+
 
 #endif  // ANDROID_HIDL_SUPPORT_H
 

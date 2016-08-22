@@ -38,7 +38,7 @@ sp<IServiceManager> defaultServiceManager()
     {
         AutoMutex _l(gDefaultServiceManagerLock);
         while (gDefaultServiceManager == NULL) {
-            gDefaultServiceManager = interface_cast<IServiceManager>(
+            gDefaultServiceManager = interface_cast<IHwServiceManager>(
                 ProcessState::self()->getContextObject(NULL));
             if (gDefaultServiceManager == NULL)
                 sleep(1);
@@ -50,11 +50,11 @@ sp<IServiceManager> defaultServiceManager()
 
 // ----------------------------------------------------------------------
 
-class BpServiceManager : public BpInterface<IServiceManager>
+class BpServiceManager : public BpInterface<IHwServiceManager>
 {
 public:
     explicit BpServiceManager(const sp<IBinder>& impl)
-        : BpInterface<IServiceManager>(impl)
+        : BpInterface<IHwServiceManager>(impl)
     {
     }
 
@@ -73,7 +73,7 @@ public:
     virtual sp<IBinder> checkService( const String16& name, const hidl_version& version) const
     {
         Parcel data, reply;
-        data.writeInterfaceToken(IServiceManager::getInterfaceDescriptor());
+        data.writeInterfaceToken(getInterfaceDescriptor());
         data.writeString16(name);
         version.writeToParcel(data);
         remote()->transact(CHECK_SERVICE_TRANSACTION, data, &reply);
@@ -85,7 +85,7 @@ public:
             bool allowIsolated)
     {
         Parcel data, reply;
-        data.writeInterfaceToken(IServiceManager::getInterfaceDescriptor());
+        data.writeInterfaceToken(getInterfaceDescriptor());
         data.writeString16(name);
         data.writeStrongBinder(service);
         version.writeToParcel(data);
@@ -101,7 +101,7 @@ public:
 
         for (;;) {
             Parcel data, reply;
-            data.writeInterfaceToken(IServiceManager::getInterfaceDescriptor());
+            data.writeInterfaceToken(getInterfaceDescriptor());
             data.writeInt32(n++);
             status_t err = remote()->transact(LIST_SERVICES_TRANSACTION, data, &reply);
             if (err != NO_ERROR)
