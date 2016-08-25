@@ -113,6 +113,9 @@ status_t hidl_string::writeEmbeddedToParcel(
             parentOffset + offsetof(hidl_string, mBuffer));
 }
 
+// static
+const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
+
 }  // namespace hardware
 }  // namespace android
 

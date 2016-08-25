@@ -47,6 +47,9 @@ struct hidl_string {
     status_t writeEmbeddedToParcel(
             Parcel *parcel, size_t parentHandle, size_t parentOffset) const;
 
+    // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
+    static const size_t kOffsetOfBuffer;
+
 private:
     char *mBuffer;
     size_t mSize;  // NOT including the terminating '\0'.
