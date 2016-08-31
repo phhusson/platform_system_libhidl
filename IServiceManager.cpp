@@ -18,6 +18,7 @@
 
 #include <hidl/IServiceManager.h>
 #include <hidl/Static.h>
+#include <hidl/Status.h>
 
 #include <utils/Log.h>
 #include <hwbinder/IPCThreadState.h>
@@ -91,7 +92,13 @@ public:
         version.writeToParcel(data);
         data.writeInt32(allowIsolated ? 1 : 0);
         status_t err = remote()->transact(ADD_SERVICE_TRANSACTION, data, &reply);
-        return err == NO_ERROR ? reply.readExceptionCode() : err;
+        if (err == NO_ERROR) {
+            Status status;
+            status.readFromParcel(reply);
+            return status.exceptionCode();
+        } else {
+            return err;
+        }
     }
 
     virtual Vector<String16> listServices()

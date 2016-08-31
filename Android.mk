@@ -25,7 +25,8 @@ LOCAL_SANITIZE := integer
 LOCAL_SRC_FILES := \
 	HidlSupport.cpp \
 	IServiceManager.cpp \
-	Static.cpp
+	Static.cpp \
+	Status.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_MULTILIB := both
