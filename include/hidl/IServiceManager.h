@@ -26,11 +26,9 @@
 namespace android {
 namespace hardware {
 
-class IServiceManager : public IInterface
+class IServiceManager : virtual public RefBase
 {
 public:
-    DECLARE_HWBINDER_META_INTERFACE(ServiceManager);
-
     /**
      * Retrieve an existing service, blocking for a few seconds
      * if it doesn't yet exist.
@@ -54,7 +52,12 @@ public:
                                             const android::hardware::hidl_version& version,
                                             bool allowIsolated = false) = 0;
 
-    enum {
+};
+
+struct IHwServiceManager : public IServiceManager, public IInterface {
+    DECLARE_HWBINDER_META_INTERFACE(ServiceManager);
+
+    enum Call {
         GET_SERVICE_TRANSACTION = IBinder::FIRST_CALL_TRANSACTION,
         CHECK_SERVICE_TRANSACTION,
         ADD_SERVICE_TRANSACTION,
