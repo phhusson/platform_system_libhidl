@@ -147,19 +147,32 @@ private:
 std::stringstream& operator<< (std::stringstream& stream, const Status& s);
 
 template<typename T> class Return {
+private:
+      T val {};
+      Status status {};
 public:
-      T val;
-      Status status;
-public:
-      Return(T v) : val(v), status(Status::ok()) { }
-      Return(Status s) : status(s) {
-          // TODO(malchev): Spew a LOG error here
-      }
-      ~Return() {
-          // TODO(malchev): Assert that status isOk() if it hasn't been checked
-      }
+      Return(T v) : val{v} {}
+      Return(Status s) : status(s) {}
       operator T() { return val; }
+      const Status& getStatus() const {
+          return status;
+      }
 };
+
+template<> class Return<void> {
+private:
+      Status status {};
+public:
+      Return() = default;
+      Return(Status s) : status(s) {}
+      const Status& getStatus() const {
+          return status;
+      }
+};
+
+static inline Return<void> Void() {
+    return Return<void>();
+}
 
 }  // namespace hardware
 }  // namespace android
