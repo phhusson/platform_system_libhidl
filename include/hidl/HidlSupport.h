@@ -190,14 +190,14 @@ status_t hidl_vec<T>::writeEmbeddedToParcel(
 // Version functions
 struct hidl_version {
 public:
-    hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {};
+    constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {};
 
     bool operator==(const hidl_version& other) {
         return (mMajor == other.get_major() && mMinor == other.get_minor());
     }
 
-    uint16_t get_major() const { return mMajor; }
-    uint16_t get_minor() const { return mMinor; }
+    constexpr uint16_t get_major() const { return mMajor; }
+    constexpr uint16_t get_minor() const { return mMinor; }
 
     android::status_t writeToParcel(android::hardware::Parcel& parcel) const {
         return parcel.writeUint32((uint32_t) mMajor << 16 | mMinor);
@@ -234,22 +234,19 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 #define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
     static ::android::sp<I##INTERFACE> getService(                                       \
-            const std::string &serviceName,                                              \
-            const hidl_version &version);                                                \
+            const std::string &serviceName);                                             \
     status_t registerAsService(                                                          \
-            const std::string &serviceName,                                              \
-            const hidl_version &version);
+            const std::string &serviceName);                                             \
 
 #define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
-            const std::string &serviceName,                                              \
-            const hidl_version &version /* TODO get version from IFoo directly */)       \
+            const std::string &serviceName)                                              \
     {                                                                                    \
         sp<I##INTERFACE> iface;                                                          \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr) {                                                             \
             sp<IBinder> binderIface = sm->checkService(String16(serviceName.c_str()),    \
-                                                       version);                         \
+                                                       I##INTERFACE::version);           \
             iface = IHw##INTERFACE::asInterface(binderIface);                            \
         }                                                                                \
         if (iface != nullptr) {                                                          \
@@ -274,12 +271,12 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
         return iface;                                                                    \
     }                                                                                    \
     status_t I##INTERFACE::registerAsService(                                            \
-            const std::string &serviceName,                                              \
-            const hidl_version &version)                                                 \
+            const std::string &serviceName)                                              \
     {                                                                                    \
         sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
-        return sm->addService(String16(serviceName.c_str()), binderIface, version);      \
+        return sm->addService(String16(serviceName.c_str()), binderIface,                \
+                              I##INTERFACE::version);                                    \
     }
 
 }  // namespace hardware
