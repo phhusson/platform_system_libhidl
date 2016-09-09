@@ -17,6 +17,7 @@
 #ifndef ANDROID_HIDL_SUPPORT_H
 #define ANDROID_HIDL_SUPPORT_H
 
+#include <dlfcn.h>
 #include <hwbinder/Parcel.h>
 
 namespace android {
@@ -221,15 +222,25 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
     return hidl_version(major,minor);
 }
 
+#if defined(__LP64__)
+#define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
+#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib64/hw/"
+#define HAL_LIBRARY_PATH_ODM "/odm/lib64/hw/"
+#else
+#define HAL_LIBRARY_PATH_SYSTEM "/system/lib/hw/"
+#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib/hw/"
+#define HAL_LIBRARY_PATH_ODM "/odm/lib/hw/"
+#endif
+
 #define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
     static ::android::sp<I##INTERFACE> getService(                                       \
             const ::android::String16 &serviceName,                                      \
             const hidl_version &version);                                                \
-    status_t registerAsService(                                                            \
+    status_t registerAsService(                                                          \
             const ::android::String16& serviceName,                                      \
             const hidl_version &version);
 
-#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE)                                    \
+#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
             const ::android::String16 &serviceName,                                      \
             const hidl_version &version /* TODO get version from IFoo directly */)       \
@@ -237,13 +248,31 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
         sp<I##INTERFACE> iface;                                                          \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr) {                                                             \
-            sp<IBinder> binderIface = sm->getService(serviceName, version);              \
+            sp<IBinder> binderIface = sm->checkService(serviceName, version);            \
             iface = IHw##INTERFACE::asInterface(binderIface);                            \
         }                                                                                \
-        /* TODO: if we don't have a binder interface, try to instantiate default */      \
+        if (iface != nullptr) {                                                          \
+            return iface;                                                                \
+        }                                                                                \
+        int dlMode = RTLD_LAZY;                                                          \
+        void *handle = dlopen(HAL_LIBRARY_PATH_ODM LIB, dlMode);                         \
+        if (handle == nullptr) {                                                         \
+            handle = dlopen(HAL_LIBRARY_PATH_VENDOR LIB, dlMode);                        \
+        }                                                                                \
+        if (handle == nullptr) {                                                         \
+            handle = dlopen(HAL_LIBRARY_PATH_SYSTEM LIB, dlMode);                        \
+        }                                                                                \
+        if (handle == nullptr) {                                                         \
+            return iface;                                                                \
+        }                                                                                \
+        I##INTERFACE* (*generator)(const char* name);                                    \
+        *(void **)(&generator) = dlsym(handle, "HIDL_FETCH_I"#INTERFACE);                \
+        if (generator) {                                                                 \
+            iface = (*generator)(String8(serviceName).string());                         \
+        }                                                                                \
         return iface;                                                                    \
     }                                                                                    \
-    status_t I##INTERFACE::registerAsService(                                              \
+    status_t I##INTERFACE::registerAsService(                                            \
             const ::android::String16& serviceName,                                      \
             const hidl_version &version)                                                 \
     {                                                                                    \
