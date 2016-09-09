@@ -234,21 +234,22 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 #define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
     static ::android::sp<I##INTERFACE> getService(                                       \
-            const ::android::String16 &serviceName,                                      \
+            const std::string &serviceName,                                              \
             const hidl_version &version);                                                \
     status_t registerAsService(                                                          \
-            const ::android::String16& serviceName,                                      \
+            const std::string &serviceName,                                              \
             const hidl_version &version);
 
 #define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
-            const ::android::String16 &serviceName,                                      \
+            const std::string &serviceName,                                              \
             const hidl_version &version /* TODO get version from IFoo directly */)       \
     {                                                                                    \
         sp<I##INTERFACE> iface;                                                          \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr) {                                                             \
-            sp<IBinder> binderIface = sm->checkService(serviceName, version);            \
+            sp<IBinder> binderIface = sm->checkService(String16(serviceName.c_str()),    \
+                                                       version);                         \
             iface = IHw##INTERFACE::asInterface(binderIface);                            \
         }                                                                                \
         if (iface != nullptr) {                                                          \
@@ -268,17 +269,17 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
         I##INTERFACE* (*generator)(const char* name);                                    \
         *(void **)(&generator) = dlsym(handle, "HIDL_FETCH_I"#INTERFACE);                \
         if (generator) {                                                                 \
-            iface = (*generator)(String8(serviceName).string());                         \
+            iface = (*generator)(serviceName.c_str());                                   \
         }                                                                                \
         return iface;                                                                    \
     }                                                                                    \
     status_t I##INTERFACE::registerAsService(                                            \
-            const ::android::String16& serviceName,                                      \
+            const std::string &serviceName,                                              \
             const hidl_version &version)                                                 \
     {                                                                                    \
         sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
-        return sm->addService(serviceName, binderIface, version);                        \
+        return sm->addService(String16(serviceName.c_str()), binderIface, version);      \
     }
 
 }  // namespace hardware
