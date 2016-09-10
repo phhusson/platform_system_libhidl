@@ -15,7 +15,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libhidl
-LOCAL_SHARED_LIBRARIES := libbase liblog libutils libhwbinder
+LOCAL_SHARED_LIBRARIES := libbase liblog libutils libhwbinder libcutils
 LOCAL_EXPORT_SHARED_LIBRARY_HEADERS := libbase libutils
 
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
@@ -23,9 +23,10 @@ LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
 LOCAL_CLANG := true
 LOCAL_SANITIZE := integer
 LOCAL_SRC_FILES := \
-	HidlSupport.cpp \
-	IServiceManager.cpp \
-	Static.cpp \
+	HidlSupport.cpp 	\
+	IServiceManager.cpp	\
+	MQDescriptor.cpp        \
+	Static.cpp 		\
 	Status.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
