@@ -29,6 +29,10 @@ LOCAL_SRC_FILES := \
 	Static.cpp 		\
 	Status.cpp
 
+ifeq ($(TARGET_BUILD_VARIANT),user)
+   LOCAL_CFLAGS += -DLIBHIDL_TARGET_BUILD_VARIANT_USER
+endif
+
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_MULTILIB := both
 include $(BUILD_SHARED_LIBRARY)

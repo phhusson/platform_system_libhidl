@@ -16,6 +16,12 @@
 
 #include <hidl/HidlSupport.h>
 
+#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+#include <android-base/logging.h>
+#include <cutils/properties.h>
+#include <regex>
+#endif
+
 namespace android {
 namespace hardware {
 
@@ -115,6 +121,74 @@ status_t hidl_string::writeEmbeddedToParcel(
 
 // static
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
+
+
+
+void registerInstrumentationCallbacks(
+        const std::string &profilerPrefix,
+        std::vector<InstrumentationCallback> *instrumentationCallbacks) {
+#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+    std::vector<std::string> instrumentationLibPaths;
+    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
+    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
+    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
+    for (auto path : instrumentationLibPaths) {
+        DIR *dir = opendir(path.c_str());
+        if (dir == 0) {
+            LOG(WARNING) << path << " does not exit. ";
+            return;
+        }
+
+        struct dirent *file;
+        while ((file = readdir(dir)) != NULL) {
+            if (!isInstrumentationLib(profilerPrefix, file))
+                continue;
+
+            void *handle = dlopen((path + file->d_name).c_str(), RTLD_NOW);
+            if (handle == nullptr) {
+                LOG(WARNING) << "couldn't load file: " << file->d_name
+                    << " error: " << dlerror();
+                continue;
+            }
+            using cb_fun = void (*)(
+                    const InstrumentationEvent,
+                    const char *,
+                    const char *,
+                    const char *,
+                    const char *,
+                    std::vector<void *> *);
+            auto cb = (cb_fun)dlsym(handle, "HIDL_INSTRUMENTATION_FUNCTION");
+            if (cb == nullptr) {
+                LOG(WARNING)
+                    << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION, "
+                       "error: "
+                    << dlerror();
+                continue;
+            }
+            instrumentationCallbacks->push_back(cb);
+            LOG(INFO) << "Register instrumentation callback from "
+                << file->d_name;
+        }
+        closedir(dir);
+    }
+#else
+    // No-op for user builds.
+    return;
+#endif
+}
+
+bool isInstrumentationLib(
+        const std::string &profiler_prefix,
+        const dirent *file) {
+#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+    if (file->d_type != DT_REG) return false;
+    std::cmatch cm;
+    std::regex e("^" + profiler_prefix + "(.*).profiler.so$");
+    if (std::regex_match(file->d_name, cm, e)) return true;
+#else
+#endif
+    return false;
+}
 
 }  // namespace hardware
 }  // namespace android
