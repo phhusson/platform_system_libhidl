@@ -17,8 +17,12 @@
 #ifndef ANDROID_HIDL_SUPPORT_H
 #define ANDROID_HIDL_SUPPORT_H
 
+#include <algorithm>
 #include <dlfcn.h>
 #include <hwbinder/Parcel.h>
+#include <utils/Errors.h>
+#include <utils/RefBase.h>
+#include <utils/StrongPointer.h>
 
 namespace android {
 namespace hardware {
