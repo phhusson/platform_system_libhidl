@@ -35,7 +35,7 @@ namespace hardware {
 sp<IServiceManager> defaultServiceManager()
 {
     if (gDefaultServiceManager != NULL) return gDefaultServiceManager;
-    if (access("/dev/hwbinder", F_OK) != 0) {
+    if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
         // HwBinder not available on this device or not accessible to
         // this process.
         return nullptr;
