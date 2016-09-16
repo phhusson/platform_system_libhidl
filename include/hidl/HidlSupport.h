@@ -271,6 +271,9 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
         *(void **)(&generator) = dlsym(handle, "HIDL_FETCH_I"#INTERFACE);                \
         if (generator) {                                                                 \
             iface = (*generator)(serviceName.c_str());                                   \
+            if (iface != nullptr) {                                                      \
+                iface = new Bs##INTERFACE(iface);                                        \
+            }                                                                            \
         }                                                                                \
         return iface;                                                                    \
     }                                                                                    \
