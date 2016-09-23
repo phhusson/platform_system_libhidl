@@ -66,37 +66,6 @@ MQDescriptor::~MQDescriptor() {
     }
 }
 
-/*
- * TODO: Modify design to send access flags over WireMQDescriptor
- * as well and use the same for the mmap call.
- */
-void* MQDescriptor::mapGrantorDescr(uint32_t grantor_idx) {
-  const native_handle_t* handle = mHandle;
-  int fdIndex = mGrantors[grantor_idx].fdIndex;
-  /*
-   * Offset for mmap must be a multiple of PAGE_SIZE.
-   */
-  int mapOffset = (mGrantors[grantor_idx].offset / PAGE_SIZE) * PAGE_SIZE;
-  int mapLength =
-      mGrantors[grantor_idx].offset - mapOffset + mGrantors[grantor_idx].extent;
-
-  void* address = mmap(0, mapLength, PROT_READ | PROT_WRITE, MAP_SHARED,
-                       handle->data[fdIndex], mapOffset);
-  return (address == MAP_FAILED)
-             ? nullptr
-             : (uint8_t*)address + (mGrantors[grantor_idx].offset - mapOffset);
-}
-
-void MQDescriptor::unmapGrantorDescr(void* address, uint32_t grantor_idx) {
-  const native_handle_t* handle = mHandle;
-  int mapOffset = (mGrantors[grantor_idx].offset / PAGE_SIZE) * PAGE_SIZE;
-  int mapLength =
-      mGrantors[grantor_idx].offset - mapOffset + mGrantors[grantor_idx].extent;
-  void* baseAddress =
-      (uint8_t*)address - (mGrantors[grantor_idx].offset - mapOffset);
-  if (baseAddress) munmap(baseAddress, mapLength);
-}
-
 ::android::status_t MQDescriptor::readEmbeddedFromParcel(
     const Parcel &parcel,
     size_t parentHandle,
@@ -152,6 +121,30 @@ _hidl_error:
 
 _hidl_error:
     return _hidl_err;
+}
+
+size_t MQDescriptor::getSize() const {
+  return mGrantors[DATAPTRPOS].extent;
+}
+
+size_t MQDescriptor::getQuantum() const { return mQuantum; }
+
+int32_t MQDescriptor::getFlags() const { return mFlags; }
+
+std::vector<GrantorDescriptor> MQDescriptor::getGrantors() const {
+  size_t grantor_count = mGrantors.size();
+  std::vector<GrantorDescriptor> grantors(grantor_count);
+  for (size_t i = 0; i < grantor_count; i++) {
+    grantors[i] = mGrantors[i];
+  }
+  return grantors;
+}
+
+const sp<NativeHandle> MQDescriptor::getNativeHandle() const {
+  /*
+   * Create an sp<NativeHandle> from mHandle.
+   */
+  return NativeHandle::create(mHandle, false /* ownsHandle */);
 }
 
 }  // namespace hardware
