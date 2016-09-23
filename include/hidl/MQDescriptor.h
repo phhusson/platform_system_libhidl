@@ -20,6 +20,7 @@
 #include <android-base/macros.h>
 #include <cutils/native_handle.h>
 #include <hidl/HidlSupport.h>
+#include <utils/NativeHandle.h>
 
 namespace android {
 namespace hardware {
@@ -48,8 +49,6 @@ struct MQDescriptor {
     size_t getQuantum() const;
 
     int32_t getFlags() const;
-    void* mapGrantorDescr(uint32_t grantor_idx);
-    void unmapGrantorDescr(void* address, uint32_t grantor_idx);
 
     ::android::status_t readEmbeddedFromParcel(
             const ::android::hardware::Parcel &parcel,
@@ -63,23 +62,16 @@ struct MQDescriptor {
 
     bool isHandleValid() const { return mHandle != nullptr; }
     size_t countGrantors() const { return mGrantors.size(); }
+    std::vector<GrantorDescriptor> getGrantors() const;
+    const sp<NativeHandle> getNativeHandle() const;
 
 private:
     ::android::hardware::hidl_vec<GrantorDescriptor> mGrantors;
-    const ::native_handle_t *mHandle;
+    ::native_handle_t *mHandle;
     uint32_t mQuantum;
     uint32_t mFlags;
 };
-
-inline size_t MQDescriptor::getSize() const {
-  return mGrantors[DATAPTRPOS].extent;
-}
-
-inline size_t MQDescriptor::getQuantum() const { return mQuantum; }
-
-inline int32_t MQDescriptor::getFlags() const { return mFlags; }
-
-} // namespace hardware
-} // namespace android
+}  // namespace hardware
+}  // namespace android
 
 #endif  // FMSGQ_DESCRIPTOR_H
