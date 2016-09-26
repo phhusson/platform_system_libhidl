@@ -39,6 +39,32 @@ MQDescriptor::MQDescriptor(
     }
 }
 
+MQDescriptor::MQDescriptor(size_t bufferSize, native_handle_t *nHandle,
+                           int32_t flags, size_t messageSize)
+    : mHandle(nHandle), mQuantum(messageSize), mFlags(flags) {
+    mGrantors.resize(kMinGrantorCount);
+    /*
+     * Create a default grantor descriptor for read, write pointers and
+     * the data buffer. fdIndex parameter is set to 0 by default and
+     * the offset for each grantor is contiguous.
+     */
+    mGrantors[READPTRPOS] = {
+        0 /* grantor flags */, 0 /* fdIndex */, 0 /* offset */,
+        sizeof(RingBufferPosition) /* extent */
+    };
+
+    mGrantors[WRITEPTRPOS] = {
+        0 /* grantor flags */,
+        0 /* fdIndex */,
+        sizeof(RingBufferPosition) /* offset */,
+        sizeof(RingBufferPosition) /* extent */
+    };
+    mGrantors[DATAPTRPOS] = {
+        0 /* grantor flags */, 0 /* fdIndex */,
+        2 * sizeof(RingBufferPosition) /* offset */, bufferSize /* extent */
+    };
+}
+
 MQDescriptor::MQDescriptor(const MQDescriptor &other)
     : mGrantors(other.mGrantors),
       mHandle(nullptr),
