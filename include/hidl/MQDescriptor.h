@@ -25,19 +25,22 @@
 namespace android {
 namespace hardware {
 
+typedef uint64_t RingBufferPosition;
+
 struct GrantorDescriptor {
     uint32_t flags;
     uint32_t fdIndex;
     uint32_t offset;
-    uint32_t extent;
+    size_t extent;
 };
-
-enum GrantorType : int { READPTRPOS = 0, WRITEPTRPOS, DATAPTRPOS };
 
 struct MQDescriptor {
     MQDescriptor(
             const std::vector<GrantorDescriptor>& grantors,
-            native_handle_t* nhandle, int32_t flags, size_t size);
+            native_handle_t* nHandle, int32_t flags, size_t size);
+
+    MQDescriptor(size_t bufferSize, native_handle_t* nHandle, int32_t flags,
+                 size_t messageSize);
 
     ~MQDescriptor();
 
@@ -64,6 +67,12 @@ struct MQDescriptor {
     size_t countGrantors() const { return mGrantors.size(); }
     std::vector<GrantorDescriptor> getGrantors() const;
     const sp<NativeHandle> getNativeHandle() const;
+    /*
+     * There should atleast be GrantorDescriptors for the read counter, write
+     * counter and data buffer.
+     */
+    static constexpr int32_t kMinGrantorCount = 3;
+    enum GrantorType : int { READPTRPOS = 0, WRITEPTRPOS, DATAPTRPOS };
 
 private:
     ::android::hardware::hidl_vec<GrantorDescriptor> mGrantors;
