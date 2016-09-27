@@ -239,23 +239,31 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 #define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
     static ::android::sp<I##INTERFACE> getService(                                       \
-            const std::string &serviceName);                                             \
+            const std::string &serviceName, bool getStub=false);                         \
     status_t registerAsService(                                                          \
             const std::string &serviceName);                                             \
 
 #define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
-            const std::string &serviceName)                                              \
+            const std::string &serviceName, bool getStub)                                \
     {                                                                                    \
         sp<I##INTERFACE> iface;                                                          \
-        const sp<IServiceManager> sm = defaultServiceManager();                          \
-        if (sm != nullptr) {                                                             \
-            sp<IBinder> binderIface = sm->checkService(String16(serviceName.c_str()),    \
-                                                       I##INTERFACE::version);           \
-            iface = IHw##INTERFACE::asInterface(binderIface);                            \
-        }                                                                                \
-        if (iface != nullptr) {                                                          \
-            return iface;                                                                \
+        const struct timespec DELAY {1,0};                                               \
+        unsigned retries = 3;                                                            \
+        if (!getStub) {                                                                  \
+            do {                                                                         \
+                const sp<IServiceManager> sm = defaultServiceManager();                  \
+                if (sm != nullptr) {                                                     \
+                    sp<IBinder> binderIface =                                            \
+                            sm->checkService(String16(serviceName.c_str()),              \
+                                             I##INTERFACE::version);                     \
+                    iface = IHw##INTERFACE::asInterface(binderIface);                    \
+                }                                                                        \
+                if (iface != nullptr) {                                                  \
+                    return iface;                                                        \
+                }                                                                        \
+                TEMP_FAILURE_RETRY(nanosleep(&DELAY, nullptr));                          \
+            } while (retries--);                                                         \
         }                                                                                \
         int dlMode = RTLD_LAZY;                                                          \
         void *handle = dlopen(HAL_LIBRARY_PATH_ODM LIB, dlMode);                         \
