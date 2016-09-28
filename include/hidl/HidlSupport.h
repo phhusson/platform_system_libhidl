@@ -64,6 +64,8 @@ private:
     hidl_string &setTo(const char *data, size_t size);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 template<typename T>
 struct hidl_vec {
     hidl_vec()
@@ -162,6 +164,124 @@ private:
     size_t mSize;
     bool mOwnsBuffer;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace details {
+
+    template<size_t SIZE1, size_t... SIZES>
+    struct product {
+        static constexpr size_t value = SIZE1 * product<SIZES...>::value;
+    };
+
+    template<size_t SIZE1>
+    struct product<SIZE1> {
+        static constexpr size_t value = SIZE1;
+    };
+
+    template<typename T, size_t SIZE1, size_t... SIZES>
+    struct accessor {
+        explicit accessor(T *base)
+            : mBase(base) {
+        }
+
+        accessor<T, SIZES...> operator[](size_t index) {
+            return accessor<T, SIZES...>(
+                    &mBase[index * product<SIZES...>::value]);
+        }
+
+    private:
+        T *mBase;
+    };
+
+    template<typename T, size_t SIZE1>
+    struct accessor<T, SIZE1> {
+        explicit accessor(T *base)
+            : mBase(base) {
+        }
+
+        T &operator[](size_t index) {
+            return mBase[index];
+        }
+
+    private:
+        T *mBase;
+    };
+
+    template<typename T, size_t SIZE1, size_t... SIZES>
+    struct const_accessor {
+        explicit const_accessor(const T *base)
+            : mBase(base) {
+        }
+
+        const_accessor<T, SIZES...> operator[](size_t index) {
+            return const_accessor<T, SIZES...>(
+                    &mBase[index * product<SIZES...>::value]);
+        }
+
+    private:
+        const T *mBase;
+    };
+
+    template<typename T, size_t SIZE1>
+    struct const_accessor<T, SIZE1> {
+        explicit const_accessor(const T *base)
+            : mBase(base) {
+        }
+
+        const T &operator[](size_t index) const {
+            return mBase[index];
+        }
+
+    private:
+        const T *mBase;
+    };
+
+}  // namespace details
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<typename T, size_t SIZE1, size_t... SIZES>
+struct hidl_array {
+    hidl_array() = default;
+
+    T *data() { return mBuffer; }
+    const T *data() const { return mBuffer; }
+
+    details::accessor<T, SIZES...> operator[](size_t index) {
+        return details::accessor<T, SIZES...>(
+                &mBuffer[index * details::product<SIZES...>::value]);
+    }
+
+    details::const_accessor<T, SIZES...> operator[](size_t index) const {
+        return details::const_accessor<T, SIZES...>(
+                &mBuffer[index * details::product<SIZES...>::value]);
+    }
+
+private:
+    T mBuffer[details::product<SIZE1, SIZES...>::value];
+};
+
+template<typename T, size_t SIZE1>
+struct hidl_array<T, SIZE1> {
+    hidl_array() = default;
+
+    T *data() { return mBuffer; }
+    const T *data() const { return mBuffer; }
+
+    T &operator[](size_t index) {
+        return mBuffer[index];
+    }
+
+    const T &operator[](size_t index) const {
+        return mBuffer[index];
+    }
+
+private:
+    T mBuffer[SIZE1];
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
 status_t hidl_vec<T>::readEmbeddedFromParcel(
