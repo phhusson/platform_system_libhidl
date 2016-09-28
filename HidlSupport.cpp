@@ -16,7 +16,7 @@
 
 #include <hidl/HidlSupport.h>
 
-#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <android-base/logging.h>
 #include <cutils/properties.h>
 #include <regex>
@@ -127,7 +127,7 @@ const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 void registerInstrumentationCallbacks(
         const std::string &profilerPrefix,
         std::vector<InstrumentationCallback> *instrumentationCallbacks) {
-#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
     std::vector<std::string> instrumentationLibPaths;
     instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
     instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
@@ -180,12 +180,11 @@ void registerInstrumentationCallbacks(
 bool isInstrumentationLib(
         const std::string &profiler_prefix,
         const dirent *file) {
-#ifndef DLIBHIDL_TARGET_BUILD_VARIANT_USER
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
     if (file->d_type != DT_REG) return false;
     std::cmatch cm;
     std::regex e("^" + profiler_prefix + "(.*).profiler.so$");
     if (std::regex_match(file->d_name, cm, e)) return true;
-#else
 #endif
     return false;
 }
