@@ -35,7 +35,6 @@ cc_library_shared {
     srcs: [
         "HidlSupport.cpp",
         "IServiceManager.cpp",
-        "MQDescriptor.cpp",
         "Static.cpp",
         "Status.cpp",
     ],
