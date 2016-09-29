@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <hwbinder/Parcel.h>
+#include <tuple>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
@@ -258,6 +259,12 @@ struct hidl_array {
                 &mBuffer[index * details::product<SIZES...>::value]);
     }
 
+    using size_tuple_type = std::tuple<decltype(SIZE1), decltype(SIZES)...>;
+
+    static constexpr size_tuple_type size() {
+        return std::make_tuple(SIZE1, SIZES...);
+    }
+
 private:
     T mBuffer[details::product<SIZE1, SIZES...>::value];
 };
@@ -276,6 +283,8 @@ struct hidl_array<T, SIZE1> {
     const T &operator[](size_t index) const {
         return mBuffer[index];
     }
+
+    static constexpr size_t size() { return SIZE1; }
 
 private:
     T mBuffer[SIZE1];
