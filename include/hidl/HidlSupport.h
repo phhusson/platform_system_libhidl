@@ -160,6 +160,11 @@ struct hidl_vec {
             size_t parentOffset,
             size_t *handle) const;
 
+    status_t findInParcel(const Parcel &parcel, size_t *handle) const {
+        return parcel.quickFindBuffer(mBuffer, handle);
+    }
+
+
 private:
     T *mBuffer;
     size_t mSize;
@@ -318,6 +323,127 @@ status_t hidl_vec<T>::writeEmbeddedToParcel(
             handle,
             parentHandle,
             parentOffset + offsetof(hidl_vec<T>, mBuffer));
+}
+
+///////////////////////////// pointers for HIDL
+
+template <typename T>
+static status_t readEmbeddedReferenceFromParcel(
+        T const* * /* bufptr */,
+        const Parcel & parcel,
+        size_t parentHandle,
+        size_t parentOffset,
+        size_t *handle,
+        bool *shouldResolveRefInBuffer
+    ) {
+    // *bufptr is ignored because, if I am embedded in some
+    // other buffer, the kernel should have fixed me up already.
+    bool isPreviouslyWritten;
+    status_t result = parcel.readEmbeddedReference(
+        nullptr, // ignored, not written to bufptr.
+        handle,
+        parentHandle,
+        parentOffset,
+        &isPreviouslyWritten);
+    // tell caller to run T::readEmbeddedToParcel and
+    // T::readEmbeddedReferenceToParcel if necessary.
+    // It is not called here because we don't know if these two are valid methods.
+    *shouldResolveRefInBuffer = !isPreviouslyWritten;
+    return result;
+}
+
+template <typename T>
+static status_t writeEmbeddedReferenceToParcel(
+        T const* buf,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset,
+        size_t *handle,
+        bool *shouldResolveRefInBuffer
+        ) {
+
+    if(buf == nullptr) {
+        *shouldResolveRefInBuffer = false;
+        return parcel->writeEmbeddedNullReference(handle, parentHandle, parentOffset);
+    }
+
+    // find whether the buffer exists
+    size_t childHandle, childOffset;
+    status_t result;
+    bool found;
+
+    result = parcel->findBuffer(buf, sizeof(T), &found, &childHandle, &childOffset);
+
+    // tell caller to run T::writeEmbeddedToParcel and
+    // T::writeEmbeddedReferenceToParcel if necessary.
+    // It is not called here because we don't know if these two are valid methods.
+    *shouldResolveRefInBuffer = !found;
+
+    if(result != OK) {
+        return result; // bad pointers and length given
+    }
+    if(!found) { // did not find it.
+        return parcel->writeEmbeddedBuffer(buf, sizeof(T), handle,
+                parentHandle, parentOffset);
+    }
+    // found the buffer. easy case.
+    return parcel->writeEmbeddedReference(
+            handle,
+            childHandle,
+            childOffset,
+            parentHandle,
+            parentOffset);
+}
+
+template <typename T>
+static status_t readReferenceFromParcel(
+        T const* *bufptr,
+        const Parcel & parcel,
+        size_t *handle,
+        bool *shouldResolveRefInBuffer
+    ) {
+    bool isPreviouslyWritten;
+    status_t result = parcel.readReference(reinterpret_cast<void const* *>(bufptr),
+            handle, &isPreviouslyWritten);
+    // tell caller to run T::readEmbeddedToParcel and
+    // T::readEmbeddedReferenceToParcel if necessary.
+    // It is not called here because we don't know if these two are valid methods.
+    *shouldResolveRefInBuffer = !isPreviouslyWritten;
+    return result;
+}
+
+template <typename T>
+static status_t writeReferenceToParcel(
+        T const *buf,
+        Parcel * parcel,
+        size_t *handle,
+        bool *shouldResolveRefInBuffer
+    ) {
+
+    if(buf == nullptr) {
+        *shouldResolveRefInBuffer = false;
+        return parcel->writeNullReference(handle);
+    }
+
+    // find whether the buffer exists
+    size_t childHandle, childOffset;
+    status_t result;
+    bool found;
+
+    result = parcel->findBuffer(buf, sizeof(T), &found, &childHandle, &childOffset);
+
+    // tell caller to run T::writeEmbeddedToParcel and
+    // T::writeEmbeddedReferenceToParcel if necessary.
+    // It is not called here because we don't know if these two are valid methods.
+    *shouldResolveRefInBuffer = !found;
+
+    if(result != OK) {
+        return result; // bad pointers and length given
+    }
+    if(!found) { // did not find it.
+        return parcel->writeBuffer(buf, sizeof(T), handle);
+    }
+    // found the buffer. easy case.
+    return parcel->writeReference(handle,
+        childHandle, childOffset);
 }
 
 // ----------------------------------------------------------------------
