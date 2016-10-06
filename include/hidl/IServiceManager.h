@@ -55,7 +55,7 @@ public:
 };
 
 struct IHwServiceManager : public IServiceManager, public IInterface {
-    DECLARE_HWBINDER_META_INTERFACE(ServiceManager);
+    DECLARE_HWBINDER_META_INTERFACE(ServiceManager)
 
     enum Call {
         GET_SERVICE_TRANSACTION = IBinder::FIRST_CALL_TRANSACTION,
