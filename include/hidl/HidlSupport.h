@@ -450,7 +450,7 @@ static status_t writeReferenceToParcel(
 // Version functions
 struct hidl_version {
 public:
-    constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {};
+    constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {}
 
     bool operator==(const hidl_version& other) {
         return (mMajor == other.get_major() && mMinor == other.get_minor());
@@ -460,7 +460,7 @@ public:
     constexpr uint16_t get_minor() const { return mMinor; }
 
     android::status_t writeToParcel(android::hardware::Parcel& parcel) const {
-        return parcel.writeUint32((uint32_t) mMajor << 16 | mMinor);
+        return parcel.writeUint32(static_cast<uint32_t>(mMajor) << 16 | mMinor);
     }
 
     static hidl_version* readFromParcel(const android::hardware::Parcel& parcel) {
