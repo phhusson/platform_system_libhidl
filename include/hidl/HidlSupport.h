@@ -82,6 +82,10 @@ struct hidl_vec {
         *this = other;
     }
 
+    hidl_vec(hidl_vec<T> &&other) {
+        *this = static_cast<hidl_vec &&>(other);
+    }
+
     ~hidl_vec() {
         if (mOwnsBuffer) {
             delete[] mBuffer;
@@ -99,6 +103,14 @@ struct hidl_vec {
         mBuffer = data;
         mSize = size;
         mOwnsBuffer = false;
+    }
+
+    hidl_vec &operator=(hidl_vec &&other) {
+        mBuffer = other.mBuffer;
+        mSize = other.mSize;
+        mOwnsBuffer = other.mOwnsBuffer;
+        other.mOwnsBuffer = false;
+        return *this;
     }
 
     hidl_vec &operator=(const hidl_vec &other) {
