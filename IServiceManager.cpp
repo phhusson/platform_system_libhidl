@@ -23,7 +23,6 @@
 #include <utils/Log.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
-#include <hwbinder/Static.h>
 #include <utils/String8.h>
 #include <utils/SystemClock.h>
 
