@@ -113,6 +113,14 @@ struct hidl_vec {
         return mBuffer;
     }
 
+    T *releaseData() {
+        if (!mOwnsBuffer && mSize > 0) {
+            resize(mSize);
+        }
+        mOwnsBuffer = false;
+        return mBuffer;
+    }
+
     hidl_vec &operator=(hidl_vec &&other) {
         mBuffer = other.mBuffer;
         mSize = other.mSize;
