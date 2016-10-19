@@ -93,16 +93,16 @@ struct hidl_vec {
         mBuffer = NULL;
     }
 
-    // Reference an existing array _WITHOUT_ taking ownership. It is the
+    // Reference an existing array, optionally taking ownership. It is the
     // caller's responsibility to ensure that the underlying memory stays
     // valid for the lifetime of this hidl_vec.
-    void setToExternal(T *data, size_t size) {
+    void setToExternal(T *data, size_t size, bool shouldOwn = false) {
         if (mOwnsBuffer) {
             delete [] mBuffer;
         }
         mBuffer = data;
         mSize = size;
-        mOwnsBuffer = false;
+        mOwnsBuffer = shouldOwn;
     }
 
     T *data() {
