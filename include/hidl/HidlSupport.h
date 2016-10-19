@@ -105,6 +105,14 @@ struct hidl_vec {
         mOwnsBuffer = false;
     }
 
+    T *data() {
+        return mBuffer;
+    }
+
+    const T *data() const {
+        return mBuffer;
+    }
+
     hidl_vec &operator=(hidl_vec &&other) {
         mBuffer = other.mBuffer;
         mSize = other.mSize;
