@@ -40,7 +40,13 @@ enum MQFlavor : uint32_t {
    * FMQ. It is intended to be have a single reader and single writer.
    * Attempts to overflow/underflow returns a failure.
    */
-  kSynchronizedReadWrite = 0x01
+  kSynchronizedReadWrite = 0x01,
+  /*
+   * kUnsynchronizedWrite represents the flavor of FMQ where writes always
+   * succeed. This flavor allows one writer and many readers. A read operation
+   * can detect an overwrite and reset the read counter.
+   */
+  kUnsynchronizedWrite = 0x02
 };
 
 template <MQFlavor flavor>
@@ -95,6 +101,12 @@ private:
  * flavor of FMQ.
  */
 using MQDescriptorSync = MQDescriptor<kSynchronizedReadWrite>;
+
+/*
+ * MQDescriptorUnsync will describe the unsynchronized write
+ * flavor of FMQ.
+ */
+using MQDescriptorUnsync = MQDescriptor<kUnsynchronizedWrite>;
 
 template<MQFlavor flavor>
 MQDescriptor<flavor>::MQDescriptor(
