@@ -123,8 +123,17 @@ status_t hidl_string::writeEmbeddedToParcel(
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 
 
+// ----------------------------------------------------------------------
+// HidlInstrumentor implementation.
+HidlInstrumentor::HidlInstrumentor(const std::string &prefix) {
+    mEnableInstrumentation = property_get_bool("hal.instrumentation.enable",
+                                               false);
+    registerInstrumentationCallbacks(prefix, &mInstrumentationCallbacks);
+}
 
-void registerInstrumentationCallbacks(
+HidlInstrumentor:: ~HidlInstrumentor() {}
+
+void HidlInstrumentor::registerInstrumentationCallbacks(
         const std::string &profilerPrefix,
         std::vector<InstrumentationCallback> *instrumentationCallbacks) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
@@ -177,7 +186,7 @@ void registerInstrumentationCallbacks(
 #endif
 }
 
-bool isInstrumentationLib(
+bool HidlInstrumentor::isInstrumentationLib(
         const std::string &profiler_prefix,
         const dirent *file) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
