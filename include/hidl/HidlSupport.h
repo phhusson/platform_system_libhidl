@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <cutils/properties.h>
 #include <hwbinder/Parcel.h>
 #include <tuple>
 #include <utils/Errors.h>
@@ -579,51 +580,61 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
     }
 
 // ----------------------------------------------------------------------
-// Hidl instrumentation utilities.
+// Class that provides Hidl instrumentation utilities.
+struct HidlInstrumentor {
+    // Event that triggers the instrumentation. e.g. enter of an API call on
+    // the server/client side, exit of an API call on the server/client side
+    // etc.
+    enum InstrumentationEvent {
+        SERVER_API_ENTRY = 0,
+        SERVER_API_EXIT,
+        CLIENT_API_ENTRY,
+        CLIENT_API_EXIT,
+        SYNC_CALLBACK_ENTRY,
+        SYNC_CALLBACK_EXIT,
+        ASYNC_CALLBACK_ENTRY,
+        ASYNC_CALLBACK_EXIT,
+    };
 
-// Event that triggers the instrumentation. e.g. enter of an API call on
-// the server/client side, exit of an API call on the server/client side etc.
-enum InstrumentationEvent {
-    SERVER_API_ENTRY = 0,
-    SERVER_API_EXIT,
-    CLIENT_API_ENTRY,
-    CLIENT_API_EXIT,
-    SYNC_CALLBACK_ENTRY,
-    SYNC_CALLBACK_EXIT,
-    ASYNC_CALLBACK_ENTRY,
-    ASYNC_CALLBACK_EXIT,
+    // Signature of the instrumentation callback function.
+    using InstrumentationCallback = std::function<void(
+            const InstrumentationEvent event,
+            const char *package,
+            const char *version,
+            const char *interface,
+            const char *method,
+            std::vector<void *> *args)>;
+
+    explicit HidlInstrumentor(const std::string &prefix);
+    virtual ~HidlInstrumentor();
+
+ protected:
+    // Function that lookup and dynamically loads the hidl instrumentation
+    // libraries and registers the instrumentation callback functions.
+    //
+    // The instrumentation libraries should be stored under any of the following
+    // directories: HAL_LIBRARY_PATH_SYSTEM, HAL_LIBRARY_PATH_VENDOR and
+    // HAL_LIBRARY_PATH_ODM. The name of instrumentation libraries should
+    // follow pattern: ^profilerPrefix(.*).profiler.so$
+    //
+    // Each instrumentation library is expected to implement the instrumentation
+    // function called HIDL_INSTRUMENTATION_FUNCTION.
+    //
+    // A no-op for user build.
+    void registerInstrumentationCallbacks(
+            const std::string &profilerPrefix,
+            std::vector<InstrumentationCallback> *instrumentationCallbacks);
+
+    // Utility function to determine whether a give file is a instrumentation
+    // library (i.e. the file name follow the expected pattern).
+    bool isInstrumentationLib(
+            const std::string &profilerPrefix,
+            const dirent *file);
+    // A list of registered instrumentation callbacks.
+    std::vector<InstrumentationCallback> mInstrumentationCallbacks;
+    // Flag whether to enable instrumentation.
+    bool mEnableInstrumentation;
 };
-
-// Signature of the instrumentation callback function.
-using InstrumentationCallback = std::function<void(
-        const InstrumentationEvent event,
-        const char *package,
-        const char *version,
-        const char *interface,
-        const char *method,
-        std::vector<void *> *args)>;
-
-// Function that lookup and dynamically loads the hidl instrumentation libraries
-// and registers the instrumentation callback functions.
-//
-// The instrumentation libraries should be stored under any of the following
-// directories: HAL_LIBRARY_PATH_SYSTEM, HAL_LIBRARY_PATH_VENDOR and
-// HAL_LIBRARY_PATH_ODM. The name of instrumentation libraries should follow
-// pattern: ^profilerPrefix(.*).profiler.so$
-//
-// Each instrumentation library is expected to implement the instrumentation
-// function called HIDL_INSTRUMENTATION_FUNCTION.
-//
-// A no-op for user build.
-void registerInstrumentationCallbacks(
-        const std::string &profilerPrefix,
-        std::vector<InstrumentationCallback> *instrumentationCallbacks);
-
-// Utility function to determine whether a give file is a instrumentation
-// library (i.e. the file name follow the expected pattern).
-bool isInstrumentationLib(
-        const std::string &profilerPrefix,
-        const dirent *file);
 
 }  // namespace hardware
 }  // namespace android
