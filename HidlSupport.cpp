@@ -37,6 +37,10 @@ hidl_string::~hidl_string() {
     clear();
 }
 
+hidl_string::hidl_string(const char *s) : hidl_string() {
+    *this = s;
+}
+
 hidl_string::hidl_string(const hidl_string &other)
     : mBuffer(const_cast<char *>(kEmptyString)),
       mSize(0),
