@@ -1,0 +1,88 @@
+#define LOG_TAG "LibHidlTest"
+
+#include <android-base/logging.h>
+#include <gtest/gtest.h>
+#include <hidl/HidlSupport.h>
+#include <vector>
+
+#define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(isArrayEqual(__a1__, __a2__, __size__))
+
+template<typename T, typename S>
+static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
+    for(size_t i = 0; i < size; i++)
+        if(arr1[i] != arr2[i])
+            return false;
+    return true;
+}
+
+class LibHidlTest : public ::testing::Test {
+public:
+    virtual void SetUp() override {
+    }
+    virtual void TearDown() override {
+    }
+};
+
+TEST_F(LibHidlTest, StringTest) {
+    using android::hardware::hidl_string;
+    hidl_string s; // empty constructor
+    EXPECT_STREQ(s.c_str(), "");
+    hidl_string s1 = "s1"; // copy = from cstr
+    EXPECT_STREQ(s1.c_str(), "s1");
+    hidl_string s2("s2"); // copy constructor from cstr
+    EXPECT_STREQ(s2.c_str(), "s2");
+    hidl_string s3 = hidl_string("s3"); // move =
+    EXPECT_STREQ(s3.c_str(), "s3");
+    hidl_string s4(hidl_string(hidl_string("s4"))); // move constructor
+    EXPECT_STREQ(s4.c_str(), "s4");
+    hidl_string s5(std::string("s5")); // copy constructor from std::string
+    EXPECT_STREQ(s5, "s5");
+    hidl_string s6 = std::string("s6"); // copy = from std::string
+    EXPECT_STREQ(s6, "s6");
+    hidl_string s7(s6); // copy constructor
+    EXPECT_STREQ(s7, "s6");
+    hidl_string s8 = s7; // copy =
+    EXPECT_STREQ(s8, "s6");
+    char myCString[20] = "myCString";
+    s.setToExternal(&myCString[0], strlen(myCString));
+    EXPECT_STREQ(s, "myCString");
+    myCString[2] = 'D';
+    EXPECT_STREQ(s, "myDString");
+    s.clear(); // should not affect myCString
+    EXPECT_STREQ(myCString, "myDString");
+    // casts
+    s = "great";
+    std::string myString = s;
+    const char *anotherCString = s;
+    EXPECT_EQ(myString, "great");
+    EXPECT_STREQ(anotherCString, "great");
+}
+
+TEST_F(LibHidlTest, VecTest) {
+    using android::hardware::hidl_vec;
+    using std::vector;
+    int32_t array[] = {5, 6, 7};
+    vector<int32_t> v(array, array + 3);
+
+    hidl_vec<int32_t> hv1 = v; // copy =
+    EXPECT_ARRAYEQ(hv1, array, 3);
+    EXPECT_ARRAYEQ(hv1, v, 3);
+    hidl_vec<int32_t> hv2(v); // copy constructor
+    EXPECT_ARRAYEQ(hv2, v, 3);
+
+    vector<int32_t> v2 = hv1; // cast
+    EXPECT_ARRAYEQ(v2, v, 3);
+}
+
+template <typename T>
+void great(android::hardware::hidl_vec<T>) {}
+
+TEST_F(LibHidlTest, VecCopyTest) {
+    android::hardware::hidl_vec<int32_t> v;
+    great(v);
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

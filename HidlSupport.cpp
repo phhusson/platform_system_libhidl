@@ -20,6 +20,7 @@
 #include <android-base/logging.h>
 #include <cutils/properties.h>
 #include <regex>
+#include <utility>
 #endif
 
 namespace android {
@@ -28,9 +29,9 @@ namespace hardware {
 static const char *const kEmptyString = "";
 
 hidl_string::hidl_string()
-    : mBuffer(const_cast<char *>(kEmptyString)),
+    : mBuffer(kEmptyString),
       mSize(0),
-      mOwnsBuffer(true) {
+      mOwnsBuffer(false) {
 }
 
 hidl_string::~hidl_string() {
@@ -38,61 +39,100 @@ hidl_string::~hidl_string() {
 }
 
 hidl_string::hidl_string(const char *s) : hidl_string() {
-    *this = s;
+    copyFrom(s, strlen(s));
 }
 
-hidl_string::hidl_string(const hidl_string &other)
-    : mBuffer(const_cast<char *>(kEmptyString)),
-      mSize(0),
-      mOwnsBuffer(true) {
-    setTo(other.c_str(), other.size());
+hidl_string::hidl_string(const hidl_string &other): hidl_string() {
+    copyFrom(other.c_str(), other.size());
+}
+
+hidl_string::hidl_string(const std::string &s) : hidl_string() {
+    copyFrom(s.c_str(), s.size());
+}
+
+hidl_string::hidl_string(hidl_string &&other): hidl_string() {
+    moveFrom(std::forward<hidl_string>(other));
+}
+
+hidl_string &hidl_string::operator=(hidl_string &&other) {
+    if (this != &other) {
+        clear();
+        moveFrom(std::forward<hidl_string>(other));
+    }
+    return *this;
 }
 
 hidl_string &hidl_string::operator=(const hidl_string &other) {
     if (this != &other) {
-        setTo(other.c_str(), other.size());
+        clear();
+        copyFrom(other.c_str(), other.size());
     }
 
     return *this;
 }
 
 hidl_string &hidl_string::operator=(const char *s) {
-    return setTo(s, strlen(s));
+    clear();
+    copyFrom(s, strlen(s));
+    return *this;
 }
 
-hidl_string &hidl_string::setTo(const char *data, size_t size) {
+hidl_string &hidl_string::operator=(const std::string &s) {
     clear();
+    copyFrom(s.c_str(), s.size());
+    return *this;
+}
 
-    mBuffer = (char *)malloc(size + 1);
-    memcpy(mBuffer, data, size);
-    mBuffer[size] = '\0';
+hidl_string::operator std::string() const {
+    return std::string(mBuffer, mSize);
+}
+
+hidl_string::operator const char *() const {
+    return mBuffer;
+}
+
+void hidl_string::copyFrom(const char *data, size_t size) {
+    // assume my resources are freed.
+
+    char *buf = (char *)malloc(size + 1);
+    memcpy(buf, data, size);
+    buf[size] = '\0';
+    mBuffer = buf;
 
     mSize = size;
     mOwnsBuffer = true;
+}
 
-    return *this;
+void hidl_string::moveFrom(hidl_string &&other) {
+    // assume my resources are freed.
+
+    mBuffer = other.mBuffer;
+    mSize = other.mSize;
+    mOwnsBuffer = other.mOwnsBuffer;
+
+    other.mOwnsBuffer = false;
 }
 
 void hidl_string::clear() {
     if (mOwnsBuffer && (mBuffer != kEmptyString)) {
-        free(mBuffer);
+        free(const_cast<char *>(mBuffer));
     }
 
-    mBuffer = const_cast<char *>(kEmptyString);
+    mBuffer = kEmptyString;
     mSize = 0;
-    mOwnsBuffer = true;
+    mOwnsBuffer = false;
 }
 
 void hidl_string::setToExternal(const char *data, size_t size) {
     clear();
 
-    mBuffer = const_cast<char *>(data);
+    mBuffer = data;
     mSize = size;
     mOwnsBuffer = false;
 }
 
 const char *hidl_string::c_str() const {
-    return mBuffer ? mBuffer : "";
+    return mBuffer;
 }
 
 size_t hidl_string::size() const {
