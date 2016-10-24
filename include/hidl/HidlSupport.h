@@ -536,15 +536,13 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
         sp<I##INTERFACE> iface;                                                          \
         const struct timespec DELAY {1,0};                                               \
         unsigned retries = 3;                                                            \
-        if (!getStub) {                                                                  \
+        const sp<IServiceManager> sm = defaultServiceManager();                          \
+        if (sm != nullptr && !getStub) {                                                 \
             do {                                                                         \
-                const sp<IServiceManager> sm = defaultServiceManager();                  \
-                if (sm != nullptr) {                                                     \
-                    sp<IBinder> binderIface =                                            \
-                            sm->checkService(String16(serviceName.c_str()),              \
-                                             I##INTERFACE::version);                     \
-                    iface = IHw##INTERFACE::asInterface(binderIface);                    \
-                }                                                                        \
+                sp<IBinder> binderIface =                                                \
+                        sm->checkService(String16(serviceName.c_str()),                  \
+                                         I##INTERFACE::version);                         \
+                iface = IHw##INTERFACE::asInterface(binderIface);                        \
                 if (iface != nullptr) {                                                  \
                     return iface;                                                        \
                 }                                                                        \
