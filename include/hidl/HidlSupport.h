@@ -35,13 +35,15 @@ struct hidl_string {
     ~hidl_string();
 
     hidl_string(const hidl_string &);
-    hidl_string &operator=(const hidl_string &);
+    hidl_string(const char *);
 
     const char *c_str() const;
     size_t size() const;
     bool empty() const;
 
+    hidl_string &operator=(const hidl_string &);
     hidl_string &operator=(const char *s);
+
     void clear();
 
     // Reference an external char array. Ownership is _not_ transferred.
