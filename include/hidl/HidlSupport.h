@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <cutils/properties.h>
+#include <hidl/Status.h>
 #include <hwbinder/Parcel.h>
 #include <tuple>
 #include <utils/Errors.h>
@@ -74,6 +75,14 @@ struct hidl_string {
 
     status_t writeEmbeddedToParcel(
             Parcel *parcel, size_t parentHandle, size_t parentOffset) const;
+
+    inline bool operator==(const char *s) const {
+        return strcmp(mBuffer, s) == 0;
+    }
+
+    inline bool operator!=(const char *s) const {
+        return !(operator==(s));
+    }
 
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
@@ -560,6 +569,15 @@ private:
 inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_t minor) {
     return hidl_version(major,minor);
 }
+
+struct IHidlInterfaceBase : virtual public RefBase {
+    virtual bool isRemote() const = 0;
+    // HIDL reserved methods follow.
+    virtual ::android::hardware::Return<void> interfaceChain(
+            std::function<void(const hidl_vec<hidl_string>&)> _hidl_cb) = 0;
+    // descriptor for HIDL reserved methods.
+    static const ::android::String16 descriptor;
+};
 
 #if defined(__LP64__)
 #define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
