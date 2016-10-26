@@ -1,0 +1,19 @@
+cc_test {
+    name: "libhidl-test",
+    gtest: false,
+    srcs: ["main.cpp"],
+
+    shared_libs: [
+        "libbase",
+        "libhidl",
+        "libhwbinder",
+        "liblog",
+        "libutils",
+    ],
+    static_libs: ["libgtest"],
+
+    cflags: [
+        "-O0",
+        "-g",
+    ],
+}

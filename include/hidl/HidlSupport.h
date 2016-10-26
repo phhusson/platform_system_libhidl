@@ -34,15 +34,33 @@ struct hidl_string {
     hidl_string();
     ~hidl_string();
 
+    // copy constructor.
     hidl_string(const hidl_string &);
+    // copy from a C-style string.
     hidl_string(const char *);
+    // copy from an std::string.
+    hidl_string(const std::string &);
+
+    // move constructor.
+    hidl_string(hidl_string &&);
 
     const char *c_str() const;
     size_t size() const;
     bool empty() const;
 
+    // copy assignment operator.
     hidl_string &operator=(const hidl_string &);
+    // copy from a C-style string.
     hidl_string &operator=(const char *s);
+    // copy from an std::string.
+    hidl_string &operator=(const std::string &);
+    // move assignment operator.
+    hidl_string &operator=(hidl_string &&other);
+    // cast to std::string.
+    operator std::string() const;
+    // cast to C-style string. Caller is responsible
+    // to maintain this hidl_string alive.
+    operator const char *() const;
 
     void clear();
 
@@ -61,11 +79,15 @@ struct hidl_string {
     static const size_t kOffsetOfBuffer;
 
 private:
-    char *mBuffer;
+    const char *mBuffer;
     size_t mSize;  // NOT including the terminating '\0'.
-    bool mOwnsBuffer;
+    bool mOwnsBuffer; // if true then mBuffer is a mutable char *
 
-    hidl_string &setTo(const char *data, size_t size);
+    // copy from data with size. Assume that my memory is freed
+    // (through clear(), for example)
+    void copyFrom(const char *data, size_t size);
+    // move from another hidl_string
+    void moveFrom(hidl_string &&);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,15 +100,16 @@ struct hidl_vec {
           mOwnsBuffer(true) {
     }
 
-    hidl_vec(const hidl_vec<T> &other)
-        : mBuffer(NULL),
-          mSize(0),
-          mOwnsBuffer(true) {
+    hidl_vec(const hidl_vec<T> &other) : hidl_vec() {
         *this = other;
     }
 
     hidl_vec(hidl_vec<T> &&other) {
         *this = static_cast<hidl_vec &&>(other);
+    }
+
+    hidl_vec(const std::vector<T> &other) : hidl_vec() {
+        *this = other;
     }
 
     ~hidl_vec() {
@@ -137,18 +160,28 @@ struct hidl_vec {
             if (mOwnsBuffer) {
                 delete[] mBuffer;
             }
-            mBuffer = NULL;
-            mSize = other.mSize;
-            mOwnsBuffer = true;
-            if (mSize > 0) {
-                mBuffer = new T[mSize];
-                for (size_t i = 0; i < mSize; ++i) {
-                    mBuffer[i] = other.mBuffer[i];
-                }
-            }
+            copyFrom(other, other.mSize);
         }
 
         return *this;
+    }
+
+    // copy from an std::vector.
+    hidl_vec &operator=(const std::vector<T> &other) {
+        if (mOwnsBuffer) {
+            delete[] mBuffer;
+        }
+        copyFrom(other, other.size());
+        return *this;
+    }
+
+    // cast to an std::vector.
+    operator std::vector<T>() const {
+        std::vector<T> v(mSize);
+        for (size_t i = 0; i < mSize; ++i) {
+            v[i] = mBuffer[i];
+        }
+        return v;
     }
 
     size_t size() const {
@@ -200,6 +233,21 @@ private:
     T *mBuffer;
     size_t mSize;
     bool mOwnsBuffer;
+
+    // copy from an array-like object, assuming my resources are freed.
+    template <typename Array>
+    void copyFrom(const Array &data, size_t size) {
+        mSize = size;
+        mOwnsBuffer = true;
+        if (mSize > 0) {
+            mBuffer = new T[size];
+            for (size_t i = 0; i < size; ++i) {
+                mBuffer[i] = data[i];
+            }
+        } else {
+            mBuffer = NULL;
+        }
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
