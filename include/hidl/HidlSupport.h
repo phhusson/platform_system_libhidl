@@ -76,14 +76,6 @@ struct hidl_string {
     status_t writeEmbeddedToParcel(
             Parcel *parcel, size_t parentHandle, size_t parentOffset) const;
 
-    inline bool operator==(const char *s) const {
-        return strcmp(mBuffer, s) == 0;
-    }
-
-    inline bool operator!=(const char *s) const {
-        return !(operator==(s));
-    }
-
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
 
@@ -98,6 +90,22 @@ private:
     // move from another hidl_string
     void moveFrom(hidl_string &&);
 };
+
+inline bool operator==(const hidl_string &hs, const char *s) {
+    return strcmp(hs.c_str(), s) == 0;
+}
+
+inline bool operator!=(const hidl_string &hs, const char *s) {
+    return !(hs == s);
+}
+
+inline bool operator==(const char *s, const hidl_string &hs) {
+    return strcmp(hs.c_str(), s) == 0;
+}
+
+inline bool operator!=(const char *s, const hidl_string &hs) {
+    return !(s == hs);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

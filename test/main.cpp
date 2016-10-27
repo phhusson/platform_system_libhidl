@@ -105,6 +105,19 @@ TEST_F(LibHidlTest, TaskRunnerTest) {
     EXPECT_TRUE(flag);
 }
 
+TEST_F(LibHidlTest, StringCmpTest) {
+    using android::hardware::hidl_string;
+    const char * s = "good";
+    hidl_string hs(s);
+    EXPECT_NE(hs.c_str(), s);
+
+    EXPECT_TRUE(hs == s); // operator ==
+    EXPECT_TRUE(s == hs);
+
+    EXPECT_FALSE(hs != s); // operator ==
+    EXPECT_FALSE(s != hs);
+}
+
 template <typename T>
 void great(android::hardware::hidl_vec<T>) {}
 
