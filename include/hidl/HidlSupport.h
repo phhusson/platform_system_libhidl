@@ -113,8 +113,9 @@ struct hidl_vec {
         *this = other;
     }
 
-    hidl_vec(hidl_vec<T> &&other) {
-        *this = static_cast<hidl_vec &&>(other);
+    hidl_vec(hidl_vec<T> &&other)
+	: mOwnsBuffer(false) {
+        *this = std::move(other);
     }
 
     hidl_vec(const std::vector<T> &other) : hidl_vec() {
@@ -157,6 +158,9 @@ struct hidl_vec {
     }
 
     hidl_vec &operator=(hidl_vec &&other) {
+        if (mOwnsBuffer) {
+            delete[] mBuffer;
+        }
         mBuffer = other.mBuffer;
         mSize = other.mSize;
         mOwnsBuffer = other.mOwnsBuffer;
