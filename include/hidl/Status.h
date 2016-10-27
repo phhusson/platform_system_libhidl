@@ -153,7 +153,7 @@ private:
 public:
       Return(T v) : val{v} {}
       Return(Status s) : status(s) {}
-      operator T() { return val; }
+      operator T() const { return val; }
       const Status& getStatus() const {
           return status;
       }
