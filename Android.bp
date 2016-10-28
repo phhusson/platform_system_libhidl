@@ -41,6 +41,7 @@ cc_library_shared {
         "IServiceManager.cpp",
         "Static.cpp",
         "Status.cpp",
+        "TaskRunner.cpp",
     ],
 
     product_variables: {

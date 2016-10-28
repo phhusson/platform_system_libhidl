@@ -19,6 +19,7 @@
 #include <android-base/logging.h>
 #include <gtest/gtest.h>
 #include <hidl/HidlSupport.h>
+#include <hidl/TaskRunner.h>
 #include <vector>
 
 #define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(isArrayEqual(__a1__, __a2__, __size__))
@@ -88,6 +89,20 @@ TEST_F(LibHidlTest, VecTest) {
 
     vector<int32_t> v2 = hv1; // cast
     EXPECT_ARRAYEQ(v2, v, 3);
+}
+
+TEST_F(LibHidlTest, TaskRunnerTest) {
+    using android::hardware::TaskRunner;
+    TaskRunner tr;
+    bool flag = false;
+    tr.push([&] {
+        usleep(1000);
+        flag = true;
+    });
+    usleep(500);
+    EXPECT_FALSE(flag);
+    usleep(1000);
+    EXPECT_TRUE(flag);
 }
 
 template <typename T>
