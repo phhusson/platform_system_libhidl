@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
+#ifndef ANDROID_SYNCHRONIZED_QUEUE_H
+#define ANDROID_SYNCHRONIZED_QUEUE_H
+
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <thread>
 
+namespace android {
+namespace hardware {
 /* Threadsafe queue.
  */
 template <typename T>
@@ -32,16 +37,22 @@ struct SynchronizedQueue {
 
     /* Puts an item onto the end of the queue.
      */
-    void push(const T& item);
+    bool push(const T& item);
 
     /* Gets the size of the array.
      */
     size_t size();
 
+    /* Sets the limit to the queue. Will fail
+     * the push operation if the limit is reached.
+     */
+    void setLimit(size_t limit);
+
 private:
     std::condition_variable mCondition;
     std::mutex mMutex;
     std::queue<T> mQueue;
+    size_t mQueueLimit = SIZE_MAX;
 };
 
 template <typename T>
@@ -59,13 +70,20 @@ T SynchronizedQueue<T>::wait_pop() {
 }
 
 template <typename T>
-void SynchronizedQueue<T>::push(const T &item) {
+bool SynchronizedQueue<T>::push(const T &item) {
+    bool success;
     {
         std::unique_lock<std::mutex> lock(mMutex);
-        mQueue.push(item);
+        if (mQueue.size() < mQueueLimit) {
+            mQueue.push(item);
+            success = true;
+        } else {
+            success = false;
+        }
     }
 
     mCondition.notify_one();
+    return success;
 }
 
 template <typename T>
@@ -74,3 +92,15 @@ size_t SynchronizedQueue<T>::size() {
 
     return mQueue.size();
 }
+
+template <typename T>
+void SynchronizedQueue<T>::setLimit(size_t limit) {
+    std::unique_lock<std::mutex> lock(mMutex);
+
+    mQueueLimit = limit;
+}
+
+} // namespace hardware
+} // namespace android
+
+#endif
