@@ -22,6 +22,7 @@
 #include <dlfcn.h>
 #include <cutils/properties.h>
 #include <hidl/Status.h>
+#include <hwbinder/IBinder.h>
 #include <hwbinder/Parcel.h>
 #include <tuple>
 #include <utils/Errors.h>
@@ -584,12 +585,40 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 struct IHidlInterfaceBase : virtual public RefBase {
     virtual bool isRemote() const = 0;
+    virtual sp<::android::hardware::IBinder> toBinder() = 0;
     // HIDL reserved methods follow.
     virtual ::android::hardware::Return<void> interfaceChain(
             std::function<void(const hidl_vec<hidl_string>&)> _hidl_cb) = 0;
     // descriptor for HIDL reserved methods.
     static const ::android::String16 descriptor;
 };
+
+template<typename IChild, typename IParent, typename BpChild>
+sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
+    if (parent.get() == nullptr) {
+        // casts always succeed with nullptrs.
+        return nullptr;
+    }
+    bool canCast = false;
+    parent->interfaceChain([&](const hidl_vec<hidl_string> &allowedCastTypes) {
+        for (size_t i = 0; i < allowedCastTypes.size(); i++) {
+            if (allowedCastTypes[i] == childIndicator) {
+                canCast = true;
+                break;
+            }
+        }
+    });
+
+    if (!canCast) {
+        return sp<IChild>(nullptr); // cast failed.
+    }
+    if (parent->isRemote()) {
+        // binderized mode. Got BpChild. grab the remote and wrap it.
+        return sp<IChild>(new BpChild(parent->toBinder()));
+    }
+    // Passthrough mode. Got BnChild and BsChild.
+    return sp<IChild>(static_cast<IChild *>(parent.get()));
+}
 
 #if defined(__LP64__)
 #define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
