@@ -553,7 +553,7 @@ struct hidl_version {
 public:
     constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {}
 
-    bool operator==(const hidl_version& other) {
+    bool operator==(const hidl_version& other) const {
         return (mMajor == other.get_major() && mMinor == other.get_minor());
     }
 
@@ -633,22 +633,32 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
 #define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
     static ::android::sp<I##INTERFACE> getService(                                       \
             const std::string &serviceName, bool getStub=false);                         \
-    status_t registerAsService(                                                          \
+    ::android::status_t registerAsService(                                               \
             const std::string &serviceName);                                             \
 
 #define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
             const std::string &serviceName, bool getStub)                                \
     {                                                                                    \
+        using ::android::sp;                                                             \
+        using ::android::hardware::defaultServiceManager;                                \
+        using ::android::hardware::IBinder;                                              \
+        using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<I##INTERFACE> iface;                                                          \
         const struct timespec DELAY {1,0};                                               \
         unsigned retries = 3;                                                            \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr && !getStub) {                                                 \
             do {                                                                         \
-                sp<IBinder> binderIface =                                                \
-                        sm->checkService(String16(serviceName.c_str()),                  \
-                                         I##INTERFACE::version);                         \
+                sp<IBinder> binderIface;                                                 \
+                IServiceManager::Version version {                                       \
+                    .major = I##INTERFACE::version.get_major(),                          \
+                    .minor = I##INTERFACE::version.get_minor(),                          \
+                };                                                                       \
+                sm->get(serviceName.c_str(), version,                                    \
+                    [&binderIface](sp<IBinder> iface) {                                  \
+                        binderIface = iface;                                             \
+                    });                                                                  \
                 iface = IHw##INTERFACE::asInterface(binderIface);                        \
                 if (iface != nullptr) {                                                  \
                     return iface;                                                        \
@@ -677,13 +687,21 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
         }                                                                                \
         return iface;                                                                    \
     }                                                                                    \
-    status_t I##INTERFACE::registerAsService(                                            \
+    ::android::status_t I##INTERFACE::registerAsService(                                 \
             const std::string &serviceName)                                              \
     {                                                                                    \
+        using ::android::sp;                                                             \
+        using ::android::hardware::defaultServiceManager;                                \
+        using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
-        return sm->addService(String16(serviceName.c_str()), binderIface,                \
-                              I##INTERFACE::version);                                    \
+        IServiceManager::Version version {                                               \
+            .major = I##INTERFACE::version.get_major(),                                  \
+            .minor = I##INTERFACE::version.get_minor(),                                  \
+        };                                                                               \
+        sm->add(serviceName.c_str(), binderIface, version);                              \
+        /* TODO return value */                                                          \
+        return ::android::OK;                                                            \
     }
 
 // ----------------------------------------------------------------------
