@@ -23,7 +23,7 @@ namespace android {
 namespace hardware {
 
 Mutex gDefaultServiceManagerLock;
-sp<IServiceManager> gDefaultServiceManager;
+sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 
 }   // namespace hardware
 }   // namespace android
