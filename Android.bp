@@ -16,6 +16,34 @@ subdirs = [
     "test",
 ]
 
+genrule {
+    name: "android.hidl.manager@1.0_genc++",
+    tool: "hidl-gen",
+    cmd: "$tool -o $genDir -Lc++ -randroid.hidl:system/libhidl android.hidl.manager@1.0",
+    srcs: [
+        "manager/1.0/IServiceManager.hal",
+    ],
+    out: [
+        "android/hidl/manager/1.0/ServiceManagerAll.cpp",
+    ],
+}
+
+genrule {
+    name: "android.hidl.manager@1.0_genc++_headers",
+    tool: "hidl-gen",
+    cmd: "$tool -o $genDir -Lc++ -randroid.hidl:system/libhidl android.hidl.manager@1.0",
+    srcs: [
+        "manager/1.0/IServiceManager.hal",
+    ],
+    out: [
+        "android/hidl/manager/1.0/IServiceManager.h",
+        "android/hidl/manager/1.0/IHwServiceManager.h",
+        "android/hidl/manager/1.0/BnServiceManager.h",
+        "android/hidl/manager/1.0/BpServiceManager.h",
+        "android/hidl/manager/1.0/BsServiceManager.h",
+    ],
+}
+
 cc_library_shared {
     name: "libhidl",
     shared_libs: [
@@ -36,9 +64,14 @@ cc_library_shared {
     sanitize: {
         misc_undefined: ["integer"],
     },
+
+    generated_sources: ["android.hidl.manager@1.0_genc++"],
+    generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
+    export_generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
+
     srcs: [
         "HidlSupport.cpp",
-        "IServiceManager.cpp",
+        "ServiceManagement.cpp",
         "Static.cpp",
         "Status.cpp",
         "TaskRunner.cpp",

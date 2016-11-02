@@ -16,7 +16,6 @@
 
 #include <utils/Log.h>
 
-#include "IServiceManager.h"
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/ProcessState.h>
 #include <utils/Errors.h>
