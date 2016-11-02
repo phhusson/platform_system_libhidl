@@ -701,6 +701,8 @@ struct HidlInstrumentor {
         SYNC_CALLBACK_EXIT,
         ASYNC_CALLBACK_ENTRY,
         ASYNC_CALLBACK_EXIT,
+        PASSTHROUGH_ENTRY,
+        PASSTHROUGH_EXIT,
     };
 
     // Signature of the instrumentation callback function.
