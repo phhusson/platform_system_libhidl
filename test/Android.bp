@@ -13,7 +13,7 @@
 // limitations under the License.
 
 cc_test {
-    name: "libhidl-test",
+    name: "libhidl_test",
     gtest: false,
     srcs: ["main.cpp"],
 
