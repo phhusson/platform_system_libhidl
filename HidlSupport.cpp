@@ -184,9 +184,17 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
         std::vector<InstrumentationCallback> *instrumentationCallbacks) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     std::vector<std::string> instrumentationLibPaths;
-    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
-    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
-    instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
+    char instrumentation_lib_path[PROPERTY_VALUE_MAX];
+    if (property_get("hal.instrumentation.lib.path",
+                     instrumentation_lib_path,
+                     "") > 0) {
+        instrumentationLibPaths.push_back(instrumentation_lib_path);
+    } else {
+        instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
+        instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
+        instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_ODM);
+    }
+
     for (auto path : instrumentationLibPaths) {
         DIR *dir = opendir(path.c_str());
         if (dir == 0) {
