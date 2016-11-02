@@ -14,18 +14,27 @@
  * limitations under the License.
  */
 
-// All static variables go here, to control initialization and
-// destruction order in the library.
+#ifndef ANDROID_HARDWARE_ISERVICE_MANAGER_H
+#define ANDROID_HARDWARE_ISERVICE_MANAGER_H
 
-#include <utils/threads.h>
-#include <android/hidl/manager/1.0/IServiceManager.h>
+#include <utils/StrongPointer.h>
 
 namespace android {
+
+namespace hidl {
+namespace manager {
+namespace V1_0 {
+    struct IServiceManager;
+}; // namespace V1_0
+}; // namespace manager
+}; // namespace hidl
+
 namespace hardware {
 
-// For ServiceManagement.cpp
-extern Mutex gDefaultServiceManagerLock;
-extern sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
+sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
 
-}   // namespace hardware
-}   // namespace android
+}; // namespace hardware
+}; // namespace android
+
+#endif // ANDROID_HARDWARE_ISERVICE_MANAGER_H
+
