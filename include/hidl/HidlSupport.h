@@ -636,7 +636,7 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     ::android::status_t registerAsService(                                               \
             const std::string &serviceName);                                             \
 
-#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, LIB)                               \
+#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, PACKAGE)                           \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
             const std::string &serviceName, bool getStub)                                \
     {                                                                                    \
@@ -648,26 +648,25 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr && !getStub) {                                                 \
             sp<IBinder> binderIface;                                                     \
-            IServiceManager::Version version {                                           \
-                .major = I##INTERFACE::version.get_major(),                              \
-                .minor = I##INTERFACE::version.get_minor(),                              \
-            };                                                                           \
-            sm->get(serviceName.c_str(), version,                                        \
-                [&binderIface](sp<IBinder> iface) {                                      \
-                    binderIface = iface;                                                 \
-                });                                                                      \
-            iface = IHw##INTERFACE::asInterface(binderIface);                            \
-            if (iface != nullptr) {                                                      \
-                return iface;                                                            \
+            ::android::hardware::Return<void> ret =                                      \
+                sm->get(PACKAGE "::I" #INTERFACE, serviceName.c_str(),                   \
+                    [&binderIface](sp<IBinder> iface) {                                  \
+                        binderIface = iface;                                             \
+                    });                                                                  \
+            if (ret.getStatus().isOk()) {                                                \
+                iface = IHw##INTERFACE::asInterface(binderIface);                        \
+                if (iface != nullptr) {                                                  \
+                    return iface;                                                        \
+                }                                                                        \
             }                                                                            \
         }                                                                                \
         int dlMode = RTLD_LAZY;                                                          \
-        void *handle = dlopen(HAL_LIBRARY_PATH_ODM LIB, dlMode);                         \
+        void *handle = dlopen(HAL_LIBRARY_PATH_ODM PACKAGE "-impl.so", dlMode);          \
         if (handle == nullptr) {                                                         \
-            handle = dlopen(HAL_LIBRARY_PATH_VENDOR LIB, dlMode);                        \
+            handle = dlopen(HAL_LIBRARY_PATH_VENDOR PACKAGE "-impl.so", dlMode);         \
         }                                                                                \
         if (handle == nullptr) {                                                         \
-            handle = dlopen(HAL_LIBRARY_PATH_SYSTEM LIB, dlMode);                        \
+            handle = dlopen(HAL_LIBRARY_PATH_SYSTEM PACKAGE "-impl.so", dlMode);         \
         }                                                                                \
         if (handle == nullptr) {                                                         \
             return iface;                                                                \
@@ -687,16 +686,18 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     {                                                                                    \
         using ::android::sp;                                                             \
         using ::android::hardware::defaultServiceManager;                                \
+        using ::android::hardware::hidl_string;                                          \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
-        IServiceManager::Version version {                                               \
-            .major = I##INTERFACE::version.get_major(),                                  \
-            .minor = I##INTERFACE::version.get_minor(),                                  \
-        };                                                                               \
-        sm->add(serviceName.c_str(), binderIface, version);                              \
-        /* TODO return value */                                                          \
-        return ::android::OK;                                                            \
+        bool success = false;                                                            \
+        ::android::hardware::Return<void> ret =                                          \
+            this->interfaceChain(                                                        \
+                [&success, &sm, &serviceName, &binderIface](const auto &chain) {         \
+                    success = sm->add(chain, serviceName.c_str(), binderIface);          \
+                });                                                                      \
+        success = success && ret.getStatus().isOk();                                     \
+        return success ? ::android::OK : ::android::UNKNOWN_ERROR;                       \
     }
 
 // ----------------------------------------------------------------------

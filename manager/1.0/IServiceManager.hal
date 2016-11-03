@@ -17,28 +17,39 @@
 package android.hidl.manager@1.0;
 
 interface IServiceManager {
-    struct Version {
-        uint16_t major;
-        uint16_t minor;
-    };
 
     /**
      * Retrieve an existing service.
      *
-     * Warning: This function should only be used in specific circumstances. You
-     * are likely looking for 'IMyInterface::getService("name");'.
+     * WARNING: This function is for libhidl/HwBinder use only. You are likely
+     * looking for 'IMyInterface::getService("name")' instead.
+     *
+     * @param iface    Fully-qualified interface name.
+     *                 e.x. "android.hidl.manager@1.0::IServiceManager"
+     * @param name     Name of the specific instance of the service. Same as
+     *                 name in IServiceManager::add. e.x. "manager"
+     *
+     * @return service Handle to requested service, same as provided in
+     *                 IServiceManager::add.
      */
-    get(string name, Version version) generates (interface service);
+    get(string fqName, string name) generates (interface service);
 
     /**
      * Register a service.
      *
-     * Warning: Function 'INTERFACE::registerAsService' should be used
-     * instead of this to register services.
+     * WARNING: This function is for libhidl/HwBinder use only. You are likely
+     * looking for 'INTERFACE::registerAsService("name")' instead.
      *
-     * TODO: namespace out name per interface type.
-     *       register as super classes as well.
+     * @param interfaceChain List of fully-qualified interface names. The first
+     *                       must be the actual interface name. Subsequent names must
+     *                       follow the inheritance hierarchy of the interface.
+     * @param name           Can be anything. Must also be used to retrieve service.
+     * @param service        Handle to registering service.
+     *
+     * @return success       Whether or not the service was registered.
+     *
      */
-    add(string name, interface service, Version version) generates (bool success);
+    add(vec<string> interfaceChain, string name, interface service)
+        generates (bool success);
 
 };
