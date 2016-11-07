@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "HidlSupport"
+
 #include <hidl/HidlSupport.h>
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
@@ -198,7 +200,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
     for (auto path : instrumentationLibPaths) {
         DIR *dir = opendir(path.c_str());
         if (dir == 0) {
-            LOG(WARNING) << path << " does not exit. ";
+            LOG(WARNING) << path << " does not exist. ";
             return;
         }
 
