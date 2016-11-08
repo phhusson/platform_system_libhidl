@@ -645,26 +645,21 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
         using ::android::hardware::IBinder;                                              \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<I##INTERFACE> iface;                                                          \
-        const struct timespec DELAY {1,0};                                               \
-        unsigned retries = 3;                                                            \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr && !getStub) {                                                 \
-            do {                                                                         \
-                sp<IBinder> binderIface;                                                 \
-                IServiceManager::Version version {                                       \
-                    .major = I##INTERFACE::version.get_major(),                          \
-                    .minor = I##INTERFACE::version.get_minor(),                          \
-                };                                                                       \
-                sm->get(serviceName.c_str(), version,                                    \
-                    [&binderIface](sp<IBinder> iface) {                                  \
-                        binderIface = iface;                                             \
-                    });                                                                  \
-                iface = IHw##INTERFACE::asInterface(binderIface);                        \
-                if (iface != nullptr) {                                                  \
-                    return iface;                                                        \
-                }                                                                        \
-                TEMP_FAILURE_RETRY(nanosleep(&DELAY, nullptr));                          \
-            } while (retries--);                                                         \
+            sp<IBinder> binderIface;                                                     \
+            IServiceManager::Version version {                                           \
+                .major = I##INTERFACE::version.get_major(),                              \
+                .minor = I##INTERFACE::version.get_minor(),                              \
+            };                                                                           \
+            sm->get(serviceName.c_str(), version,                                        \
+                [&binderIface](sp<IBinder> iface) {                                      \
+                    binderIface = iface;                                                 \
+                });                                                                      \
+            iface = IHw##INTERFACE::asInterface(binderIface);                            \
+            if (iface != nullptr) {                                                      \
+                return iface;                                                            \
+            }                                                                            \
         }                                                                                \
         int dlMode = RTLD_LAZY;                                                          \
         void *handle = dlopen(HAL_LIBRARY_PATH_ODM LIB, dlMode);                         \
