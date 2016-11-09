@@ -169,8 +169,8 @@ status_t hidl_string::writeEmbeddedToParcel(
 // static
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 
-const ::android::String16 IHidlInterfaceBase::descriptor(
-        "android.hardware@0.0::IHidlInterfaceBase");
+const ::android::String16 IBase::descriptor(
+        "android.hardware.base@0.0::IBase");
 
 // ----------------------------------------------------------------------
 // HidlInstrumentor implementation.
