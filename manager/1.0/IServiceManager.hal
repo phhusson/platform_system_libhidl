@@ -16,6 +16,22 @@
 
 package android.hidl.manager@1.0;
 
+/**
+ * Manages all the hidl hals on a device.
+ *
+ * All examples in this file assume that there is one service registered with
+ * the service manager, "android.hidl.manager@1.0::IServiceManager/manager"
+ *
+ * Terminology:
+ *   Package: "android.hidl.manager"
+ *   Major version: "1"
+ *   Minor version: "0"
+ *   Version: "1.0"
+ *   Interface name: "IServiceManager"
+ *   Fully-qualified interface name: "android.hidl.manager@1.0::IServiceManager"
+ *   Instance name: "manager"
+ *   Fully-qualified instance name: "android.hidl.manager@1.0::IServiceManager/manager"
+ */
 interface IServiceManager {
 
     /**
@@ -25,9 +41,7 @@ interface IServiceManager {
      * looking for 'IMyInterface::getService("name")' instead.
      *
      * @param iface    Fully-qualified interface name.
-     *                 e.x. "android.hidl.manager@1.0::IServiceManager"
-     * @param name     Name of the specific instance of the service. Same as
-     *                 name in IServiceManager::add. e.x. "manager"
+     * @param name     Instance name. Same as in IServiceManager::add.
      *
      * @return service Handle to requested service, same as provided in
      *                 IServiceManager::add.
@@ -43,7 +57,7 @@ interface IServiceManager {
      * @param interfaceChain List of fully-qualified interface names. The first
      *                       must be the actual interface name. Subsequent names must
      *                       follow the inheritance hierarchy of the interface.
-     * @param name           Can be anything. Must also be used to retrieve service.
+     * @param name           Instance name. Must also be used to retrieve service.
      * @param service        Handle to registering service.
      *
      * @return success       Whether or not the service was registered.
@@ -51,5 +65,21 @@ interface IServiceManager {
      */
     add(vec<string> interfaceChain, string name, interface service)
         generates (bool success);
+
+    /**
+     * List all registered services.
+     *
+     * @return fqInstanceNames List of fully-qualified instance names.
+     */
+    list() generates (vec<string> fqInstanceNames);
+
+    /**
+     * List all instances of a particular service.
+     *
+     * @param fqName         Fully-qualified interface name.
+     *
+     * @return instanceNames List of instance names running the particular service.
+     */
+    listByInterface(string fqName) generates (vec<string> instanceNames);
 
 };
