@@ -29,6 +29,7 @@ namespace android {
 namespace hardware {
 
 static const char *const kEmptyString = "";
+std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap{};
 
 hidl_string::hidl_string()
     : mBuffer(kEmptyString),

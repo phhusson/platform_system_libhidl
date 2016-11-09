@@ -21,9 +21,11 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <cutils/properties.h>
+#include <functional>
 #include <hidl/Status.h>
 #include <hwbinder/IBinder.h>
 #include <hwbinder/Parcel.h>
+#include <map>
 #include <tuple>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
@@ -585,7 +587,6 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 struct IHidlInterfaceBase : virtual public RefBase {
     virtual bool isRemote() const = 0;
-    virtual sp<::android::hardware::IBinder> toBinder() = 0;
     // HIDL reserved methods follow.
     virtual ::android::hardware::Return<void> interfaceChain(
             std::function<void(const hidl_vec<hidl_string>&)> _hidl_cb) = 0;
@@ -593,7 +594,43 @@ struct IHidlInterfaceBase : virtual public RefBase {
     static const ::android::String16 descriptor;
 };
 
-template<typename IChild, typename IParent, typename BpChild>
+extern std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap;
+
+// Construct a smallest possible binder from the given interface.
+// If it is remote, then its remote() will be retrieved.
+// Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
+// and iface is of class IChild. BnChild will be used to wrapped the given iface.
+// Return nullptr if iface is null or any failure.
+template <typename IType, typename IHwType>
+sp<IBinder> toBinder(sp<IType> iface) {
+    IType *ifacePtr = iface.get();
+    if (ifacePtr == nullptr) {
+        return nullptr;
+    }
+    if (ifacePtr->isRemote()) {
+        return ::android::hardware::IInterface::asBinder(static_cast<IHwType *>(ifacePtr));
+    } else {
+        std::string myDescriptor{};
+        ifacePtr->interfaceChain([&](const hidl_vec<hidl_string> &types) {
+            if (types.size() > 0) {
+                myDescriptor = types[0].c_str();
+            }
+        });
+        if (myDescriptor.empty()) {
+            // interfaceChain fails || types.size() == 0
+            return nullptr;
+        }
+        auto iter = gBnConstructorMap.find(myDescriptor);
+        if (iter == gBnConstructorMap.end()) {
+            return nullptr;
+        }
+        return sp<IBinder>((iter->second)(reinterpret_cast<void *>(ifacePtr)));
+    }
+}
+
+// cast the interface IParent to IChild.
+// Return nullptr if parent is null or any failure.
+template<typename IChild, typename IParent, typename BpChild, typename IHwParent>
 sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     if (parent.get() == nullptr) {
         // casts always succeed with nullptrs.
@@ -614,7 +651,7 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     }
     if (parent->isRemote()) {
         // binderized mode. Got BpChild. grab the remote and wrap it.
-        return sp<IChild>(new BpChild(parent->toBinder()));
+        return sp<IChild>(new BpChild(toBinder<IParent, IHwParent>(parent)));
     }
     // Passthrough mode. Got BnChild and BsChild.
     return sp<IChild>(static_cast<IChild *>(parent.get()));
