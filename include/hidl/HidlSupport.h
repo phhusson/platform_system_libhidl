@@ -667,13 +667,16 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
 #define HAL_LIBRARY_PATH_ODM "/odm/lib/hw/"
 #endif
 
-#define DECLARE_REGISTER_AND_GET_SERVICE(INTERFACE)                                      \
+#define DECLARE_SERVICE_MANAGER_INTERACTIONS(INTERFACE)                                  \
     static ::android::sp<I##INTERFACE> getService(                                       \
             const std::string &serviceName, bool getStub=false);                         \
-    ::android::status_t registerAsService(                                               \
-            const std::string &serviceName);                                             \
+    ::android::status_t registerAsService(const std::string &serviceName);               \
+    static bool registerForNotifications(                                                \
+        const std::string &serviceName,                                                  \
+        const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification>        \
+                  &notification);                                                        \
 
-#define IMPLEMENT_REGISTER_AND_GET_SERVICE(INTERFACE, PACKAGE)                           \
+#define IMPLEMENT_SERVICE_MANAGER_INTERACTIONS(INTERFACE, PACKAGE)                       \
     ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
             const std::string &serviceName, bool getStub)                                \
     {                                                                                    \
@@ -723,7 +726,6 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     {                                                                                    \
         using ::android::sp;                                                             \
         using ::android::hardware::defaultServiceManager;                                \
-        using ::android::hardware::hidl_string;                                          \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
@@ -735,6 +737,22 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
                 });                                                                      \
         success = success && ret.getStatus().isOk();                                     \
         return success ? ::android::OK : ::android::UNKNOWN_ERROR;                       \
+    }                                                                                    \
+    bool I##INTERFACE::registerForNotifications(                                         \
+            const std::string &serviceName,                                              \
+            const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification>    \
+                      &notification)                                                     \
+    {                                                                                    \
+        using ::android::sp;                                                             \
+        using ::android::hardware::defaultServiceManager;                                \
+        using ::android::hidl::manager::V1_0::IServiceManager;                           \
+        const sp<IServiceManager> sm = defaultServiceManager();                          \
+        if (sm == nullptr) {                                                             \
+            return false;                                                                \
+        }                                                                                \
+        return sm->registerForNotifications(PACKAGE "::I" #INTERFACE,                    \
+                                            serviceName,                                 \
+                                            notification);                               \
     }
 
 // ----------------------------------------------------------------------
