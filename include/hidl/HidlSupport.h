@@ -585,7 +585,7 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
     return hidl_version(major,minor);
 }
 
-struct IHidlInterfaceBase : virtual public RefBase {
+struct IBase : virtual public RefBase {
     virtual bool isRemote() const = 0;
     // HIDL reserved methods follow.
     virtual ::android::hardware::Return<void> interfaceChain(
