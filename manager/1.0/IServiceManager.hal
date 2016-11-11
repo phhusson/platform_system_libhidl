@@ -16,6 +16,8 @@
 
 package android.hidl.manager@1.0;
 
+import IServiceNotification;
+
 /**
  * Manages all the hidl hals on a device.
  *
@@ -35,7 +37,7 @@ package android.hidl.manager@1.0;
 interface IServiceManager {
 
     /**
-     * Retrieve an existing service.
+     * Retrieve an existing service that supports the requested version.
      *
      * WARNING: This function is for libhidl/HwBinder use only. You are likely
      * looking for 'IMyInterface::getService("name")' instead.
@@ -44,12 +46,13 @@ interface IServiceManager {
      * @param name     Instance name. Same as in IServiceManager::add.
      *
      * @return service Handle to requested service, same as provided in
-     *                 IServiceManager::add.
+     *                 IServiceManager::add. Will be nullptr if not available.
      */
     get(string fqName, string name) generates (interface service);
 
     /**
-     * Register a service.
+     * Register a service. The service manager must be registered as all of the
+     * services that it inherits from.
      *
      * WARNING: This function is for libhidl/HwBinder use only. You are likely
      * looking for 'INTERFACE::registerAsService("name")' instead.
@@ -82,4 +85,24 @@ interface IServiceManager {
      */
     listByInterface(string fqName) generates (vec<string> instanceNames);
 
+    /**
+     * Register for service notifications for a particular service. Must support
+     * multiple registrations.
+     *
+     * onRegistration must be sent out for all services which support the
+     * version provided in the fqName. For instance, if a client registers for
+     * notifications from "android.hardware.foo@1.0", they must also get
+     * notifications from "android.hardware.foo@1.1".
+     *
+     * @param fqName   Fully-qualified interface name.
+     * @param name     Instance name. If name is empty, notifications must be
+     *                 sent out for all names.
+     * @param callback Client callback to recieve notifications.
+     *
+     * @return success Whether or not registration was successful.
+     */
+    registerForNotifications(string fqName,
+                             string name,
+                             IServiceNotification callback)
+        generates (bool success);
 };
