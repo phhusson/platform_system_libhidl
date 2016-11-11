@@ -14,35 +14,8 @@
 
 subdirs = [
     "test",
+    "manager/1.0"
 ]
-
-genrule {
-    name: "android.hidl.manager@1.0_genc++",
-    tools: ["hidl-gen"],
-    cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl android.hidl.manager@1.0",
-    srcs: [
-        "manager/1.0/IServiceManager.hal",
-    ],
-    out: [
-        "android/hidl/manager/1.0/ServiceManagerAll.cpp",
-    ],
-}
-
-genrule {
-    name: "android.hidl.manager@1.0_genc++_headers",
-    tools: ["hidl-gen"],
-    cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl android.hidl.manager@1.0",
-    srcs: [
-        "manager/1.0/IServiceManager.hal",
-    ],
-    out: [
-        "android/hidl/manager/1.0/IServiceManager.h",
-        "android/hidl/manager/1.0/IHwServiceManager.h",
-        "android/hidl/manager/1.0/BnServiceManager.h",
-        "android/hidl/manager/1.0/BpServiceManager.h",
-        "android/hidl/manager/1.0/BsServiceManager.h",
-    ],
-}
 
 cc_library_shared {
     name: "libhidl",
