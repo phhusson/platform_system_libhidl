@@ -69,20 +69,29 @@ struct MQDescriptor {
 
     int32_t getFlags() const;
 
-    ::android::status_t readEmbeddedFromParcel(
-            const ::android::hardware::Parcel &parcel,
-            size_t parentHandle,
-            size_t parentOffset);
-
-    ::android::status_t writeEmbeddedToParcel(
-            ::android::hardware::Parcel *parcel,
-            size_t parentHandle,
-            size_t parentOffset) const;
-
     bool isHandleValid() const { return mHandle != nullptr; }
     size_t countGrantors() const { return mGrantors.size(); }
     std::vector<GrantorDescriptor> getGrantors() const;
     const sp<NativeHandle> getNativeHandle() const;
+
+    inline const ::android::hardware::hidl_vec<GrantorDescriptor> &grantors() const {
+        return mGrantors;
+    }
+
+    inline ::android::hardware::hidl_vec<GrantorDescriptor> &grantors() {
+        return mGrantors;
+    }
+
+    inline const ::native_handle_t *handle() const {
+        return mHandle;
+    }
+
+    inline ::native_handle_t *handle() {
+        return mHandle;
+    }
+
+    static const size_t kOffsetOfGrantors;
+    static const size_t kOffsetOfHandle;
     /*
      * There should atleast be GrantorDescriptors for the read counter, write
      * counter and data buffer.
@@ -95,6 +104,12 @@ private:
     uint32_t mQuantum;
     uint32_t mFlags;
 };
+
+template<MQFlavor flavor>
+const size_t MQDescriptor<flavor>::kOffsetOfGrantors = offsetof(MQDescriptor<flavor>, mGrantors);
+
+template<MQFlavor flavor>
+const size_t MQDescriptor<flavor>::kOffsetOfHandle = offsetof(MQDescriptor<flavor>, mHandle);
 
 /*
  * MQDescriptorSync will describe the wait-free synchronized
@@ -179,26 +194,27 @@ MQDescriptor<flavor>::~MQDescriptor() {
 }
 
 template<MQFlavor flavor>
-::android::status_t MQDescriptor<flavor>::readEmbeddedFromParcel(
-    const Parcel &parcel,
-    size_t parentHandle,
-    size_t parentOffset) {
+::android::status_t readEmbeddedFromParcel(
+        MQDescriptor<flavor> *obj,
+        const ::android::hardware::Parcel &parcel,
+        size_t parentHandle,
+        size_t parentOffset) {
     ::android::status_t _hidl_err = ::android::OK;
 
     size_t _hidl_grantors_child;
 
-    _hidl_err = const_cast<hidl_vec<GrantorDescriptor> *>(
-            &mGrantors)->readEmbeddedFromParcel(
+    _hidl_err = ::android::hardware::readEmbeddedFromParcel(
+                &obj->grantors(),
                 parcel,
                 parentHandle,
-                parentOffset + offsetof(MQDescriptor, mGrantors),
+                parentOffset + MQDescriptor<flavor>::kOffsetOfGrantors,
                 &_hidl_grantors_child);
 
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     const native_handle_t *_hidl_mq_handle_ptr = parcel.readEmbeddedNativeHandle(
             parentHandle,
-            parentOffset + offsetof(MQDescriptor, mHandle));
+            parentOffset + MQDescriptor<flavor>::kOffsetOfHandle);
 
     if (_hidl_mq_handle_ptr == nullptr) {
         _hidl_err = ::android::UNKNOWN_ERROR;
@@ -209,26 +225,28 @@ template<MQFlavor flavor>
 }
 
 template<MQFlavor flavor>
-::android::status_t MQDescriptor<flavor>::writeEmbeddedToParcel(
-    Parcel *parcel,
-    size_t parentHandle,
-    size_t parentOffset) const {
+::android::status_t writeEmbeddedToParcel(
+        const MQDescriptor<flavor> &obj,
+        ::android::hardware::Parcel *parcel,
+        size_t parentHandle,
+        size_t parentOffset) {
     ::android::status_t _hidl_err = ::android::OK;
 
     size_t _hidl_grantors_child;
 
-    _hidl_err = mGrantors.writeEmbeddedToParcel(
+    _hidl_err = ::android::hardware::writeEmbeddedToParcel(
+            obj.grantors(),
             parcel,
             parentHandle,
-            parentOffset + offsetof(MQDescriptor, mGrantors),
+            parentOffset + MQDescriptor<flavor>::kOffsetOfGrantors,
             &_hidl_grantors_child);
 
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     _hidl_err = parcel->writeEmbeddedNativeHandle(
-            mHandle,
+            obj.handle(),
             parentHandle,
-            parentOffset + offsetof(MQDescriptor, mHandle));
+            parentOffset + MQDescriptor<flavor>::kOffsetOfHandle);
 
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
