@@ -92,7 +92,9 @@ interface IServiceManager {
      * onRegistration must be sent out for all services which support the
      * version provided in the fqName. For instance, if a client registers for
      * notifications from "android.hardware.foo@1.0", they must also get
-     * notifications from "android.hardware.foo@1.1".
+     * notifications from "android.hardware.foo@1.1". If a matching service
+     * is already registered, onRegistration must be sent out with preexisting
+     * = true.
      *
      * @param fqName   Fully-qualified interface name.
      * @param name     Instance name. If name is empty, notifications must be
