@@ -591,7 +591,7 @@ struct IBase : virtual public RefBase {
     virtual ::android::hardware::Return<void> interfaceChain(
             std::function<void(const hidl_vec<hidl_string>&)> _hidl_cb) = 0;
     // descriptor for HIDL reserved methods.
-    static const ::android::String16 descriptor;
+    static const char* descriptor;
 };
 
 extern std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap;
