@@ -28,34 +28,52 @@ namespace android {
 namespace hardware {
 
 /**
+ * Registers passthrough service implementation.
+ */
+template<class Interface>
+status_t registerPassthroughServiceImplementation(std::string name) {
+    sp<Interface> service = Interface::getService(name, true /* getStub */);
+
+    if (service == nullptr) {
+        ALOGE("Could not get passthrough implementation for %s.", name.c_str());
+        return EXIT_FAILURE;
+    }
+
+    LOG_FATAL_IF(service->isRemote(), "Implementation of %s is remote!", name.c_str());
+
+    status_t status = service->registerAsService(name);
+
+    if (status == OK) {
+        ALOGI("Registration complete for %s.", name.c_str());
+    } else {
+        ALOGE("Could not register service %s (%d).", name.c_str(), status);
+    }
+
+    return status;
+}
+
+/**
+ * Launches the RPC threadpool. This method never returns.
+ *
+ * Return value is exit status.
+ */
+inline int launchRpcServer(size_t maxThreads) {
+    ProcessState::self()->setThreadPoolMaxThreadCount(maxThreads);
+    ProcessState::self()->startThreadPool();
+    IPCThreadState::self()->joinThreadPool();
+
+    return 0;
+}
+
+/**
  * Creates default passthrough service implementation. This method never returns.
  *
  * Return value is exit status.
  */
 template<class Interface>
 int defaultPassthroughServiceImplementation(std::string name) {
-    sp<Interface> service = Interface::getService(name, true /* getStub */);
-
-    if (service == nullptr) {
-        ALOGE("Could not get passthrough implementation.");
-        return EXIT_FAILURE;
-    }
-
-    LOG_FATAL_IF(service->isRemote(), "Implementation is remote!");
-
-    status_t status = service->registerAsService(name);
-
-    if (status == OK) {
-        ALOGI("Registration complete.");
-    } else {
-        ALOGE("Could not register service (%d).", status);
-    }
-
-    ProcessState::self()->setThreadPoolMaxThreadCount(0);
-    ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool();
-
-    return 0;
+    registerPassthroughServiceImplementation<Interface>(name);
+    return launchRpcServer(0);
 }
 
 }  // namespace hardware
