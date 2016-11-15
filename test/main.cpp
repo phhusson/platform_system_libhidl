@@ -89,6 +89,10 @@ TEST_F(LibHidlTest, VecTest) {
 
     vector<int32_t> v2 = hv1; // cast
     EXPECT_ARRAYEQ(v2, v, 3);
+
+    hidl_vec<int32_t> v3 = {5, 6, 7}; // initializer_list
+    EXPECT_EQ(v3.size(), 3);
+    EXPECT_ARRAYEQ(v3, array, v3.size());
 }
 
 TEST_F(LibHidlTest, TaskRunnerTest) {

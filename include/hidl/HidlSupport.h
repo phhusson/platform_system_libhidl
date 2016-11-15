@@ -125,8 +125,19 @@ struct hidl_vec {
     }
 
     hidl_vec(hidl_vec<T> &&other)
-	: mOwnsBuffer(false) {
+    : mOwnsBuffer(false) {
         *this = std::move(other);
+    }
+
+    hidl_vec(const std::initializer_list<int> list)
+            : mSize(list.size()),
+              mOwnsBuffer(true) {
+        mBuffer = new T[mSize];
+
+        int idx = 0;
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            mBuffer[idx++] = *it;
+        }
     }
 
     hidl_vec(const std::vector<T> &other) : hidl_vec() {
