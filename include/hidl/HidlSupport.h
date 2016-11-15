@@ -73,12 +73,6 @@ struct hidl_string {
     // for the lifetime of this hidl_string.
     void setToExternal(const char *data, size_t size);
 
-    status_t readEmbeddedFromParcel(
-            const Parcel &parcel, size_t parentHandle, size_t parentOffset);
-
-    status_t writeEmbeddedToParcel(
-            Parcel *parcel, size_t parentHandle, size_t parentOffset) const;
-
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
 
@@ -93,6 +87,12 @@ private:
     // move from another hidl_string
     void moveFrom(hidl_string &&);
 };
+
+status_t readEmbeddedFromParcel(hidl_string *string,
+        const Parcel &parcel, size_t parentHandle, size_t parentOffset);
+
+status_t writeEmbeddedToParcel(const hidl_string &string,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset);
 
 inline bool operator==(const hidl_string &hs, const char *s) {
     return strcmp(hs.c_str(), s) == 0;
@@ -236,23 +236,12 @@ struct hidl_vec {
         mOwnsBuffer = true;
     }
 
-    status_t readEmbeddedFromParcel(
-            const Parcel &parcel,
-            size_t parentHandle,
-            size_t parentOffset,
-            size_t *handle);
-
-    status_t writeEmbeddedToParcel(
-            Parcel *parcel,
-            size_t parentHandle,
-            size_t parentOffset,
-            size_t *handle) const;
-
     status_t findInParcel(const Parcel &parcel, size_t *handle) const {
         return parcel.quickFindBuffer(mBuffer, handle);
     }
 
-
+    // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
+    static const size_t kOffsetOfBuffer;
 private:
     T *mBuffer;
     size_t mSize;
@@ -273,6 +262,39 @@ private:
         }
     }
 };
+
+template <typename T>
+const size_t hidl_vec<T>::kOffsetOfBuffer = offsetof(hidl_vec<T>, mBuffer);
+
+template<typename T>
+status_t readEmbeddedFromParcel(
+        hidl_vec<T> * /*vec*/,
+        const Parcel &parcel,
+        size_t parentHandle,
+        size_t parentOffset,
+        size_t *handle) {
+    const void *ptr = parcel.readEmbeddedBuffer(
+            handle,
+            parentHandle,
+            parentOffset + hidl_vec<T>::kOffsetOfBuffer);
+
+    return ptr != NULL ? OK : UNKNOWN_ERROR;
+}
+
+template<typename T>
+status_t writeEmbeddedToParcel(
+        const hidl_vec<T> &vec,
+        Parcel *parcel,
+        size_t parentHandle,
+        size_t parentOffset,
+        size_t *handle) {
+    return parcel->writeEmbeddedBuffer(
+            vec.data(),
+            sizeof(T) * vec.size(),
+            handle,
+            parentHandle,
+            parentOffset + hidl_vec<T>::kOffsetOfBuffer);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -397,36 +419,6 @@ struct hidl_array<T, SIZE1> {
 private:
     T mBuffer[SIZE1];
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-template<typename T>
-status_t hidl_vec<T>::readEmbeddedFromParcel(
-        const Parcel &parcel,
-        size_t parentHandle,
-        size_t parentOffset,
-        size_t *handle) {
-    const void *ptr = parcel.readEmbeddedBuffer(
-            handle,
-            parentHandle,
-            parentOffset + offsetof(hidl_vec<T>, mBuffer));
-
-    return ptr != NULL ? OK : UNKNOWN_ERROR;
-}
-
-template<typename T>
-status_t hidl_vec<T>::writeEmbeddedToParcel(
-        Parcel *parcel,
-        size_t parentHandle,
-        size_t parentOffset,
-        size_t *handle) const {
-    return parcel->writeEmbeddedBuffer(
-            mBuffer,
-            sizeof(T) * mSize,
-            handle,
-            parentHandle,
-            parentOffset + offsetof(hidl_vec<T>, mBuffer));
-}
 
 ///////////////////////////// pointers for HIDL
 
