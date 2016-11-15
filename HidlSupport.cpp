@@ -146,28 +146,28 @@ bool hidl_string::empty() const {
     return mSize == 0;
 }
 
-status_t hidl_string::readEmbeddedFromParcel(
+// static
+const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
+
+status_t readEmbeddedFromParcel(hidl_string * /* string */,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
     const void *ptr = parcel.readEmbeddedBuffer(
             nullptr /* buffer_handle */,
             parentHandle,
-            parentOffset + offsetof(hidl_string, mBuffer));
+            parentOffset + hidl_string::kOffsetOfBuffer);
 
     return ptr != NULL ? OK : UNKNOWN_ERROR;
 }
 
-status_t hidl_string::writeEmbeddedToParcel(
-        Parcel *parcel, size_t parentHandle, size_t parentOffset) const {
+status_t writeEmbeddedToParcel(const hidl_string &string,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset) {
     return parcel->writeEmbeddedBuffer(
-            mBuffer,
-            mSize + 1,
+            string.c_str(),
+            string.size() + 1,
             nullptr /* handle */,
             parentHandle,
-            parentOffset + offsetof(hidl_string, mBuffer));
+            parentOffset + hidl_string::kOffsetOfBuffer);
 }
-
-// static
-const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 
 const char* IBase::descriptor = "android.hardware.base@0.0::IBase";
 
