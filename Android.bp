@@ -44,6 +44,7 @@ cc_library_shared {
 
     srcs: [
         "HidlSupport.cpp",
+        "HidlBinderSupport.cpp",
         "ServiceManagement.cpp",
         "Static.cpp",
         "Status.cpp",
