@@ -129,12 +129,12 @@ struct hidl_vec {
         *this = std::move(other);
     }
 
-    hidl_vec(const std::initializer_list<int> list)
+    hidl_vec(const std::initializer_list<T> list)
             : mSize(list.size()),
               mOwnsBuffer(true) {
         mBuffer = new T[mSize];
 
-        int idx = 0;
+        size_t idx = 0;
         for (auto it = list.begin(); it != list.end(); ++it) {
             mBuffer[idx++] = *it;
         }
