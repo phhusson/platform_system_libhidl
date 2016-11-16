@@ -29,7 +29,6 @@ namespace android {
 namespace hardware {
 
 static const char *const kEmptyString = "";
-std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap{};
 
 hidl_string::hidl_string()
     : mBuffer(kEmptyString),
@@ -144,29 +143,6 @@ size_t hidl_string::size() const {
 
 bool hidl_string::empty() const {
     return mSize == 0;
-}
-
-// static
-const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
-
-status_t readEmbeddedFromParcel(hidl_string * /* string */,
-        const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
-    const void *ptr = parcel.readEmbeddedBuffer(
-            nullptr /* buffer_handle */,
-            parentHandle,
-            parentOffset + hidl_string::kOffsetOfBuffer);
-
-    return ptr != NULL ? OK : UNKNOWN_ERROR;
-}
-
-status_t writeEmbeddedToParcel(const hidl_string &string,
-        Parcel *parcel, size_t parentHandle, size_t parentOffset) {
-    return parcel->writeEmbeddedBuffer(
-            string.c_str(),
-            string.size() + 1,
-            nullptr /* handle */,
-            parentHandle,
-            parentOffset + hidl_string::kOffsetOfBuffer);
 }
 
 const char* IBase::descriptor = "android.hardware.base@0.0::IBase";

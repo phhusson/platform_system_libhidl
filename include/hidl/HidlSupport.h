@@ -23,13 +23,12 @@
 #include <cutils/properties.h>
 #include <functional>
 #include <hidl/Status.h>
-#include <hwbinder/IBinder.h>
-#include <hwbinder/Parcel.h>
 #include <map>
 #include <tuple>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
+#include <vector>
 
 namespace android {
 namespace hardware {
@@ -87,12 +86,6 @@ private:
     // move from another hidl_string
     void moveFrom(hidl_string &&);
 };
-
-status_t readEmbeddedFromParcel(hidl_string *string,
-        const Parcel &parcel, size_t parentHandle, size_t parentOffset);
-
-status_t writeEmbeddedToParcel(const hidl_string &string,
-        Parcel *parcel, size_t parentHandle, size_t parentOffset);
 
 inline bool operator==(const hidl_string &hs, const char *s) {
     return strcmp(hs.c_str(), s) == 0;
@@ -247,10 +240,6 @@ struct hidl_vec {
         mOwnsBuffer = true;
     }
 
-    status_t findInParcel(const Parcel &parcel, size_t *handle) const {
-        return parcel.quickFindBuffer(mBuffer, handle);
-    }
-
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
 private:
@@ -276,36 +265,6 @@ private:
 
 template <typename T>
 const size_t hidl_vec<T>::kOffsetOfBuffer = offsetof(hidl_vec<T>, mBuffer);
-
-template<typename T>
-status_t readEmbeddedFromParcel(
-        hidl_vec<T> * /*vec*/,
-        const Parcel &parcel,
-        size_t parentHandle,
-        size_t parentOffset,
-        size_t *handle) {
-    const void *ptr = parcel.readEmbeddedBuffer(
-            handle,
-            parentHandle,
-            parentOffset + hidl_vec<T>::kOffsetOfBuffer);
-
-    return ptr != NULL ? OK : UNKNOWN_ERROR;
-}
-
-template<typename T>
-status_t writeEmbeddedToParcel(
-        const hidl_vec<T> &vec,
-        Parcel *parcel,
-        size_t parentHandle,
-        size_t parentOffset,
-        size_t *handle) {
-    return parcel->writeEmbeddedBuffer(
-            vec.data(),
-            sizeof(T) * vec.size(),
-            handle,
-            parentHandle,
-            parentOffset + hidl_vec<T>::kOffsetOfBuffer);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -431,127 +390,6 @@ private:
     T mBuffer[SIZE1];
 };
 
-///////////////////////////// pointers for HIDL
-
-template <typename T>
-static status_t readEmbeddedReferenceFromParcel(
-        T const* * /* bufptr */,
-        const Parcel & parcel,
-        size_t parentHandle,
-        size_t parentOffset,
-        size_t *handle,
-        bool *shouldResolveRefInBuffer
-    ) {
-    // *bufptr is ignored because, if I am embedded in some
-    // other buffer, the kernel should have fixed me up already.
-    bool isPreviouslyWritten;
-    status_t result = parcel.readEmbeddedReference(
-        nullptr, // ignored, not written to bufptr.
-        handle,
-        parentHandle,
-        parentOffset,
-        &isPreviouslyWritten);
-    // tell caller to run T::readEmbeddedToParcel and
-    // T::readEmbeddedReferenceToParcel if necessary.
-    // It is not called here because we don't know if these two are valid methods.
-    *shouldResolveRefInBuffer = !isPreviouslyWritten;
-    return result;
-}
-
-template <typename T>
-static status_t writeEmbeddedReferenceToParcel(
-        T const* buf,
-        Parcel *parcel, size_t parentHandle, size_t parentOffset,
-        size_t *handle,
-        bool *shouldResolveRefInBuffer
-        ) {
-
-    if(buf == nullptr) {
-        *shouldResolveRefInBuffer = false;
-        return parcel->writeEmbeddedNullReference(handle, parentHandle, parentOffset);
-    }
-
-    // find whether the buffer exists
-    size_t childHandle, childOffset;
-    status_t result;
-    bool found;
-
-    result = parcel->findBuffer(buf, sizeof(T), &found, &childHandle, &childOffset);
-
-    // tell caller to run T::writeEmbeddedToParcel and
-    // T::writeEmbeddedReferenceToParcel if necessary.
-    // It is not called here because we don't know if these two are valid methods.
-    *shouldResolveRefInBuffer = !found;
-
-    if(result != OK) {
-        return result; // bad pointers and length given
-    }
-    if(!found) { // did not find it.
-        return parcel->writeEmbeddedBuffer(buf, sizeof(T), handle,
-                parentHandle, parentOffset);
-    }
-    // found the buffer. easy case.
-    return parcel->writeEmbeddedReference(
-            handle,
-            childHandle,
-            childOffset,
-            parentHandle,
-            parentOffset);
-}
-
-template <typename T>
-static status_t readReferenceFromParcel(
-        T const* *bufptr,
-        const Parcel & parcel,
-        size_t *handle,
-        bool *shouldResolveRefInBuffer
-    ) {
-    bool isPreviouslyWritten;
-    status_t result = parcel.readReference(reinterpret_cast<void const* *>(bufptr),
-            handle, &isPreviouslyWritten);
-    // tell caller to run T::readEmbeddedToParcel and
-    // T::readEmbeddedReferenceToParcel if necessary.
-    // It is not called here because we don't know if these two are valid methods.
-    *shouldResolveRefInBuffer = !isPreviouslyWritten;
-    return result;
-}
-
-template <typename T>
-static status_t writeReferenceToParcel(
-        T const *buf,
-        Parcel * parcel,
-        size_t *handle,
-        bool *shouldResolveRefInBuffer
-    ) {
-
-    if(buf == nullptr) {
-        *shouldResolveRefInBuffer = false;
-        return parcel->writeNullReference(handle);
-    }
-
-    // find whether the buffer exists
-    size_t childHandle, childOffset;
-    status_t result;
-    bool found;
-
-    result = parcel->findBuffer(buf, sizeof(T), &found, &childHandle, &childOffset);
-
-    // tell caller to run T::writeEmbeddedToParcel and
-    // T::writeEmbeddedReferenceToParcel if necessary.
-    // It is not called here because we don't know if these two are valid methods.
-    *shouldResolveRefInBuffer = !found;
-
-    if(result != OK) {
-        return result; // bad pointers and length given
-    }
-    if(!found) { // did not find it.
-        return parcel->writeBuffer(buf, sizeof(T), handle);
-    }
-    // found the buffer. easy case.
-    return parcel->writeReference(handle,
-        childHandle, childOffset);
-}
-
 // ----------------------------------------------------------------------
 // Version functions
 struct hidl_version {
@@ -564,20 +402,6 @@ public:
 
     constexpr uint16_t get_major() const { return mMajor; }
     constexpr uint16_t get_minor() const { return mMinor; }
-
-    android::status_t writeToParcel(android::hardware::Parcel& parcel) const {
-        return parcel.writeUint32(static_cast<uint32_t>(mMajor) << 16 | mMinor);
-    }
-
-    static hidl_version* readFromParcel(const android::hardware::Parcel& parcel) {
-        uint32_t version;
-        android::status_t status = parcel.readUint32(&version);
-        if (status != OK) {
-            return nullptr;
-        } else {
-            return new hidl_version(version >> 16, version & 0xFFFF);
-        }
-    }
 
 private:
     uint16_t mMajor;
@@ -597,69 +421,6 @@ struct IBase : virtual public RefBase {
     static const char* descriptor;
 };
 
-extern std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap;
-
-// Construct a smallest possible binder from the given interface.
-// If it is remote, then its remote() will be retrieved.
-// Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
-// and iface is of class IChild. BnChild will be used to wrapped the given iface.
-// Return nullptr if iface is null or any failure.
-template <typename IType, typename IHwType>
-sp<IBinder> toBinder(sp<IType> iface) {
-    IType *ifacePtr = iface.get();
-    if (ifacePtr == nullptr) {
-        return nullptr;
-    }
-    if (ifacePtr->isRemote()) {
-        return ::android::hardware::IInterface::asBinder(static_cast<IHwType *>(ifacePtr));
-    } else {
-        std::string myDescriptor{};
-        ifacePtr->interfaceChain([&](const hidl_vec<hidl_string> &types) {
-            if (types.size() > 0) {
-                myDescriptor = types[0].c_str();
-            }
-        });
-        if (myDescriptor.empty()) {
-            // interfaceChain fails || types.size() == 0
-            return nullptr;
-        }
-        auto iter = gBnConstructorMap.find(myDescriptor);
-        if (iter == gBnConstructorMap.end()) {
-            return nullptr;
-        }
-        return sp<IBinder>((iter->second)(reinterpret_cast<void *>(ifacePtr)));
-    }
-}
-
-// cast the interface IParent to IChild.
-// Return nullptr if parent is null or any failure.
-template<typename IChild, typename IParent, typename BpChild, typename IHwParent>
-sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
-    if (parent.get() == nullptr) {
-        // casts always succeed with nullptrs.
-        return nullptr;
-    }
-    bool canCast = false;
-    parent->interfaceChain([&](const hidl_vec<hidl_string> &allowedCastTypes) {
-        for (size_t i = 0; i < allowedCastTypes.size(); i++) {
-            if (allowedCastTypes[i] == childIndicator) {
-                canCast = true;
-                break;
-            }
-        }
-    });
-
-    if (!canCast) {
-        return sp<IChild>(nullptr); // cast failed.
-    }
-    if (parent->isRemote()) {
-        // binderized mode. Got BpChild. grab the remote and wrap it.
-        return sp<IChild>(new BpChild(toBinder<IParent, IHwParent>(parent)));
-    }
-    // Passthrough mode. Got BnChild and BsChild.
-    return sp<IChild>(static_cast<IChild *>(parent.get()));
-}
-
 #if defined(__LP64__)
 #define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
 #define HAL_LIBRARY_PATH_VENDOR "/vendor/lib64/hw/"
@@ -678,85 +439,6 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
         const std::string &serviceName,                                                  \
         const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification>        \
                   &notification);                                                        \
-
-#define IMPLEMENT_SERVICE_MANAGER_INTERACTIONS(INTERFACE, PACKAGE)                       \
-    ::android::sp<I##INTERFACE> I##INTERFACE::getService(                                \
-            const std::string &serviceName, bool getStub)                                \
-    {                                                                                    \
-        using ::android::sp;                                                             \
-        using ::android::hardware::defaultServiceManager;                                \
-        using ::android::hardware::IBinder;                                              \
-        using ::android::hidl::manager::V1_0::IServiceManager;                           \
-        sp<I##INTERFACE> iface;                                                          \
-        const sp<IServiceManager> sm = defaultServiceManager();                          \
-        if (sm != nullptr && !getStub) {                                                 \
-            sp<IBinder> binderIface;                                                     \
-            ::android::hardware::Return<void> ret =                                      \
-                sm->get(PACKAGE "::I" #INTERFACE, serviceName.c_str(),                   \
-                    [&binderIface](sp<IBinder> iface) {                                  \
-                        binderIface = iface;                                             \
-                    });                                                                  \
-            if (ret.getStatus().isOk()) {                                                \
-                iface = IHw##INTERFACE::asInterface(binderIface);                        \
-                if (iface != nullptr) {                                                  \
-                    return iface;                                                        \
-                }                                                                        \
-            }                                                                            \
-        }                                                                                \
-        int dlMode = RTLD_LAZY;                                                          \
-        void *handle = dlopen(HAL_LIBRARY_PATH_ODM PACKAGE "-impl.so", dlMode);          \
-        if (handle == nullptr) {                                                         \
-            handle = dlopen(HAL_LIBRARY_PATH_VENDOR PACKAGE "-impl.so", dlMode);         \
-        }                                                                                \
-        if (handle == nullptr) {                                                         \
-            handle = dlopen(HAL_LIBRARY_PATH_SYSTEM PACKAGE "-impl.so", dlMode);         \
-        }                                                                                \
-        if (handle == nullptr) {                                                         \
-            return iface;                                                                \
-        }                                                                                \
-        I##INTERFACE* (*generator)(const char* name);                                    \
-        *(void **)(&generator) = dlsym(handle, "HIDL_FETCH_I"#INTERFACE);                \
-        if (generator) {                                                                 \
-            iface = (*generator)(serviceName.c_str());                                   \
-            if (iface != nullptr) {                                                      \
-                iface = new Bs##INTERFACE(iface);                                        \
-            }                                                                            \
-        }                                                                                \
-        return iface;                                                                    \
-    }                                                                                    \
-    ::android::status_t I##INTERFACE::registerAsService(                                 \
-            const std::string &serviceName)                                              \
-    {                                                                                    \
-        using ::android::sp;                                                             \
-        using ::android::hardware::defaultServiceManager;                                \
-        using ::android::hidl::manager::V1_0::IServiceManager;                           \
-        sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
-        const sp<IServiceManager> sm = defaultServiceManager();                          \
-        bool success = false;                                                            \
-        ::android::hardware::Return<void> ret =                                          \
-            this->interfaceChain(                                                        \
-                [&success, &sm, &serviceName, &binderIface](const auto &chain) {         \
-                    success = sm->add(chain, serviceName.c_str(), binderIface);          \
-                });                                                                      \
-        success = success && ret.getStatus().isOk();                                     \
-        return success ? ::android::OK : ::android::UNKNOWN_ERROR;                       \
-    }                                                                                    \
-    bool I##INTERFACE::registerForNotifications(                                         \
-            const std::string &serviceName,                                              \
-            const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification>    \
-                      &notification)                                                     \
-    {                                                                                    \
-        using ::android::sp;                                                             \
-        using ::android::hardware::defaultServiceManager;                                \
-        using ::android::hidl::manager::V1_0::IServiceManager;                           \
-        const sp<IServiceManager> sm = defaultServiceManager();                          \
-        if (sm == nullptr) {                                                             \
-            return false;                                                                \
-        }                                                                                \
-        return sm->registerForNotifications(PACKAGE "::I" #INTERFACE,                    \
-                                            serviceName,                                 \
-                                            notification);                               \
-    }
 
 // ----------------------------------------------------------------------
 // Class that provides Hidl instrumentation utilities.
