@@ -194,66 +194,6 @@ MQDescriptor<flavor>::~MQDescriptor() {
 }
 
 template<MQFlavor flavor>
-::android::status_t readEmbeddedFromParcel(
-        MQDescriptor<flavor> *obj,
-        const ::android::hardware::Parcel &parcel,
-        size_t parentHandle,
-        size_t parentOffset) {
-    ::android::status_t _hidl_err = ::android::OK;
-
-    size_t _hidl_grantors_child;
-
-    _hidl_err = ::android::hardware::readEmbeddedFromParcel(
-                &obj->grantors(),
-                parcel,
-                parentHandle,
-                parentOffset + MQDescriptor<flavor>::kOffsetOfGrantors,
-                &_hidl_grantors_child);
-
-    if (_hidl_err != ::android::OK) { return _hidl_err; }
-
-    const native_handle_t *_hidl_mq_handle_ptr = parcel.readEmbeddedNativeHandle(
-            parentHandle,
-            parentOffset + MQDescriptor<flavor>::kOffsetOfHandle);
-
-    if (_hidl_mq_handle_ptr == nullptr) {
-        _hidl_err = ::android::UNKNOWN_ERROR;
-        return _hidl_err;
-    }
-
-    return _hidl_err;
-}
-
-template<MQFlavor flavor>
-::android::status_t writeEmbeddedToParcel(
-        const MQDescriptor<flavor> &obj,
-        ::android::hardware::Parcel *parcel,
-        size_t parentHandle,
-        size_t parentOffset) {
-    ::android::status_t _hidl_err = ::android::OK;
-
-    size_t _hidl_grantors_child;
-
-    _hidl_err = ::android::hardware::writeEmbeddedToParcel(
-            obj.grantors(),
-            parcel,
-            parentHandle,
-            parentOffset + MQDescriptor<flavor>::kOffsetOfGrantors,
-            &_hidl_grantors_child);
-
-    if (_hidl_err != ::android::OK) { return _hidl_err; }
-
-    _hidl_err = parcel->writeEmbeddedNativeHandle(
-            obj.handle(),
-            parentHandle,
-            parentOffset + MQDescriptor<flavor>::kOffsetOfHandle);
-
-    if (_hidl_err != ::android::OK) { return _hidl_err; }
-
-    return _hidl_err;
-}
-
-template<MQFlavor flavor>
 size_t MQDescriptor<flavor>::getSize() const {
   return mGrantors[DATAPTRPOS].extent;
 }

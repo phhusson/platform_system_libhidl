@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <sstream>
 
-#include <hwbinder/Parcel.h>
 #include <utils/String8.h>
 #include <android-base/macros.h>
 
@@ -97,11 +96,6 @@ public:
     Status(const Status& status) = default;
     Status(Status&& status) = default;
     Status& operator=(const Status& status) = default;
-
-    // Bear in mind that if the client or service is a Java endpoint, this
-    // is not the logic which will provide/interpret the data here.
-    status_t readFromParcel(const Parcel& parcel);
-    status_t writeToParcel(Parcel* parcel) const;
 
     // Set one of the pre-defined exception types defined above.
     void setException(int32_t ex, const String8& message);
