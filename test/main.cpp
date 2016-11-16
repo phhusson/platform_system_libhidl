@@ -91,7 +91,7 @@ TEST_F(LibHidlTest, VecTest) {
     EXPECT_ARRAYEQ(v2, v, 3);
 
     hidl_vec<int32_t> v3 = {5, 6, 7}; // initializer_list
-    EXPECT_EQ(v3.size(), 3);
+    EXPECT_EQ(v3.size(), 3ul);
     EXPECT_ARRAYEQ(v3, array, v3.size());
 }
 
