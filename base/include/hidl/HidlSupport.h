@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <iterator>
+#include <cutils/native_handle.h>
 #include <cutils/properties.h>
 #include <functional>
 #include <hidl/Status.h>
@@ -104,6 +105,62 @@ private:
     };
 };
 } // namespace details
+
+
+// hidl_handle wraps a pointer to a native_handle_t in a hidl_pointer,
+// so that it can safely be transferred between 32-bit and 64-bit processes.
+struct hidl_handle {
+    hidl_handle() {
+        mHandle = nullptr;
+    }
+    ~hidl_handle() {
+    }
+
+    // copy constructors.
+    hidl_handle(const native_handle_t *handle) {
+        mHandle = handle;
+    }
+
+    hidl_handle(const hidl_handle &other) {
+        mHandle = other.mHandle;
+    }
+
+    // move constructor.
+    hidl_handle(hidl_handle &&other) {
+        *this = std::move(other);
+    }
+
+    // assingment operators
+    hidl_handle &operator=(const hidl_handle &other) {
+        mHandle = other.mHandle;
+        return *this;
+    }
+
+    hidl_handle &operator=(const native_handle_t *native_handle) {
+        mHandle = native_handle;
+        return *this;
+    }
+
+    hidl_handle &operator=(hidl_handle &&other) {
+        mHandle = other.mHandle;
+        other.mHandle = nullptr;
+        return *this;
+    }
+
+    const native_handle_t* operator->() const {
+        return mHandle;
+    }
+    // implicit conversion to const native_handle_t*
+    operator const native_handle_t *() const {
+        return mHandle;
+    }
+    // explicit conversion
+    const native_handle_t *getNativeHandle() const {
+        return mHandle;
+    }
+private:
+    details::hidl_pointer<const native_handle_t> mHandle;
+};
 
 struct hidl_string {
     hidl_string();
