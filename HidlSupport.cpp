@@ -18,8 +18,8 @@
 
 #include <hidl/HidlSupport.h>
 
-#ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <android-base/logging.h>
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <cutils/properties.h>
 #include <regex>
 #include <utility>
@@ -27,6 +27,14 @@
 
 namespace android {
 namespace hardware {
+
+namespace details {
+
+void hidl_log_base::logAlwaysFatal(const char *message) {
+    LOG(FATAL) << message;
+}
+
+} // namespace details
 
 static const char *const kEmptyString = "";
 
@@ -96,12 +104,15 @@ hidl_string::operator const char *() const {
 void hidl_string::copyFrom(const char *data, size_t size) {
     // assume my resources are freed.
 
+    if (size > UINT32_MAX) {
+        LOG(FATAL) << "string size can't exceed 2^32 bytes.";
+    }
     char *buf = (char *)malloc(size + 1);
     memcpy(buf, data, size);
     buf[size] = '\0';
     mBuffer = buf;
 
-    mSize = size;
+    mSize = static_cast<uint32_t>(size);
     mOwnsBuffer = true;
 }
 
@@ -117,7 +128,7 @@ void hidl_string::moveFrom(hidl_string &&other) {
 
 void hidl_string::clear() {
     if (mOwnsBuffer && (mBuffer != kEmptyString)) {
-        free(const_cast<char *>(mBuffer));
+        free(const_cast<char *>(static_cast<const char *>(mBuffer)));
     }
 
     mBuffer = kEmptyString;
@@ -126,10 +137,13 @@ void hidl_string::clear() {
 }
 
 void hidl_string::setToExternal(const char *data, size_t size) {
+    if (size > UINT32_MAX) {
+        LOG(FATAL) << "string size can't exceed 2^32 bytes.";
+    }
     clear();
 
     mBuffer = data;
-    mSize = size;
+    mSize = static_cast<uint32_t>(size);
     mOwnsBuffer = false;
 }
 

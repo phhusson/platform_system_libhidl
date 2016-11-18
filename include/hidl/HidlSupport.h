@@ -33,6 +33,77 @@
 namespace android {
 namespace hardware {
 
+namespace details {
+
+// hidl_log_base is a base class that templatized
+// classes implemented in a header can inherit from,
+// to avoid creating dependencies on liblog.
+struct hidl_log_base {
+    void logAlwaysFatal(const char *message);
+};
+
+// HIDL client/server code should *NOT* use this class.
+//
+// hidl_pointer wraps a pointer without taking ownership,
+// and stores it in a union with a uint64_t. This ensures
+// that we always have enough space to store a pointer,
+// regardless of whether we're running in a 32-bit or 64-bit
+// process.
+template<typename T>
+struct hidl_pointer {
+    hidl_pointer()
+        : mPointer(nullptr) {
+    }
+    hidl_pointer(T* ptr)
+        : mPointer(ptr) {
+    }
+    hidl_pointer(const hidl_pointer<T>& other) {
+        mPointer = other.mPointer;
+    }
+    hidl_pointer(hidl_pointer<T>&& other) {
+        *this = std::move(other);
+    }
+
+    hidl_pointer &operator=(const hidl_pointer<T>& other) {
+        mPointer = other.mPointer;
+        return *this;
+    }
+    hidl_pointer &operator=(hidl_pointer<T>&& other) {
+        mPointer = other.mPointer;
+        other.mPointer = nullptr;
+        return *this;
+    }
+    hidl_pointer &operator=(T* ptr) {
+        mPointer = ptr;
+        return *this;
+    }
+
+    operator T*() const {
+        return mPointer;
+    }
+    explicit operator void*() const { // requires explicit cast to avoid ambiguity
+        return mPointer;
+    }
+    T& operator*() const {
+        return *mPointer;
+    }
+    T* operator->() const {
+        return mPointer;
+    }
+    T &operator[](size_t index) {
+        return mPointer[index];
+    }
+    const T &operator[](size_t index) const {
+        return mPointer[index];
+    }
+private:
+    union {
+        T* mPointer;
+        uint64_t _pad;
+    };
+};
+} // namespace details
+
 struct hidl_string {
     hidl_string();
     ~hidl_string();
@@ -76,8 +147,8 @@ struct hidl_string {
     static const size_t kOffsetOfBuffer;
 
 private:
-    const char *mBuffer;
-    size_t mSize;  // NOT including the terminating '\0'.
+    details::hidl_pointer<const char> mBuffer;
+    uint32_t mSize;  // NOT including the terminating '\0'.
     bool mOwnsBuffer; // if true then mBuffer is a mutable char *
 
     // copy from data with size. Assume that my memory is freed
@@ -106,7 +177,7 @@ inline bool operator!=(const char *s, const hidl_string &hs) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-struct hidl_vec {
+struct hidl_vec : private details::hidl_log_base {
     hidl_vec()
         : mBuffer(NULL),
           mSize(0),
@@ -152,7 +223,10 @@ struct hidl_vec {
             delete [] mBuffer;
         }
         mBuffer = data;
-        mSize = size;
+        if (size > UINT32_MAX) {
+            logAlwaysFatal("external vector size exceeds 2^32 elements.");
+        }
+        mSize = static_cast<uint32_t>(size);
         mOwnsBuffer = shouldOwn;
     }
 
@@ -225,9 +299,12 @@ struct hidl_vec {
     }
 
     void resize(size_t size) {
+        if (size > UINT32_MAX) {
+            logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
+        }
         T *newBuffer = new T[size];
 
-        for (size_t i = 0; i < std::min(size, mSize); ++i) {
+        for (size_t i = 0; i < std::min(static_cast<uint32_t>(size), mSize); ++i) {
             newBuffer[i] = mBuffer[i];
         }
 
@@ -236,15 +313,15 @@ struct hidl_vec {
         }
         mBuffer = newBuffer;
 
-        mSize = size;
+        mSize = static_cast<uint32_t>(size);
         mOwnsBuffer = true;
     }
 
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
 private:
-    T *mBuffer;
-    size_t mSize;
+    details::hidl_pointer<T> mBuffer;
+    uint32_t mSize;
     bool mOwnsBuffer;
 
     // copy from an array-like object, assuming my resources are freed.
