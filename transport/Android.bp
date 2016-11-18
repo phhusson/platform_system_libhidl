@@ -13,27 +13,40 @@
 // limitations under the License.
 
 subdirs = [
-    "base",         // libhidlbase
-    "transport",    // libhidl
+    "manager/1.0"
 ]
 
-cc_test {
-    name: "libhidl_test",
-    gtest: false,
-    srcs: ["test_main.cpp"],
-
+cc_library_shared {
+    name: "libhidltransport",
     shared_libs: [
         "libbase",
-        "libhidlbase",
-        "libhidltransport",
-        "libhwbinder",
         "liblog",
         "libutils",
+        "libhidlbase",
+        "libhwbinder",
+        "libcutils",
     ],
-    static_libs: ["libgtest"],
+    export_shared_lib_headers: [
+        "libbase",
+        "libutils",
+        "libhidlbase",
+    ],
 
-    cflags: [
-        "-O0",
-        "-g",
+    export_include_dirs: ["include"],
+
+    generated_sources: ["android.hidl.manager@1.0_genc++"],
+    generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
+    export_generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
+
+    srcs: [
+        "HidlBinderSupport.cpp",
+        "ServiceManagement.cpp",
+        "Static.cpp"
     ],
+
+    product_variables: {
+        debuggable: {
+            cflags: ["-DLIBHIDL_TARGET_DEBUGGABLE"],
+        },
+    },
 }
