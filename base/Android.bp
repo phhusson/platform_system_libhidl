@@ -12,22 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-cc_test {
-    name: "libhidl_test",
-    gtest: false,
-    srcs: ["main.cpp"],
-
+cc_library_shared {
+    name: "libhidlbase",
     shared_libs: [
         "libbase",
-        "libhidl",
-        "libhwbinder",
         "liblog",
         "libutils",
+        "libcutils",
     ],
-    static_libs: ["libgtest"],
+    export_shared_lib_headers: [
+        "libbase",
+        "libutils",
+    ],
+    local_include_dirs: ["include"],
+    export_include_dirs: ["include"],
 
-    cflags: [
-        "-O0",
-        "-g",
+    clang: true,
+    sanitize: {
+        misc_undefined: ["integer"],
+    },
+
+    srcs: [
+        "HidlSupport.cpp",
+        "Status.cpp",
+        "TaskRunner.cpp",
     ],
+
+    product_variables: {
+        debuggable: {
+            cflags: ["-DLIBHIDL_TARGET_DEBUGGABLE"],
+        },
+    },
 }
