@@ -95,6 +95,14 @@ TEST_F(LibHidlTest, VecTest) {
     EXPECT_ARRAYEQ(v3, array, v3.size());
 }
 
+TEST_F(LibHidlTest, ArrayTest) {
+    using android::hardware::hidl_array;
+    int32_t array[] = {5, 6, 7};
+
+    hidl_array<int32_t, 3> ha(array);
+    EXPECT_ARRAYEQ(ha, array, 3);
+}
+
 TEST_F(LibHidlTest, TaskRunnerTest) {
     using android::hardware::TaskRunner;
     TaskRunner tr;
