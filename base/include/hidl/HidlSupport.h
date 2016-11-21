@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <iterator>
 #include <cutils/properties.h>
 #include <functional>
 #include <hidl/Status.h>
@@ -157,6 +158,14 @@ private:
     // move from another hidl_string
     void moveFrom(hidl_string &&);
 };
+
+inline bool operator==(const hidl_string &hs1, const hidl_string &hs2) {
+    return strcmp(hs1.c_str(), hs2.c_str()) == 0;
+}
+
+inline bool operator!=(const hidl_string &hs1, const hidl_string &hs2) {
+    return !(hs1 == hs2);
+}
 
 inline bool operator==(const hidl_string &hs, const char *s) {
     return strcmp(hs.c_str(), s) == 0;
@@ -319,6 +328,27 @@ struct hidl_vec : private details::hidl_log_base {
 
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
+
+    // Define std interator interface for walking the array contents
+    // TODO:  it might be nice to implement a full featured random access iterator...
+    class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+    {
+    public:
+        iterator(T* ptr) : mPtr(ptr) { }
+        iterator operator++()    { iterator i = *this; mPtr++; return i; }
+        iterator operator++(int) { mPtr++; return *this; }
+        iterator operator--()    { iterator i = *this; mPtr--; return i; }
+        iterator operator--(int) { mPtr--; return *this; }
+        T& operator*()  { return *mPtr; }
+        T* operator->() { return mPtr; }
+        bool operator==(const iterator& rhs) const { return mPtr == rhs.mPtr; }
+        bool operator!=(const iterator& rhs) const { return mPtr != rhs.mPtr; }
+    private:
+        T* mPtr;
+    };
+    iterator begin() { return data(); }
+    iterator end() { return data()+mSize; }
+
 private:
     details::hidl_pointer<T> mBuffer;
     uint32_t mSize;
