@@ -449,6 +449,9 @@ private:
 template<typename T, size_t SIZE1>
 struct hidl_array<T, SIZE1> {
     hidl_array() = default;
+    hidl_array(const T *source) {
+        memcpy(mBuffer, source, SIZE1 * sizeof(T));
+    }
 
     T *data() { return mBuffer; }
     const T *data() const { return mBuffer; }
