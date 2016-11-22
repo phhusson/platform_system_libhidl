@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
+#include <hidl/HidlTransportSupport.h>
+#include <sys/wait.h>
 #include <utils/Log.h>
-
-#include <hwbinder/IPCThreadState.h>
-#include <hwbinder/ProcessState.h>
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
 
@@ -53,27 +52,16 @@ status_t registerPassthroughServiceImplementation(std::string name) {
 }
 
 /**
- * Launches the RPC threadpool. This method never returns.
- *
- * Return value is exit status.
- */
-inline int launchRpcServer(size_t maxThreads) {
-    ProcessState::self()->setThreadPoolMaxThreadCount(maxThreads);
-    ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool();
-
-    return 0;
-}
-
-/**
  * Creates default passthrough service implementation. This method never returns.
  *
  * Return value is exit status.
  */
 template<class Interface>
-int defaultPassthroughServiceImplementation(std::string name) {
+int defaultPassthroughServiceImplementation(std::string name, size_t maxThreads = 1) {
+    configureRpcThreadpool(maxThreads, true);
     registerPassthroughServiceImplementation<Interface>(name);
-    return launchRpcServer(0);
+    joinRpcThreadpool();
+    return 0;
 }
 
 }  // namespace hardware

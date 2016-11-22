@@ -24,6 +24,35 @@
 namespace android {
 namespace hardware {
 
+/* Configures the threadpool used for handling incoming RPC calls in this process.
+ *
+ * This method MUST be called before interacting with any HIDL interfaces,
+ * including the IFoo::getService and IFoo::registerAsService methods.
+ *
+ * @param maxThreads maximum number of threads in this process
+ * @param callerWillJoin whether the caller will join the threadpool later.
+ *
+ * Note that maxThreads must include the caller thread if callerWillJoin is true;
+ *
+ * If you want to create a threadpool of 5 threads, without the caller ever joining:
+ *   configureRpcThreadPool(5, false);
+ * If you want to create a threadpool of 1 thread, with the caller joining:
+ *   configureRpcThreadPool(1, true); // transport won't launch any threads by itself
+ *
+ */
+inline void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
+    // TODO(b/32756130) this should be transport-dependent
+    configureBinderRpcThreadpool(maxThreads, callerWillJoin);
+}
+
+/* Joins a threadpool that you configured earlier with
+ * configureRpcThreadPool(x, true);
+ */
+inline void joinRpcThreadpool() {
+    // TODO(b/32756130) this should be transport-dependent
+    joinBinderRpcThreadpool();
+}
+
 // cast the interface IParent to IChild.
 // Return nullptr if parent is null or any failure.
 template<typename IChild, typename IParent, typename BpChild, typename BpParent>
