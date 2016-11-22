@@ -20,8 +20,9 @@
 #include <cstdint>
 #include <sstream>
 
-#include <utils/String8.h>
 #include <android-base/macros.h>
+#include <hidl/HidlInternal.h>
+#include <utils/String8.h>
 
 namespace android {
 namespace hardware {
@@ -140,28 +141,49 @@ private:
 // For gtest output logging
 std::stringstream& operator<< (std::stringstream& stream, const Status& s);
 
-template<typename T> class Return {
+template<typename T> class Return : private details::hidl_log_base {
 private:
-      T val {};
-      Status status {};
+    T mVal {};
+    Status mStatus {};
 public:
-      Return(T v) : val{v} {}
-      Return(Status s) : status(s) {}
-      operator T() const { return val; }
-      const Status& getStatus() const {
-          return status;
-      }
+    Return(T v) : mVal{v} {}
+    Return(Status s) : mStatus(s) {}
+
+    T get() const {
+        if (!mStatus.isOk()) {
+            logAlwaysFatal("Attempted to retrieve value from hidl service, "
+                           "but there was a transport error.");
+        }
+        return mVal;
+    }
+    bool isOk() const {
+        return mStatus.isOk();
+    }
+
+    // TODO(b/31348667) deprecate, remove all usage, remove function
+    // Can't mark as deprecated yet because of all the projects built with -Werror.
+    // [[deprecated("Replaced by get()")]]
+    operator T() const { return mVal; }
+
+    const Status& getStatus() const {
+        return mStatus;
+    }
 };
 
 template<> class Return<void> {
 private:
-      Status status {};
+    Status mStatus {};
 public:
-      Return() = default;
-      Return(Status s) : status(s) {}
-      const Status& getStatus() const {
-          return status;
-      }
+    Return() = default;
+    Return(Status s) : mStatus(s) {}
+
+    bool isOk() const {
+        return mStatus.isOk();
+    }
+
+    const Status& getStatus() const {
+        return mStatus;
+    }
 };
 
 static inline Return<void> Void() {

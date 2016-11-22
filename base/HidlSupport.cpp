@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "HidlSupport"
-
 #include <hidl/HidlSupport.h>
 
 #include <android-base/logging.h>
@@ -27,14 +25,6 @@
 
 namespace android {
 namespace hardware {
-
-namespace details {
-
-void hidl_log_base::logAlwaysFatal(const char *message) {
-    LOG(FATAL) << message;
-}
-
-} // namespace details
 
 static const char *const kEmptyString = "";
 
