@@ -584,6 +584,10 @@ struct IBase : virtual public RefBase {
     // HIDL reserved methods follow.
     virtual ::android::hardware::Return<void> interfaceChain(
             std::function<void(const hidl_vec<hidl_string>&)> _hidl_cb) = 0;
+    // This method notifies the interface that one or more system properties have changed.
+    // The default implementation calls report_sysprop_change() in libcutils, which in turn
+    // calls a set of registered callbacks (eg to update trace tags).
+    virtual ::android::hardware::Return<void> notifySyspropsChanged() = 0;
     // descriptor for HIDL reserved methods.
     static const char* descriptor;
 };
