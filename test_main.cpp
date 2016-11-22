@@ -67,12 +67,36 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_STREQ(s, "myDString");
     s.clear(); // should not affect myCString
     EXPECT_STREQ(myCString, "myDString");
+
     // casts
     s = "great";
     std::string myString = s;
     const char *anotherCString = s;
     EXPECT_EQ(myString, "great");
     EXPECT_STREQ(anotherCString, "great");
+
+    // Comparisons
+    const char * cstr1 = "abc";
+    std::string string1(cstr1);
+    hidl_string hs1(cstr1);
+    const char * cstrE = "abc";
+    std::string stringE(cstrE);
+    hidl_string hsE(cstrE);
+    const char * cstrNE = "ABC";
+    std::string stringNE(cstrNE);
+    hidl_string hsNE(cstrNE);
+    EXPECT_TRUE(hs1  == hsE);
+    EXPECT_FALSE(hs1 != hsE);
+    EXPECT_TRUE(hs1  != hsNE);
+    EXPECT_FALSE(hs1 == hsNE);
+    EXPECT_TRUE(hs1  == cstrE);
+    EXPECT_FALSE(hs1 != cstrE);
+    EXPECT_TRUE(hs1  != cstrNE);
+    EXPECT_FALSE(hs1 == cstrNE);
+    EXPECT_TRUE(hs1  == stringE);
+    EXPECT_FALSE(hs1 != stringE);
+    EXPECT_TRUE(hs1  != stringNE);
+    EXPECT_FALSE(hs1 == stringNE);
 }
 
 TEST_F(LibHidlTest, VecTest) {
@@ -93,6 +117,19 @@ TEST_F(LibHidlTest, VecTest) {
     hidl_vec<int32_t> v3 = {5, 6, 7}; // initializer_list
     EXPECT_EQ(v3.size(), 3ul);
     EXPECT_ARRAYEQ(v3, array, v3.size());
+
+    auto iter = hv1.begin();    // iterator begin()
+    EXPECT_EQ(*iter, 5);
+    iter++;                     // post increment
+    EXPECT_EQ(*iter, 6);
+    ++iter;                     // pre increment
+    EXPECT_EQ(*iter, 7);
+
+    int32_t sum = 0;            // range based for loop interoperability
+    for (auto &&i: hv1) {
+        sum += i;
+    }
+    EXPECT_EQ(sum, 5+6+7);
 }
 
 TEST_F(LibHidlTest, ArrayTest) {
