@@ -18,6 +18,7 @@
 #define ANDROID_HIDL_SUPPORT_H
 
 #include <algorithm>
+#include <array>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <iterator>
@@ -453,7 +454,20 @@ namespace details {
     };
 
     template<typename T, size_t SIZE1, size_t... SIZES>
+    struct std_array {
+        using type = std::array<typename std_array<T, SIZES...>::type, SIZE1>;
+    };
+
+    template<typename T, size_t SIZE1>
+    struct std_array<T, SIZE1> {
+        using type = std::array<T, SIZE1>;
+    };
+
+    template<typename T, size_t SIZE1, size_t... SIZES>
     struct accessor {
+
+        using std_array_type = typename std_array<T, SIZE1, SIZES...>::type;
+
         explicit accessor(T *base)
             : mBase(base) {
         }
@@ -463,12 +477,22 @@ namespace details {
                     &mBase[index * product<SIZES...>::value]);
         }
 
+        accessor &operator=(const std_array_type &other) {
+            for (size_t i = 0; i < SIZE1; ++i) {
+                (*this)[i] = other[i];
+            }
+            return *this;
+        }
+
     private:
         T *mBase;
     };
 
     template<typename T, size_t SIZE1>
     struct accessor<T, SIZE1> {
+
+        using std_array_type = typename std_array<T, SIZE1>::type;
+
         explicit accessor(T *base)
             : mBase(base) {
         }
@@ -477,12 +501,22 @@ namespace details {
             return mBase[index];
         }
 
+        accessor &operator=(const std_array_type &other) {
+            for (size_t i = 0; i < SIZE1; ++i) {
+                (*this)[i] = other[i];
+            }
+            return *this;
+        }
+
     private:
         T *mBase;
     };
 
     template<typename T, size_t SIZE1, size_t... SIZES>
     struct const_accessor {
+
+        using std_array_type = typename std_array<T, SIZE1, SIZES...>::type;
+
         explicit const_accessor(const T *base)
             : mBase(base) {
         }
@@ -492,18 +526,37 @@ namespace details {
                     &mBase[index * product<SIZES...>::value]);
         }
 
+        operator std_array_type() {
+            std_array_type array;
+            for (size_t i = 0; i < SIZE1; ++i) {
+                array[i] = (*this)[i];
+            }
+            return array;
+        }
+
     private:
         const T *mBase;
     };
 
     template<typename T, size_t SIZE1>
     struct const_accessor<T, SIZE1> {
+
+        using std_array_type = typename std_array<T, SIZE1>::type;
+
         explicit const_accessor(const T *base)
             : mBase(base) {
         }
 
         const T &operator[](size_t index) const {
             return mBase[index];
+        }
+
+        operator std_array_type() {
+            std_array_type array;
+            for (size_t i = 0; i < SIZE1; ++i) {
+                array[i] = (*this)[i];
+            }
+            return array;
         }
 
     private:
@@ -514,9 +567,26 @@ namespace details {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A multidimensional array of T's. Assumes that T::operator=(const T &) is defined.
 template<typename T, size_t SIZE1, size_t... SIZES>
 struct hidl_array {
+
+    using std_array_type = typename details::std_array<T, SIZE1, SIZES...>::type;
+
     hidl_array() = default;
+
+    // Copies the data from source, using T::operator=(const T &).
+    hidl_array(const T *source) {
+        for (size_t i = 0; i < elementCount(); ++i) {
+            mBuffer[i] = source[i];
+        }
+    }
+
+    // Copies the data from the given std::array, using T::operator=(const T &).
+    hidl_array(const std_array_type &array) {
+        details::accessor<T, SIZE1, SIZES...> modifier(mBuffer);
+        modifier = array;
+    }
 
     T *data() { return mBuffer; }
     const T *data() const { return mBuffer; }
@@ -537,16 +607,35 @@ struct hidl_array {
         return std::make_tuple(SIZE1, SIZES...);
     }
 
+    static constexpr size_t elementCount() {
+        return details::product<SIZE1, SIZES...>::value;
+    }
+
+    operator std_array_type() const {
+        return details::const_accessor<T, SIZE1, SIZES...>(mBuffer);
+    }
+
 private:
-    T mBuffer[details::product<SIZE1, SIZES...>::value];
+    T mBuffer[elementCount()];
 };
 
+// An array of T's. Assumes that T::operator=(const T &) is defined.
 template<typename T, size_t SIZE1>
 struct hidl_array<T, SIZE1> {
+
+    using std_array_type = typename details::std_array<T, SIZE1>::type;
+
     hidl_array() = default;
+
+    // Copies the data from source, using T::operator=(const T &).
     hidl_array(const T *source) {
-        memcpy(mBuffer, source, SIZE1 * sizeof(T));
+        for (size_t i = 0; i < elementCount(); ++i) {
+            mBuffer[i] = source[i];
+        }
     }
+
+    // Copies the data from the given std::array, using T::operator=(const T &).
+    hidl_array(const std_array_type &array) : hidl_array(array.data()) {}
 
     T *data() { return mBuffer; }
     const T *data() const { return mBuffer; }
@@ -560,6 +649,16 @@ struct hidl_array<T, SIZE1> {
     }
 
     static constexpr size_t size() { return SIZE1; }
+    static constexpr size_t elementCount() { return SIZE1; }
+
+    // Copies the data to an std::array, using T::operator=(T).
+    operator std_array_type() const {
+        std_array_type array;
+        for (size_t i = 0; i < SIZE1; ++i) {
+            array[i] = mBuffer[i];
+        }
+        return array;
+    }
 
 private:
     T mBuffer[SIZE1];
