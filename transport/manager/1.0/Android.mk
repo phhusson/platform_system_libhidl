@@ -12,6 +12,10 @@ intermediates := $(local-generated-sources-dir)
 
 HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 
+LOCAL_JAVA_LIBRARIES := \
+    android.hidl.base@1.0-java \
+
+
 #
 # Build IServiceManager.hal
 #
@@ -24,7 +28,9 @@ $(GEN): $(LOCAL_PATH)/IServiceNotification.hal
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
-        -Ljava -randroid.hidl:system/libhidl/transport \
+        -Ljava \
+        -randroid.hidl:system/libhidl/transport \
+        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceManager
 
 $(GEN): $(LOCAL_PATH)/IServiceManager.hal
@@ -41,7 +47,9 @@ $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceNotification.hal
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
-        -Ljava -randroid.hidl:system/libhidl/transport \
+        -Ljava \
+        -randroid.hidl:system/libhidl/transport \
+        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceNotification
 
 $(GEN): $(LOCAL_PATH)/IServiceNotification.hal
@@ -60,6 +68,10 @@ intermediates := $(local-generated-sources-dir)
 
 HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 
+LOCAL_STATIC_JAVA_LIBRARIES := \
+    android.hidl.base@1.0-java-static \
+
+
 #
 # Build IServiceManager.hal
 #
@@ -72,7 +84,9 @@ $(GEN): $(LOCAL_PATH)/IServiceNotification.hal
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
-        -Ljava -randroid.hidl:system/libhidl/transport \
+        -Ljava \
+        -randroid.hidl:system/libhidl/transport \
+        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceManager
 
 $(GEN): $(LOCAL_PATH)/IServiceManager.hal
@@ -89,7 +103,9 @@ $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceNotification.hal
 $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
-        -Ljava -randroid.hidl:system/libhidl/transport \
+        -Ljava \
+        -randroid.hidl:system/libhidl/transport \
+        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceNotification
 
 $(GEN): $(LOCAL_PATH)/IServiceNotification.hal

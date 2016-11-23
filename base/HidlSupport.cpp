@@ -151,8 +151,6 @@ bool hidl_string::empty() const {
     return mSize == 0;
 }
 
-const char* IBase::descriptor = "android.hardware.base@0.0::IBase";
-
 // ----------------------------------------------------------------------
 // HidlInstrumentor implementation.
 HidlInstrumentor::HidlInstrumentor(const std::string &prefix) {
