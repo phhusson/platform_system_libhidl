@@ -33,6 +33,7 @@ cc_library_shared {
     },
 
     srcs: [
+        "HidlInternal.cpp",
         "HidlSupport.cpp",
         "Status.cpp",
         "TaskRunner.cpp",

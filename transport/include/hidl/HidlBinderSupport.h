@@ -363,7 +363,9 @@ sp<IBinder> toBinder(sp<IType> iface) {
         ::android::hardware::Return<void> ret =                                          \
             this->interfaceChain(                                                        \
                 [&success, &sm, &serviceName, &binderIface](const auto &chain) {         \
-                    success = sm->add(chain, serviceName.c_str(), binderIface);          \
+                    ::android::hardware::Return<bool> addRet =                           \
+                            sm->add(chain, serviceName.c_str(), binderIface);            \
+                    success = addRet.isOk() && addRet.get();                             \
                 });                                                                      \
         success = success && ret.getStatus().isOk();                                     \
         return success ? ::android::OK : ::android::UNKNOWN_ERROR;                       \
@@ -380,9 +382,11 @@ sp<IBinder> toBinder(sp<IType> iface) {
         if (sm == nullptr) {                                                             \
             return false;                                                                \
         }                                                                                \
-        return sm->registerForNotifications(PACKAGE "::I" #INTERFACE,                    \
-                                            serviceName,                                 \
-                                            notification);                               \
+        ::android::hardware::Return<bool> success =                                      \
+                sm->registerForNotifications(PACKAGE "::I" #INTERFACE,                   \
+                                             serviceName,                                \
+                                             notification);                              \
+        return success.isOk() && success.get();                                          \
     }
 
 
