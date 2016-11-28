@@ -24,6 +24,7 @@
 #include <cutils/native_handle.h>
 #include <cutils/properties.h>
 #include <functional>
+#include <hidl/HidlInternal.h>
 #include <hidl/Status.h>
 #include <map>
 #include <tuple>
@@ -34,78 +35,6 @@
 
 namespace android {
 namespace hardware {
-
-namespace details {
-
-// hidl_log_base is a base class that templatized
-// classes implemented in a header can inherit from,
-// to avoid creating dependencies on liblog.
-struct hidl_log_base {
-    void logAlwaysFatal(const char *message);
-};
-
-// HIDL client/server code should *NOT* use this class.
-//
-// hidl_pointer wraps a pointer without taking ownership,
-// and stores it in a union with a uint64_t. This ensures
-// that we always have enough space to store a pointer,
-// regardless of whether we're running in a 32-bit or 64-bit
-// process.
-template<typename T>
-struct hidl_pointer {
-    hidl_pointer()
-        : mPointer(nullptr) {
-    }
-    hidl_pointer(T* ptr)
-        : mPointer(ptr) {
-    }
-    hidl_pointer(const hidl_pointer<T>& other) {
-        mPointer = other.mPointer;
-    }
-    hidl_pointer(hidl_pointer<T>&& other) {
-        *this = std::move(other);
-    }
-
-    hidl_pointer &operator=(const hidl_pointer<T>& other) {
-        mPointer = other.mPointer;
-        return *this;
-    }
-    hidl_pointer &operator=(hidl_pointer<T>&& other) {
-        mPointer = other.mPointer;
-        other.mPointer = nullptr;
-        return *this;
-    }
-    hidl_pointer &operator=(T* ptr) {
-        mPointer = ptr;
-        return *this;
-    }
-
-    operator T*() const {
-        return mPointer;
-    }
-    explicit operator void*() const { // requires explicit cast to avoid ambiguity
-        return mPointer;
-    }
-    T& operator*() const {
-        return *mPointer;
-    }
-    T* operator->() const {
-        return mPointer;
-    }
-    T &operator[](size_t index) {
-        return mPointer[index];
-    }
-    const T &operator[](size_t index) const {
-        return mPointer[index];
-    }
-private:
-    union {
-        T* mPointer;
-        uint64_t _pad;
-    };
-};
-} // namespace details
-
 
 // hidl_handle wraps a pointer to a native_handle_t in a hidl_pointer,
 // so that it can safely be transferred between 32-bit and 64-bit processes.
