@@ -34,6 +34,16 @@
 #include <vector>
 
 namespace android {
+
+// this file is included by all hidl interface, so we must forward declare the IMemory type.
+namespace hidl {
+namespace memory {
+namespace V1_0 {
+    struct IMemory;
+}; // namespace V1_0
+}; // namespace manager
+}; // namespace hidl
+
 namespace hardware {
 
 // hidl_handle wraps a pointer to a native_handle_t in a hidl_pointer,
@@ -168,6 +178,75 @@ inline bool operator==(const char *s, const hidl_string &hs) {
 inline bool operator!=(const char *s, const hidl_string &hs) {
     return !(s == hs);
 }
+
+// hidl_memory is a structure that can be used to transfer
+// pieces of shared memory between processes. The assumption
+// of this object is that the memory remains accessible as
+// long as the file descriptors in the enclosed mHandle
+// - as well as all of its cross-process dups() - remain opened.
+struct hidl_memory {
+
+    hidl_memory() : mOwnsHandle(false), mHandle(nullptr), mSize(0), mName("") {
+    }
+
+    /**
+     * Creates a hidl_memory object and takes ownership of the handle.
+     */
+    hidl_memory(const hidl_string &name, const hidl_handle &handle, size_t size)
+       : mOwnsHandle(true),
+         mHandle(handle),
+         mSize(size),
+         mName(name)
+    {}
+
+    // copy constructor
+    hidl_memory(const hidl_memory& other) {
+        *this = other;
+    }
+
+    // copy assignment
+    hidl_memory &operator=(const hidl_memory &other) {
+        if (this != &other) {
+            mOwnsHandle = true;
+            mHandle = native_handle_clone(other.mHandle);
+            mSize = other.mSize;
+            mName = other.mName;
+        }
+
+        return *this;
+    }
+
+    // TODO move constructor/move assignment
+
+    ~hidl_memory() {
+        // TODO if we had previously mapped from this object, unmap
+        if (mOwnsHandle) {
+            native_handle_close(mHandle);
+        }
+    }
+
+    const native_handle_t* handle() const {
+        return mHandle;
+    }
+
+    const hidl_string &name() const {
+        return mName;
+    }
+
+    size_t size() const {
+        return mSize;
+    }
+
+    // offsetof(hidl_memory, mHandle) exposed since mHandle is private.
+    static const size_t kOffsetOfHandle;
+    // offsetof(hidl_memory, mName) exposed since mHandle is private.
+    static const size_t kOffsetOfName;
+private:
+    bool mOwnsHandle;
+    hidl_handle mHandle;
+    size_t mSize;
+    hidl_string mName;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 

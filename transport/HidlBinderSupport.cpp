@@ -27,6 +27,47 @@ namespace hardware {
 
 std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap{};
 
+const size_t hidl_memory::kOffsetOfHandle = offsetof(hidl_memory, mHandle);
+const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
+
+status_t readEmbeddedFromParcel(hidl_memory * /* memory */,
+        const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
+    ::android::status_t _hidl_err = ::android::OK;
+    const native_handle_t *_hidl_memory_handle = parcel.readEmbeddedNativeHandle(
+            parentHandle,
+            parentOffset + hidl_memory::kOffsetOfHandle);
+
+    if (_hidl_memory_handle == nullptr) {
+        _hidl_err = ::android::UNKNOWN_ERROR;
+        return _hidl_err;
+    }
+
+    _hidl_err = readEmbeddedFromParcel(
+            (hidl_string*) nullptr,
+            parcel,
+            parentHandle,
+            parentOffset + hidl_memory::kOffsetOfName);
+
+    return _hidl_err;
+}
+
+status_t writeEmbeddedToParcel(const hidl_memory &memory,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset) {
+    status_t _hidl_err = parcel->writeEmbeddedNativeHandle(
+            memory.handle(),
+            parentHandle,
+            parentOffset + hidl_memory::kOffsetOfHandle);
+
+    if (_hidl_err == ::android::OK) {
+        _hidl_err = writeEmbeddedToParcel(
+            memory.name(),
+            parcel,
+            parentHandle,
+            parentOffset + hidl_memory::kOffsetOfName);
+    }
+
+    return _hidl_err;
+}
 // static
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 
