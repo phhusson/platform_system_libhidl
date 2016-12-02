@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "HidlSupport"
 
 #include <hidl/HidlSupport.h>
 
 #include <android-base/logging.h>
+
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <cutils/properties.h>
 #include <regex>
