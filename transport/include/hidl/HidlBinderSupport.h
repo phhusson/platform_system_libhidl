@@ -28,6 +28,14 @@
 namespace android {
 namespace hardware {
 
+// ---------------------- hidl_memory
+
+status_t readEmbeddedFromParcel(hidl_memory *memory,
+        const Parcel &parcel, size_t parentHandle, size_t parentOffset);
+
+status_t writeEmbeddedToParcel(const hidl_memory &memory,
+        Parcel *parcel, size_t parentHandle, size_t parentOffset);
+
 // ---------------------- hidl_string
 
 status_t readEmbeddedFromParcel(hidl_string *string,
