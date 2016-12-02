@@ -12,29 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-subdirs = [
-    "base",           // libhidlbase
-    "libhidlmemory",  // libhidlmemory
-    "transport",      // libhidltransport
-]
-
-cc_test {
-    name: "libhidl_test",
-    gtest: false,
-    srcs: ["test_main.cpp"],
-
+cc_library_shared {
+    name: "libhidlmemory",
     shared_libs: [
         "libbase",
-        "libhidlbase",
-        "libhidltransport",
-        "libhwbinder",
         "liblog",
         "libutils",
+        "libcutils",
+        "libhidlbase",
+        "libhidltransport",
+        "android.hidl.memory@1.0"
     ],
-    static_libs: ["libgtest"],
+    local_include_dirs: ["include"],
+    export_include_dirs: ["include"],
 
-    cflags: [
-        "-O0",
-        "-g",
+    export_shared_lib_headers: [
+        "android.hidl.memory@1.0",
+        "libhidlbase"
     ],
+
+    srcs: [
+        "mapping.cpp"
+    ],
+
+    product_variables: {
+        debuggable: {
+            cflags: ["-DLIBHIDL_TARGET_DEBUGGABLE"],
+        },
+    },
 }
