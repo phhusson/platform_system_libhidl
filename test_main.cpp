@@ -23,12 +23,23 @@
 #include <vector>
 
 #define EXPECT_ARRAYEQ(__a1__, __a2__, __size__) EXPECT_TRUE(isArrayEqual(__a1__, __a2__, __size__))
+#define EXPECT_2DARRAYEQ(__a1__, __a2__, __size1__, __size2__) \
+        EXPECT_TRUE(is2dArrayEqual(__a1__, __a2__, __size1__, __size2__))
 
 template<typename T, typename S>
 static inline bool isArrayEqual(const T arr1, const S arr2, size_t size) {
     for(size_t i = 0; i < size; i++)
         if(arr1[i] != arr2[i])
             return false;
+    return true;
+}
+
+template<typename T, typename S>
+static inline bool is2dArrayEqual(const T arr1, const S arr2, size_t size1, size_t size2) {
+    for(size_t i = 0; i < size1; i++)
+        for (size_t j = 0; j < size2; j++)
+            if(arr1[i][j] != arr2[i][j])
+                return false;
     return true;
 }
 
@@ -173,6 +184,29 @@ void great(android::hardware::hidl_vec<T>) {}
 TEST_F(LibHidlTest, VecCopyTest) {
     android::hardware::hidl_vec<int32_t> v;
     great(v);
+}
+
+TEST_F(LibHidlTest, StdArrayTest) {
+    using android::hardware::hidl_array;
+    hidl_array<int32_t, 5> array{(int32_t[5]){1, 2, 3, 4, 5}};
+    std::array<int32_t, 5> stdArray = array;
+    EXPECT_ARRAYEQ(array.data(), stdArray.data(), 5);
+    hidl_array<int32_t, 5> array2 = stdArray;
+    EXPECT_ARRAYEQ(array.data(), array2.data(), 5);
+}
+
+TEST_F(LibHidlTest, MultiDimStdArrayTest) {
+    using android::hardware::hidl_array;
+    hidl_array<int32_t, 2, 3> array;
+    for (size_t i = 0; i < 2; i++) {
+        for (size_t j = 0; j < 3; j++) {
+            array[i][j] = i + j + i * j;
+        }
+    }
+    std::array<std::array<int32_t, 3>, 2> stdArray = array;
+    EXPECT_2DARRAYEQ(array, stdArray, 2, 3);
+    hidl_array<int32_t, 2, 3> array2 = stdArray;
+    EXPECT_2DARRAYEQ(array, array2, 2, 3);
 }
 
 int main(int argc, char **argv) {
