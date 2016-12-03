@@ -320,19 +320,18 @@ sp<IBinder> toBinder(sp<IType> iface) {
     {                                                                                    \
         using ::android::sp;                                                             \
         using ::android::hardware::defaultServiceManager;                                \
-        using ::android::hardware::IBinder;                                              \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
         sp<I##INTERFACE> iface;                                                          \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         if (sm != nullptr && !getStub) {                                                 \
-            sp<IBinder> binderIface;                                                     \
+            sp<::android::hidl::base::V1_0::IBase> base;                                 \
             ::android::hardware::Return<void> ret =                                      \
                 sm->get(PACKAGE "::I" #INTERFACE, serviceName.c_str(),                   \
-                    [&binderIface](sp<IBinder> iface) {                                  \
-                        binderIface = iface;                                             \
+                    [&base](sp<::android::hidl::base::V1_0::IBase> found) {              \
+                        base = found;                                                    \
                     });                                                                  \
             if (ret.getStatus().isOk()) {                                                \
-                iface = IHw##INTERFACE::asInterface(binderIface);                        \
+                iface = I##INTERFACE::castFrom(base);                                    \
                 if (iface != nullptr) {                                                  \
                     return iface;                                                        \
                 }                                                                        \

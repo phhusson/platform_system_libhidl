@@ -16,6 +16,7 @@ subdirs = [
     "manager/1.0",
     "memory/1.0",
     "memory/1.0/default",
+    "base/1.0"
 ]
 
 cc_library_shared {
@@ -36,9 +37,18 @@ cc_library_shared {
 
     export_include_dirs: ["include"],
 
-    generated_sources: ["android.hidl.manager@1.0_genc++"],
-    generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
-    export_generated_headers: ["android.hidl.manager@1.0_genc++_headers"],
+    generated_sources: [
+        "android.hidl.manager@1.0_genc++",
+        "android.hidl.base@1.0_genc++"
+    ],
+    generated_headers: [
+        "android.hidl.manager@1.0_genc++_headers",
+        "android.hidl.base@1.0_genc++_headers"
+    ],
+    export_generated_headers: [
+        "android.hidl.manager@1.0_genc++_headers",
+        "android.hidl.base@1.0_genc++_headers"
+    ],
 
     srcs: [
         "HidlBinderSupport.cpp",
