@@ -423,7 +423,7 @@ private:
     // copy from an array-like object, assuming my resources are freed.
     template <typename Array>
     void copyFrom(const Array &data, size_t size) {
-        mSize = size;
+        mSize = static_cast<uint32_t>(size);
         mOwnsBuffer = true;
         if (mSize > 0) {
             mBuffer = new T[size];
