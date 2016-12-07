@@ -25,5 +25,7 @@ namespace hardware {
 Mutex gDefaultServiceManagerLock;
 sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 
+std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap{};
+
 }   // namespace hardware
 }   // namespace android
