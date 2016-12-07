@@ -18,11 +18,12 @@
 #define ANDROID_HIDL_BINDER_SUPPORT_H
 
 #include <hidl/HidlSupport.h>
+#include <hidl/HidlTransportUtils.h>
 #include <hidl/MQDescriptor.h>
 #include <hidl/Static.h>
 #include <hwbinder/IBinder.h>
 #include <hwbinder/Parcel.h>
-
+#include <android/hidl/base/1.0/BnBase.h>
 // Defines functions for hidl_string, hidl_version, Status, hidl_vec, MQDescriptor,
 // etc. to interact with Parcel.
 
@@ -286,14 +287,14 @@ static status_t writeReferenceToParcel(
 // Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
 // and iface is of class IChild. BnChild will be used to wrapped the given iface.
 // Return nullptr if iface is null or any failure.
-template <typename IType, typename IHwType>
+template <typename IType, typename ProxyType>
 sp<IBinder> toBinder(sp<IType> iface) {
     IType *ifacePtr = iface.get();
     if (ifacePtr == nullptr) {
         return nullptr;
     }
     if (ifacePtr->isRemote()) {
-        return ::android::hardware::IInterface::asBinder(static_cast<IHwType *>(ifacePtr));
+        return ::android::hardware::IInterface::asBinder(static_cast<ProxyType *>(ifacePtr));
     } else {
         std::string myDescriptor{};
         ifacePtr->interfaceChain([&](const hidl_vec<hidl_string> &types) {
@@ -310,6 +311,26 @@ sp<IBinder> toBinder(sp<IType> iface) {
             return nullptr;
         }
         return sp<IBinder>((iter->second)(reinterpret_cast<void *>(ifacePtr)));
+    }
+}
+
+template <typename IType, typename ProxyType, typename StubType>
+sp<IType> fromBinder(const sp<IBinder>& binderIface) {
+    using ::android::hidl::base::V1_0::IBase;
+    using ::android::hidl::base::V1_0::BnBase;
+
+    if (binderIface.get() == nullptr) {
+        return nullptr;
+    }
+    if (binderIface->localBinder() == nullptr) {
+        return new ProxyType(binderIface);
+    }
+    sp<IBase> base = static_cast<BnBase*>(binderIface.get())->getImpl();
+    if (canCastInterface(base.get(), IType::descriptor)) {
+        StubType* stub = static_cast<StubType*>(binderIface.get());
+        return stub->getImpl();
+    } else {
+        return nullptr;
     }
 }
 
@@ -363,14 +384,13 @@ sp<IBinder> toBinder(sp<IType> iface) {
         using ::android::sp;                                                             \
         using ::android::hardware::defaultServiceManager;                                \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
-        sp<Bn##INTERFACE> binderIface = new Bn##INTERFACE(this);                         \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
         bool success = false;                                                            \
         ::android::hardware::Return<void> ret =                                          \
             this->interfaceChain(                                                        \
-                [&success, &sm, &serviceName, &binderIface](const auto &chain) {         \
+                [&success, &sm, &serviceName, this](const auto &chain) {                 \
                     ::android::hardware::Return<bool> addRet =                           \
-                            sm->add(chain, serviceName.c_str(), binderIface);            \
+                            sm->add(chain, serviceName.c_str(), this);                   \
                     success = addRet.isOk() && addRet;                                   \
                 });                                                                      \
         success = success && ret.getStatus().isOk();                                     \
