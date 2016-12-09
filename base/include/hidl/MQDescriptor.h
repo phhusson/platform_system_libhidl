@@ -100,7 +100,7 @@ struct MQDescriptor {
     enum GrantorType : int { READPTRPOS = 0, WRITEPTRPOS, DATAPTRPOS };
 private:
     ::android::hardware::hidl_vec<GrantorDescriptor> mGrantors;
-    ::native_handle_t *mHandle;
+    ::android::hardware::details::hidl_pointer<native_handle_t> mHandle;
     uint32_t mQuantum;
     uint32_t mFlags;
 };
@@ -175,11 +175,10 @@ MQDescriptor<flavor>::MQDescriptor(const MQDescriptor<flavor> &other)
                 other.mHandle->numFds, other.mHandle->numInts);
 
         for (int i = 0; i < other.mHandle->numFds; ++i) {
-            const_cast<native_handle_t *>(mHandle)->data[i] =
-                dup(other.mHandle->data[i]);
+            mHandle->data[i] = dup(other.mHandle->data[i]);
         }
 
-        memcpy(&const_cast<native_handle_t *>(mHandle)->data[other.mHandle->numFds],
+        memcpy(&mHandle->data[other.mHandle->numFds],
                &other.mHandle->data[other.mHandle->numFds],
                other.mHandle->numInts * sizeof(int));
     }
@@ -188,8 +187,8 @@ MQDescriptor<flavor>::MQDescriptor(const MQDescriptor<flavor> &other)
 template<MQFlavor flavor>
 MQDescriptor<flavor>::~MQDescriptor() {
     if (mHandle != nullptr) {
-        native_handle_close(const_cast<native_handle_t *>(mHandle));
-        native_handle_delete(const_cast<native_handle_t *>(mHandle));
+        native_handle_close(mHandle);
+        native_handle_delete(mHandle);
     }
 }
 
