@@ -149,21 +149,17 @@ public:
     Return(T v) : mVal{v} {}
     Return(Status s) : mStatus(s) {}
 
-    T get() const {
+    bool isOk() const {
+        return mStatus.isOk();
+    }
+
+    operator T() const {
         if (!mStatus.isOk()) {
             logAlwaysFatal("Attempted to retrieve value from hidl service, "
                            "but there was a transport error.");
         }
         return mVal;
     }
-    bool isOk() const {
-        return mStatus.isOk();
-    }
-
-    // TODO(b/31348667) deprecate, remove all usage, remove function
-    // Can't mark as deprecated yet because of all the projects built with -Werror.
-    // [[deprecated("Replaced by get()")]]
-    operator T() const { return mVal; }
 
     const Status& getStatus() const {
         return mStatus;
