@@ -17,8 +17,10 @@
 // All static variables go here, to control initialization and
 // destruction order in the library.
 
-#include <utils/threads.h>
+#include <android/hidl/base/1.0/IBase.h>
 #include <android/hidl/manager/1.0/IServiceManager.h>
+#include <hwbinder/IBinder.h>
+#include <utils/threads.h>
 
 namespace android {
 namespace hardware {
@@ -26,6 +28,11 @@ namespace hardware {
 // For ServiceManagement.cpp
 extern Mutex gDefaultServiceManagerLock;
 extern sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
+
+// For HidlBinderSupport
+// value function receives reinterpret_cast<void *>(static_cast<IFoo *>(foo)),
+// returns sp<IBinder>
+extern std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap;
 
 }   // namespace hardware
 }   // namespace android
