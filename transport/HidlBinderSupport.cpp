@@ -25,8 +25,6 @@
 namespace android {
 namespace hardware {
 
-std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap{};
-
 const size_t hidl_memory::kOffsetOfHandle = offsetof(hidl_memory, mHandle);
 const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
 

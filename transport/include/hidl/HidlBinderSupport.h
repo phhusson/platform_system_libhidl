@@ -19,6 +19,7 @@
 
 #include <hidl/HidlSupport.h>
 #include <hidl/MQDescriptor.h>
+#include <hidl/Static.h>
 #include <hwbinder/IBinder.h>
 #include <hwbinder/Parcel.h>
 
@@ -280,8 +281,6 @@ static status_t writeReferenceToParcel(
 
 // ---------------------- support for casting interfaces
 
-extern std::map<std::string, std::function<sp<IBinder>(void*)>> gBnConstructorMap;
-
 // Construct a smallest possible binder from the given interface.
 // If it is remote, then its remote() will be retrieved.
 // Otherwise, the smallest possible BnChild is found where IChild is a subclass of IType
@@ -303,7 +302,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
             }
         });
         if (myDescriptor.empty()) {
-            // interfaceChain fails || types.size() == 0
+            // interfaceChain fails
             return nullptr;
         }
         auto iter = gBnConstructorMap.find(myDescriptor);

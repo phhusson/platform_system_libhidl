@@ -17,8 +17,8 @@
 #ifndef ANDROID_HIDL_TRANSPORT_SUPPORT_H
 #define ANDROID_HIDL_TRANSPORT_SUPPORT_H
 
-#include <hidl/HidlSupport.h>
 #include <hidl/HidlBinderSupport.h>
+#include <hidl/HidlSupport.h>
 
 namespace android {
 namespace hardware {
