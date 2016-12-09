@@ -38,7 +38,8 @@
 
 namespace android {
 
-// this file is included by all hidl interface, so we must forward declare the IMemory type.
+// this file is included by all hidl interface, so we must forward declare the
+// IMemory and IBase types.
 namespace hidl {
 namespace memory {
 namespace V1_0 {
@@ -47,7 +48,22 @@ namespace V1_0 {
 }; // namespace manager
 }; // namespace hidl
 
+namespace hidl {
+namespace base {
+namespace V1_0 {
+    struct IBase;
+}; // namespace V1_0
+}; // namespace base
+}; // namespace hidl
+
 namespace hardware {
+
+// hidl_death_recipient is a callback interfaced that can be used with
+// linkToDeath() / unlinkToDeath()
+struct hidl_death_recipient : public virtual RefBase {
+    virtual void serviceDied(uint64_t cookie,
+            const ::android::wp<::android::hidl::base::V1_0::IBase>& who) = 0;
+};
 
 // hidl_handle wraps a pointer to a native_handle_t in a hidl_pointer,
 // so that it can safely be transferred between 32-bit and 64-bit processes.
