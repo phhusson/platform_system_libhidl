@@ -372,7 +372,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
                 [&success, &sm, &serviceName, &binderIface](const auto &chain) {         \
                     ::android::hardware::Return<bool> addRet =                           \
                             sm->add(chain, serviceName.c_str(), binderIface);            \
-                    success = addRet.isOk() && addRet.get();                             \
+                    success = addRet.isOk() && addRet;                                   \
                 });                                                                      \
         success = success && ret.getStatus().isOk();                                     \
         return success ? ::android::OK : ::android::UNKNOWN_ERROR;                       \
@@ -393,7 +393,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
                 sm->registerForNotifications(PACKAGE "::I" #INTERFACE,                   \
                                              serviceName,                                \
                                              notification);                              \
-        return success.isOk() && success.get();                                          \
+        return success.isOk() && success;                                                \
     }
 
 
