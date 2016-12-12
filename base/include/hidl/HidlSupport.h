@@ -28,7 +28,9 @@
 #include <hidl/HidlInternal.h>
 #include <hidl/Status.h>
 #include <map>
+#include <stddef.h>
 #include <tuple>
+#include <type_traits>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
@@ -395,25 +397,52 @@ struct hidl_vec : private details::hidl_log_base {
     // offsetof(hidl_string, mBuffer) exposed since mBuffer is private.
     static const size_t kOffsetOfBuffer;
 
+private:
     // Define std interator interface for walking the array contents
-    // TODO:  it might be nice to implement a full featured random access iterator...
-    class iterator : public std::iterator<std::bidirectional_iterator_tag, T>
+    template<bool is_const>
+    class iter : public std::iterator<
+            std::random_access_iterator_tag, /* Category */
+            T,
+            ptrdiff_t, /* Distance */
+            typename std::conditional<is_const, const T *, T *>::type /* Pointer */,
+            typename std::conditional<is_const, const T &, T &>::type /* Reference */>
     {
+        using traits = std::iterator_traits<iter>;
+        using ptr_type = typename traits::pointer;
+        using ref_type = typename traits::reference;
+        using diff_type = typename traits::difference_type;
     public:
-        iterator(T* ptr) : mPtr(ptr) { }
-        iterator operator++()    { iterator i = *this; mPtr++; return i; }
-        iterator operator++(int) { mPtr++; return *this; }
-        iterator operator--()    { iterator i = *this; mPtr--; return i; }
-        iterator operator--(int) { mPtr--; return *this; }
-        T& operator*()  { return *mPtr; }
-        T* operator->() { return mPtr; }
-        bool operator==(const iterator& rhs) const { return mPtr == rhs.mPtr; }
-        bool operator!=(const iterator& rhs) const { return mPtr != rhs.mPtr; }
+        iter(ptr_type ptr) : mPtr(ptr) { }
+        inline iter &operator++()    { mPtr++; return *this; }
+        inline iter  operator++(int) { iter i = *this; mPtr++; return i; }
+        inline iter &operator--()    { mPtr--; return *this; }
+        inline iter  operator--(int) { iter i = *this; mPtr--; return i; }
+        inline friend iter operator+(diff_type n, const iter &it) { return it.mPtr + n; }
+        inline iter  operator+(diff_type n) const { return mPtr + n; }
+        inline iter  operator-(diff_type n) const { return mPtr - n; }
+        inline diff_type operator-(const iter &other) const { return mPtr - other.mPtr; }
+        inline iter &operator+=(diff_type n) { mPtr += n; return *this; }
+        inline iter &operator-=(diff_type n) { mPtr -= n; return *this; }
+        inline ref_type operator*() const  { return *mPtr; }
+        inline ptr_type operator->() const { return mPtr; }
+        inline bool operator==(const iter &rhs) const { return mPtr == rhs.mPtr; }
+        inline bool operator!=(const iter &rhs) const { return mPtr != rhs.mPtr; }
+        inline bool operator< (const iter &rhs) const { return mPtr <  rhs.mPtr; }
+        inline bool operator> (const iter &rhs) const { return mPtr >  rhs.mPtr; }
+        inline bool operator<=(const iter &rhs) const { return mPtr <= rhs.mPtr; }
+        inline bool operator>=(const iter &rhs) const { return mPtr >= rhs.mPtr; }
+        inline ref_type operator[](size_t n) const { return mPtr[n]; }
     private:
-        T* mPtr;
+        ptr_type mPtr;
     };
+public:
+    using iterator       = iter<false /* is_const */>;
+    using const_iterator = iter<true  /* is_const */>;
+
     iterator begin() { return data(); }
     iterator end() { return data()+mSize; }
+    const_iterator begin() const { return data(); }
+    const_iterator end() const { return data()+mSize; }
 
 private:
     details::hidl_pointer<T> mBuffer;
