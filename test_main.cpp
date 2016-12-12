@@ -110,7 +110,7 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_FALSE(hs1 == stringNE);
 }
 
-TEST_F(LibHidlTest, VecTest) {
+TEST_F(LibHidlTest, VecInitTest) {
     using android::hardware::hidl_vec;
     using std::vector;
     int32_t array[] = {5, 6, 7};
@@ -128,19 +128,65 @@ TEST_F(LibHidlTest, VecTest) {
     hidl_vec<int32_t> v3 = {5, 6, 7}; // initializer_list
     EXPECT_EQ(v3.size(), 3ul);
     EXPECT_ARRAYEQ(v3, array, v3.size());
+}
+
+TEST_F(LibHidlTest, VecIterTest) {
+    int32_t array[] = {5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv1 = std::vector<int32_t>(array, array + 3);
 
     auto iter = hv1.begin();    // iterator begin()
-    EXPECT_EQ(*iter, 5);
-    iter++;                     // post increment
+    EXPECT_EQ(*iter++, 5);
     EXPECT_EQ(*iter, 6);
-    ++iter;                     // pre increment
+    EXPECT_EQ(*++iter, 7);
+    EXPECT_EQ(*iter--, 7);
+    EXPECT_EQ(*iter, 6);
+    EXPECT_EQ(*--iter, 5);
+
+    iter += 2;
     EXPECT_EQ(*iter, 7);
+    iter -= 2;
+    EXPECT_EQ(*iter, 5);
+
+    iter++;
+    EXPECT_EQ(*(iter + 1), 7);
+    EXPECT_EQ(*(1 + iter), 7);
+    EXPECT_EQ(*(iter - 1), 5);
+    EXPECT_EQ(*iter, 6);
+
+    auto five = iter - 1;
+    auto seven = iter + 1;
+    EXPECT_EQ(seven - five, 2);
+    EXPECT_EQ(five - seven, -2);
+
+    EXPECT_LT(five, seven);
+    EXPECT_LE(five, seven);
+    EXPECT_GT(seven, five);
+    EXPECT_GE(seven, five);
+
+    EXPECT_EQ(seven[0], 7);
+    EXPECT_EQ(five[1], 6);
+}
+
+TEST_F(LibHidlTest, VecIterForTest) {
+    using android::hardware::hidl_vec;
+    int32_t array[] = {5, 6, 7};
+    hidl_vec<int32_t> hv1 = std::vector<int32_t>(array, array + 3);
 
     int32_t sum = 0;            // range based for loop interoperability
     for (auto &&i: hv1) {
         sum += i;
     }
     EXPECT_EQ(sum, 5+6+7);
+
+    for (auto iter = hv1.begin(); iter < hv1.end(); ++iter) {
+        *iter += 10;
+    }
+    const hidl_vec<int32_t> &v4 = hv1;
+    sum = 0;
+    for (const auto &i : v4) {
+        sum += i;
+    }
+    EXPECT_EQ(sum, 15+16+17);
 }
 
 TEST_F(LibHidlTest, ArrayTest) {
