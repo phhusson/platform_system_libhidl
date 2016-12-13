@@ -19,7 +19,7 @@ LOCAL_JAVA_LIBRARIES := \
 #
 # Build IServiceManager.hal
 #
-GEN := $(intermediates)/android/hidl/manager/V1_0/IServiceManager.java
+GEN := $(intermediates)/android/hidl/manager/1.0/IServiceManager.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceManager.hal
@@ -40,7 +40,7 @@ LOCAL_GENERATED_SOURCES += $(GEN)
 #
 # Build IServiceNotification.hal
 #
-GEN := $(intermediates)/android/hidl/manager/V1_0/IServiceNotification.java
+GEN := $(intermediates)/android/hidl/manager/1.0/IServiceNotification.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceNotification.hal
@@ -75,7 +75,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 #
 # Build IServiceManager.hal
 #
-GEN := $(intermediates)/android/hidl/manager/V1_0/IServiceManager.java
+GEN := $(intermediates)/android/hidl/manager/1.0/IServiceManager.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceManager.hal
@@ -96,7 +96,7 @@ LOCAL_GENERATED_SOURCES += $(GEN)
 #
 # Build IServiceNotification.hal
 #
-GEN := $(intermediates)/android/hidl/manager/V1_0/IServiceNotification.java
+GEN := $(intermediates)/android/hidl/manager/1.0/IServiceNotification.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IServiceNotification.hal
