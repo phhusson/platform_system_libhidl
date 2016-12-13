@@ -141,45 +141,66 @@ private:
 // For gtest output logging
 std::stringstream& operator<< (std::stringstream& stream, const Status& s);
 
-template<typename T> class Return : private details::hidl_log_base {
+namespace details {
+    class return_status : public details::hidl_log_base {
+    private:
+        Status mStatus {};
+        mutable bool mCheckedStatus = false;
+    public:
+        return_status() {}
+        return_status(Status s) : mStatus(s) {}
+
+        return_status(const return_status &) = default;
+
+        ~return_status() {
+            // mCheckedStatus must be checked before isOk since isOk modifies mCheckedStatus
+            if (!mCheckedStatus && !isOk()) {
+                logAlwaysFatal("HIDL return status not checked and transport error occured.");
+            }
+        }
+
+        bool isOk() const {
+            mCheckedStatus = true;
+            return mStatus.isOk();
+        }
+
+        // TODO(b/31348667) deprecate and replace with 'string description()'
+        const Status& getStatus() const {
+            mCheckedStatus = true;
+            return mStatus;
+        }
+    };
+}  // namespace details
+
+template<typename T> class Return : public details::return_status {
 private:
     T mVal {};
-    Status mStatus {};
 public:
-    Return(T v) : mVal{v} {}
-    Return(Status s) : mStatus(s) {}
+    Return(T v) : details::return_status(), mVal{v} {}
+    Return(Status s) : details::return_status(s) {}
 
-    bool isOk() const {
-        return mStatus.isOk();
-    }
+    Return(const Return &) = default;
+
+    ~Return() = default;
 
     operator T() const {
-        if (!mStatus.isOk()) {
+        if (!isOk()) {
             logAlwaysFatal("Attempted to retrieve value from hidl service, "
                            "but there was a transport error.");
         }
         return mVal;
     }
 
-    const Status& getStatus() const {
-        return mStatus;
-    }
 };
 
-template<> class Return<void> {
-private:
-    Status mStatus {};
+template<> class Return<void> : public details::return_status {
 public:
-    Return() = default;
-    Return(Status s) : mStatus(s) {}
+    Return() : details::return_status() {}
+    Return(Status s) : details::return_status(s) {}
 
-    bool isOk() const {
-        return mStatus.isOk();
-    }
+    Return(const Return &) = default;
 
-    const Status& getStatus() const {
-        return mStatus;
-    }
+    ~Return() = default;
 };
 
 static inline Return<void> Void() {
