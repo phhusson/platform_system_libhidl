@@ -15,7 +15,7 @@ HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 #
 # Build IBase.hal
 #
-GEN := $(intermediates)/android/hidl/base/1.0/IBase.java
+GEN := $(intermediates)/android/hidl/base/V1_0/IBase.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IBase.hal
@@ -46,7 +46,7 @@ HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 #
 # Build IBase.hal
 #
-GEN := $(intermediates)/android/hidl/base/1.0/IBase.java
+GEN := $(intermediates)/android/hidl/base/V1_0/IBase.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/IBase.hal
