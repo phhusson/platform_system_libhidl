@@ -16,6 +16,7 @@
 
 #define LOG_TAG "ServiceManagement"
 
+#include <hidl/HidlBinderSupport.h>
 #include <hidl/ServiceManagement.h>
 #include <hidl/Static.h>
 #include <hidl/Status.h>
@@ -28,10 +29,12 @@
 #include <unistd.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
-#include <android/hidl/manager/1.0/IHwServiceManager.h>
+#include <android/hidl/manager/1.0/BpServiceManager.h>
+#include <android/hidl/manager/1.0/BnServiceManager.h>
 
-using android::hidl::manager::V1_0::IHwServiceManager;
 using android::hidl::manager::V1_0::IServiceManager;
+using android::hidl::manager::V1_0::BpServiceManager;
+using android::hidl::manager::V1_0::BnServiceManager;
 
 namespace android {
 namespace hardware {
@@ -47,7 +50,7 @@ sp<IServiceManager> defaultServiceManager() {
     {
         AutoMutex _l(gDefaultServiceManagerLock);
         while (gDefaultServiceManager == NULL) {
-            gDefaultServiceManager = interface_cast<IHwServiceManager>(
+            gDefaultServiceManager = fromBinder<IServiceManager, BpServiceManager, BnServiceManager>(
                 ProcessState::self()->getContextObject(NULL));
             if (gDefaultServiceManager == NULL)
                 sleep(1);
