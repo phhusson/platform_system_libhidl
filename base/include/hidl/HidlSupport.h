@@ -703,6 +703,23 @@ public:
         return (mMajor == other.get_major() && mMinor == other.get_minor());
     }
 
+    bool operator<(const hidl_version& other) const {
+        return (mMajor < other.get_major() ||
+                (mMajor == other.get_major() && mMinor < other.get_minor()));
+    }
+
+    bool operator>(const hidl_version& other) const {
+        return other < *this;
+    }
+
+    bool operator<=(const hidl_version& other) const {
+        return !(*this > other);
+    }
+
+    bool operator>=(const hidl_version& other) const {
+        return !(*this < other);
+    }
+
     constexpr uint16_t get_major() const { return mMajor; }
     constexpr uint16_t get_minor() const { return mMinor; }
 
@@ -798,4 +815,3 @@ struct HidlInstrumentor {
 
 
 #endif  // ANDROID_HIDL_SUPPORT_H
-
