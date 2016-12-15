@@ -255,6 +255,31 @@ TEST_F(LibHidlTest, MultiDimStdArrayTest) {
     EXPECT_2DARRAYEQ(array, array2, 2, 3);
 }
 
+TEST_F(LibHidlTest, HidlVersionTest) {
+    using android::hardware::hidl_version;
+    hidl_version v1_0{1, 0};
+    EXPECT_EQ(1, v1_0.get_major());
+    EXPECT_EQ(0, v1_0.get_minor());
+    hidl_version v2_0{2, 0};
+    hidl_version v2_1{2, 1};
+    hidl_version v2_2{2, 2};
+    hidl_version v3_0{3, 0};
+    hidl_version v3_0b{3,0};
+
+    EXPECT_TRUE(v1_0 < v2_0);
+    EXPECT_TRUE(v2_0 < v2_1);
+    EXPECT_TRUE(v2_1 < v3_0);
+    EXPECT_TRUE(v2_0 > v1_0);
+    EXPECT_TRUE(v2_1 > v2_0);
+    EXPECT_TRUE(v3_0 > v2_1);
+    EXPECT_TRUE(v3_0 == v3_0b);
+    EXPECT_TRUE(v3_0 <= v3_0b);
+    EXPECT_TRUE(v2_2 <= v3_0);
+    EXPECT_TRUE(v3_0 >= v3_0b);
+    EXPECT_TRUE(v3_0 >= v2_2);
+}
+
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
