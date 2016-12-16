@@ -156,7 +156,9 @@ bool hidl_string::empty() const {
 HidlInstrumentor::HidlInstrumentor(const std::string &prefix) {
     mEnableInstrumentation = property_get_bool("hal.instrumentation.enable",
                                                false);
-    registerInstrumentationCallbacks(prefix, &mInstrumentationCallbacks);
+    if (mEnableInstrumentation) {
+        registerInstrumentationCallbacks(prefix, &mInstrumentationCallbacks);
+    }
 }
 
 HidlInstrumentor:: ~HidlInstrumentor() {}
