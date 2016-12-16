@@ -385,6 +385,9 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
         using ::android::hardware::defaultServiceManager;                                \
         using ::android::hidl::manager::V1_0::IServiceManager;                           \
         const sp<IServiceManager> sm = defaultServiceManager();                          \
+        if (sm == nullptr) {                                                             \
+            return ::android::INVALID_OPERATION;                                         \
+        }                                                                                \
         bool success = false;                                                            \
         ::android::hardware::Return<void> ret =                                          \
             this->interfaceChain(                                                        \
