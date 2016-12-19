@@ -742,15 +742,6 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 #define HAL_LIBRARY_PATH_ODM "/odm/lib/hw/"
 #endif
 
-#define DECLARE_SERVICE_MANAGER_INTERACTIONS(INTERFACE)                                  \
-    static ::android::sp<I##INTERFACE> getService(                                       \
-            const std::string &serviceName, bool getStub=false);                         \
-    ::android::status_t registerAsService(const std::string &serviceName);               \
-    static bool registerForNotifications(                                                \
-        const std::string &serviceName,                                                  \
-        const ::android::sp<::android::hidl::manager::V1_0::IServiceNotification>        \
-                  &notification);                                                        \
-
 // ----------------------------------------------------------------------
 // Class that provides Hidl instrumentation utilities.
 struct HidlInstrumentor {
