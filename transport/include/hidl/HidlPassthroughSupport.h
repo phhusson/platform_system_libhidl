@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-// All static variables go here, to control initialization and
-// destruction order in the library.
+#ifndef ANDROID_HIDL_PASSTHROUGH_SUPPORT_H
+#define ANDROID_HIDL_PASSTHROUGH_SUPPORT_H
 
-#include <hidl/Static.h>
+#include <android/hidl/base/1.0/IBase.h>
 
 namespace android {
 namespace hardware {
 
-Mutex gDefaultServiceManagerLock;
-sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
+/*
+ * Wrap the given interface with the smallest BsChild possible. Will return the
+ * argument directly if nullptr or isRemote().
+ */
+sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
+        sp<::android::hidl::base::V1_0::IBase> iface);
 
-std::map<std::string, std::function<sp<IBinder>(void *)>>
-        gBnConstructorMap{};
+}  // namespace hardware
+}  // namespace android
 
-std::map<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
-        gBsConstructorMap;
 
-}   // namespace hardware
-}   // namespace android
+#endif  // ANDROID_HIDL_PASSTHROUGH_SUPPORT_H
