@@ -31,7 +31,7 @@ inline bool canCastInterface(::android::hidl::base::V1_0::IBase* interface, cons
     }
 
     bool canCast = false;
-    interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
+    auto ret = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
         for (size_t i = 0; i < types.size(); i++) {
             if (types[i] == castTo) {
                 canCast = true;
@@ -39,7 +39,17 @@ inline bool canCastInterface(::android::hidl::base::V1_0::IBase* interface, cons
             }
         }
     });
-    return canCast;
+    return ret.isOk() && canCast;
+}
+
+inline std::string getDescriptor(::android::hidl::base::V1_0::IBase* interface) {
+    std::string myDescriptor{};
+    auto ret = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
+        if (types.size() > 0) {
+            myDescriptor = types[0].c_str();
+        }
+    });
+    return ret.isOk() ? myDescriptor : "";
 }
 
 }   // namespace hardware
