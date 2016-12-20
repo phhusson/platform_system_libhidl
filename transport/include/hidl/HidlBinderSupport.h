@@ -296,12 +296,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
     if (ifacePtr->isRemote()) {
         return ::android::hardware::IInterface::asBinder(static_cast<ProxyType *>(ifacePtr));
     } else {
-        std::string myDescriptor{};
-        ifacePtr->interfaceChain([&](const hidl_vec<hidl_string> &types) {
-            if (types.size() > 0) {
-                myDescriptor = types[0].c_str();
-            }
-        });
+        std::string myDescriptor = getDescriptor(ifacePtr);
         if (myDescriptor.empty()) {
             // interfaceChain fails
             return nullptr;
