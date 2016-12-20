@@ -271,8 +271,11 @@ struct hidl_vec : private details::hidl_log_base {
     }
 
     hidl_vec(const std::initializer_list<T> list)
-            : mSize(list.size()),
-              mOwnsBuffer(true) {
+            : mOwnsBuffer(true) {
+        if (list.size() > UINT32_MAX) {
+            logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
+        }
+        mSize = static_cast<uint32_t>(list.size());
         mBuffer = new T[mSize];
 
         size_t idx = 0;
