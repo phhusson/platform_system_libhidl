@@ -189,6 +189,16 @@ TEST_F(LibHidlTest, VecIterForTest) {
     EXPECT_EQ(sum, 15+16+17);
 }
 
+TEST_F(LibHidlTest, VecEqTest) {
+    android::hardware::hidl_vec<int32_t> hv1{5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv2{5, 6, 7};
+    android::hardware::hidl_vec<int32_t> hv3{5, 6, 8};
+
+    // use the == and != operator intentionally here
+    EXPECT_TRUE(hv1 == hv2);
+    EXPECT_TRUE(hv1 != hv3);
+}
+
 TEST_F(LibHidlTest, ArrayTest) {
     using android::hardware::hidl_array;
     int32_t array[] = {5, 6, 7};
