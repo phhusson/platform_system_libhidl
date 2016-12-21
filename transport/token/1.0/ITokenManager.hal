@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.hidl.token@1.0;
+
+/**
+ * This facilitates converting hidl interfaces into something that
+ * are more easily transferrable to other processes.
+ */
+interface ITokenManager {
+
+    /**
+     * Register an interface. The server must only keep a weak reference
+     * to the token. The lifetime of the token is thus linked to the
+     * lifetime of the stored interface.
+     *
+     * @param store Interface which can later be fetched with the returned token.
+     * @return token Opaque value which may be used as inputs to other functions.
+     */
+    createToken(interface store) generates (uint64_t token);
+
+    /**
+     * Explicitly unregister an interface. If the server still holds a weak reference
+     * to an interface, but that interface interface is deleted and the reference
+     * cannot be promoted, then success must be false.
+     *
+     * @param token Token recieved from createToken
+     * @return success Whether or not an interface was successfully unregistered.
+     */
+    unregister(uint64_t token) generates (bool success);
+
+    /**
+     * Fetches an interface from a provided token.
+     *
+     * @param token Token recieved from createToken
+     * @return store Interface registered with createToken and the corresponding
+     *               token or nullptr.
+     */
+    get(uint64_t token) generates (interface store);
+};
