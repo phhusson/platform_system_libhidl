@@ -28,7 +28,7 @@ Status Status::fromExceptionCode(int32_t exceptionCode) {
 }
 
 Status Status::fromExceptionCode(int32_t exceptionCode,
-                                 const String8& message) {
+                                 const char *message) {
     return Status(exceptionCode, OK, message);
 }
 
@@ -37,7 +37,7 @@ Status Status::fromServiceSpecificError(int32_t serviceSpecificErrorCode) {
 }
 
 Status Status::fromServiceSpecificError(int32_t serviceSpecificErrorCode,
-                                        const String8& message) {
+                                        const char *message) {
     return Status(EX_SERVICE_SPECIFIC, serviceSpecificErrorCode, message);
 }
 
@@ -51,18 +51,18 @@ Status::Status(int32_t exceptionCode, int32_t errorCode)
     : mException(exceptionCode),
       mErrorCode(errorCode) {}
 
-Status::Status(int32_t exceptionCode, int32_t errorCode, const String8& message)
+Status::Status(int32_t exceptionCode, int32_t errorCode, const char *message)
     : mException(exceptionCode),
       mErrorCode(errorCode),
       mMessage(message) {}
 
-void Status::setException(int32_t ex, const String8& message) {
+void Status::setException(int32_t ex, const char *message) {
     mException = ex;
     mErrorCode = NO_ERROR;  // an exception, not a transaction failure.
-    mMessage.setTo(message);
+    mMessage = message;
 }
 
-void Status::setServiceSpecificError(int32_t errorCode, const String8& message) {
+void Status::setServiceSpecificError(int32_t errorCode, const char *message) {
     setException(EX_SERVICE_SPECIFIC, message);
     mErrorCode = errorCode;
 }
@@ -73,24 +73,24 @@ void Status::setFromStatusT(status_t status) {
     mMessage.clear();
 }
 
-String8 Status::toString8() const {
-    String8 ret;
-    if (mException == EX_NONE) {
-        ret.append("No error");
-    } else {
-        ret.appendFormat("Status(%d): '", mException);
-        if (mException == EX_SERVICE_SPECIFIC ||
-            mException == EX_TRANSACTION_FAILED) {
-            ret.appendFormat("%d: ", mErrorCode);
-        }
-        ret.append(String8(mMessage));
-        ret.append("'");
-    }
-    return ret;
+std::string Status::description() const {
+    std::ostringstream oss;
+    oss << (*this);
+    return oss.str();
 }
 
-std::stringstream& operator<< (std::stringstream& stream, const Status& s) {
-    stream << s.toString8().string();
+std::ostream& operator<< (std::ostream& stream, const Status& s) {
+    if (s.exceptionCode() == Status::EX_NONE) {
+        stream << "No error";
+    } else {
+        stream << "Status(" << s.exceptionCode() << "): '";
+        if (s.exceptionCode() == Status::EX_SERVICE_SPECIFIC) {
+            stream << s.serviceSpecificErrorCode() << ": ";
+        } else if (s.exceptionCode() == Status::EX_TRANSACTION_FAILED) {
+            stream << s.transactionError() << ": ";
+        }
+        stream << s.exceptionMessage() << "'";
+    }
     return stream;
 }
 
