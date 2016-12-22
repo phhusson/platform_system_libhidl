@@ -54,4 +54,21 @@ interface IBase {
      * tags).
      */
     oneway notifySyspropsChanged();
+
+    /*
+     * Registers a death recipient, to be called when the process hosting this
+     * interface dies.
+     *
+     * @param recipient a hidl_death_recipient callback object
+     * @param cookie a cookie that must be returned with the callback
+     * @return success whether the death recipient was registered successfully.
+     */
+    linkToDeath(death_recipient recipient, uint64_t cookie) generates (bool success);
+
+    /*
+     * Unregisters a previously registered death recipient.
+     * @param recipient a previously registered hidl_death_recipient callback
+     * @return success whether the death recipient was unregistered successfully.
+     */
+    unlinkToDeath(death_recipient recipient) generates (bool success);
 };
