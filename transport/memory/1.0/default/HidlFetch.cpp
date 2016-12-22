@@ -27,14 +27,6 @@ namespace memory {
 namespace V1_0 {
 namespace implementation {
 
-IAllocator* HIDL_FETCH_IAllocator(const char* name) {
-    if (name == kAshmemMemoryName) {
-        return new AshmemAllocator;
-    }
-
-    return nullptr;
-}
-
 IMapper* HIDL_FETCH_IMapper(const char* name) {
     if (name == kAshmemMemoryName) {
         return new AshmemMapper;
