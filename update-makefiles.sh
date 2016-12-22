@@ -6,14 +6,15 @@ if [ ! -d system/libhidl/transport ] ; then
   exit 1;
 fi
 
-#base
-hidl-gen -Lmakefile -r android.hidl:system/libhidl/transport android.hidl.base@1.0
-hidl-gen -Landroidbp -r android.hidl:system/libhidl/transport android.hidl.base@1.0
+packages=(
+    android.hidl.base@1.0
+    android.hidl.manager@1.0
+    android.hidl.memory@1.0
+    android.hidl.token@1.0
+)
 
-#manager
-hidl-gen -Lmakefile -r android.hidl:system/libhidl/transport android.hidl.manager@1.0
-hidl-gen -Landroidbp -r android.hidl:system/libhidl/transport android.hidl.manager@1.0
-
-#memory
-hidl-gen -Lmakefile -r android.hidl:system/libhidl/transport android.hidl.memory@1.0
-hidl-gen -Landroidbp -r android.hidl:system/libhidl/transport android.hidl.memory@1.0
+for package in "${packages[@]}"; do
+    echo "Updating $package."
+    hidl-gen -Lmakefile -r android.hidl:system/libhidl/transport $package
+    hidl-gen -Landroidbp -r android.hidl:system/libhidl/transport $package
+done

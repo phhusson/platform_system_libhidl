@@ -13,10 +13,11 @@
 // limitations under the License.
 
 subdirs = [
+    "base/1.0",
     "manager/1.0",
     "memory/1.0",
     "memory/1.0/default",
-    "base/1.0"
+    "token/1.0",
 ]
 
 cc_library_shared {
