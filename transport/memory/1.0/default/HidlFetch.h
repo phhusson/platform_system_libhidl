@@ -26,9 +26,6 @@ namespace memory {
 namespace V1_0 {
 namespace implementation {
 
-// TODO: disable passthrough allocator. It's much better if it's in a centralized location
-extern "C" IAllocator* HIDL_FETCH_IAllocator(const char* name);
-
 extern "C" IMapper* HIDL_FETCH_IMapper(const char* name);
 
 }  // namespace implementation
