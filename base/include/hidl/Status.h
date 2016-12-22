@@ -22,7 +22,7 @@
 
 #include <android-base/macros.h>
 #include <hidl/HidlInternal.h>
-#include <utils/String8.h>
+#include <utils/Errors.h>
 
 namespace android {
 namespace hardware {
@@ -84,10 +84,10 @@ public:
     //  Java clients.
     static Status fromExceptionCode(int32_t exceptionCode);
     static Status fromExceptionCode(int32_t exceptionCode,
-                                    const String8& message);
+                                    const char *message);
     static Status fromServiceSpecificError(int32_t serviceSpecificErrorCode);
     static Status fromServiceSpecificError(int32_t serviceSpecificErrorCode,
-                                           const String8& message);
+                                           const char *message);
     static Status fromStatusT(status_t status);
 
     Status() = default;
@@ -99,9 +99,9 @@ public:
     Status& operator=(const Status& status) = default;
 
     // Set one of the pre-defined exception types defined above.
-    void setException(int32_t ex, const String8& message);
+    void setException(int32_t ex, const char *message);
     // Set a service specific exception with error code.
-    void setServiceSpecificError(int32_t errorCode, const String8& message);
+    void setServiceSpecificError(int32_t errorCode, const char *message);
     // Setting a |status| != OK causes generated code to return |status|
     // from Binder transactions, rather than writing an exception into the
     // reply Parcel.  This is the least preferable way of reporting errors.
@@ -109,7 +109,7 @@ public:
 
     // Get information about an exception.
     int32_t exceptionCode() const  { return mException; }
-    const String8& exceptionMessage() const { return mMessage; }
+    const char *exceptionMessage() const { return mMessage.c_str(); }
     status_t transactionError() const {
         return mException == EX_TRANSACTION_FAILED ? mErrorCode : OK;
     }
@@ -119,12 +119,12 @@ public:
 
     bool isOk() const { return mException == EX_NONE; }
 
-    // For logging.
-    String8 toString8() const;
+    // For debugging purposes only
+    std::string description() const;
 
 private:
     Status(int32_t exceptionCode, int32_t errorCode);
-    Status(int32_t exceptionCode, int32_t errorCode, const String8& message);
+    Status(int32_t exceptionCode, int32_t errorCode, const char *message);
 
     // If |mException| == EX_TRANSACTION_FAILED, generated code will return
     // |mErrorCode| as the result of the transaction rather than write an
@@ -135,11 +135,11 @@ private:
     // If |mException| == EX_SERVICE_SPECIFIC we write |mErrorCode| as well.
     int32_t mException = EX_NONE;
     int32_t mErrorCode = 0;
-    String8 mMessage;
+    std::string mMessage;
 };  // class Status
 
 // For gtest output logging
-std::stringstream& operator<< (std::stringstream& stream, const Status& s);
+std::ostream& operator<< (std::ostream& stream, const Status& s);
 
 namespace details {
     class return_status : public details::hidl_log_base {
@@ -168,6 +168,12 @@ namespace details {
         const Status& getStatus() const {
             mCheckedStatus = true;
             return mStatus;
+        }
+
+        // For debugging purposes only
+        std::string description() const {
+            // Doesn't consider checked.
+            return mStatus.description();
         }
     };
 }  // namespace details
