@@ -29,6 +29,9 @@ interface IMemory {
     commit();
 
     /**
+     * Must return the same value everytime it is called. Must be callable
+     * at any point in or outside of the update/commit process.
+     *
      * @return ptr Actual pointer to underlying memory.
      */
     getPointer() generates (pointer ptr);
