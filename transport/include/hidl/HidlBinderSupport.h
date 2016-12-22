@@ -17,6 +17,7 @@
 #ifndef ANDROID_HIDL_BINDER_SUPPORT_H
 #define ANDROID_HIDL_BINDER_SUPPORT_H
 
+#include <android/hidl/base/1.0/IBase.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
 #include <hidl/MQDescriptor.h>
@@ -29,6 +30,29 @@
 
 namespace android {
 namespace hardware {
+
+// hidl_binder_death_recipient wraps a transport-independent
+// hidl_death_recipient, and implements the binder-specific
+// DeathRecipient interface.
+struct hidl_binder_death_recipient : IBinder::DeathRecipient {
+    hidl_binder_death_recipient(const sp<hidl_death_recipient> &recipient,
+            uint64_t cookie, const sp<::android::hidl::base::V1_0::IBase> &base) :
+        mRecipient(recipient), mCookie(cookie), mBase(base) {
+    }
+    virtual void binderDied(const wp<IBinder>& /*who*/) {
+        sp<hidl_death_recipient> recipient = mRecipient.promote();
+        if (recipient != nullptr) {
+            recipient->serviceDied(mCookie, mBase);
+        }
+    }
+    wp<hidl_death_recipient> getRecipient() {
+        return mRecipient;
+    }
+private:
+    wp<hidl_death_recipient> mRecipient;
+    uint64_t mCookie;
+    wp<::android::hidl::base::V1_0::IBase> mBase;
+};
 
 // ---------------------- hidl_memory
 
