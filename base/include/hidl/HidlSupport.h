@@ -382,6 +382,24 @@ struct hidl_vec : private details::hidl_log_base {
         return v;
     }
 
+    // equality check, assuming that T::operator== is defined.
+    bool operator==(const hidl_vec &other) const {
+        if (mSize != other.size()) {
+            return false;
+        }
+        for (size_t i = 0; i < mSize; ++i) {
+            if (!(mBuffer[i] == other.mBuffer[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // inequality check, assuming that T::operator== is defined.
+    inline bool operator!=(const hidl_vec &other) const {
+        return !((*this) == other);
+    }
+
     size_t size() const {
         return mSize;
     }
@@ -649,6 +667,20 @@ struct hidl_array {
                 &mBuffer[index * details::product<SIZES...>::value]);
     }
 
+    // equality check, assuming that T::operator== is defined.
+    bool operator==(const hidl_array &other) const {
+        for (size_t i = 0; i < elementCount(); ++i) {
+            if (!(mBuffer[i] == other.mBuffer[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    inline bool operator!=(const hidl_array &other) const {
+        return !((*this) == other);
+    }
+
     using size_tuple_type = std::tuple<decltype(SIZE1), decltype(SIZES)...>;
 
     static constexpr size_tuple_type size() {
@@ -694,6 +726,20 @@ struct hidl_array<T, SIZE1> {
 
     const T &operator[](size_t index) const {
         return mBuffer[index];
+    }
+
+    // equality check, assuming that T::operator== is defined.
+    bool operator==(const hidl_array &other) const {
+        for (size_t i = 0; i < elementCount(); ++i) {
+            if (!(mBuffer[i] == other.mBuffer[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    inline bool operator!=(const hidl_array &other) const {
+        return !((*this) == other);
     }
 
     static constexpr size_t size() { return SIZE1; }
