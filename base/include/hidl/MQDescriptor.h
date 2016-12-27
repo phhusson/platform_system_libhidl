@@ -58,6 +58,7 @@ struct MQDescriptor {
     MQDescriptor(size_t bufferSize, native_handle_t* nHandle,
                  size_t messageSize, bool configureEventFlag = false);
 
+    MQDescriptor();
     ~MQDescriptor();
 
     explicit MQDescriptor(const MQDescriptor &other);
@@ -198,6 +199,12 @@ MQDescriptor<flavor>::MQDescriptor(const MQDescriptor<flavor> &other)
                other.mHandle->numInts * sizeof(int));
     }
 }
+
+template<MQFlavor flavor>
+MQDescriptor<flavor>::MQDescriptor() : MQDescriptor(
+        std::vector<android::hardware::GrantorDescriptor>(),
+        nullptr /* nHandle */,
+        0 /* size */) {}
 
 template<MQFlavor flavor>
 MQDescriptor<flavor>::~MQDescriptor() {
