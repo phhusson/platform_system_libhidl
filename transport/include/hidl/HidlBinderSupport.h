@@ -23,7 +23,9 @@
 #include <hidl/MQDescriptor.h>
 #include <hidl/Static.h>
 #include <hwbinder/IBinder.h>
+#include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
+#include <hwbinder/ProcessState.h>
 #include <android/hidl/base/1.0/BnBase.h>
 // Defines functions for hidl_string, hidl_version, Status, hidl_vec, MQDescriptor,
 // etc. to interact with Parcel.
@@ -351,6 +353,14 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
     } else {
         return nullptr;
     }
+}
+
+inline void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
+    ProcessState::self()->setThreadPoolConfiguration(maxThreads, callerWillJoin /*callerJoinsPool*/);
+}
+
+inline void joinBinderRpcThreadpool() {
+    IPCThreadState::self()->joinThreadPool();
 }
 
 }  // namespace hardware
