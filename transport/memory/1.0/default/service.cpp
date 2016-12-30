@@ -4,17 +4,18 @@
 
 #include <android-base/logging.h>
 #include <android/hidl/memory/1.0/IAllocator.h>
-#include <hwbinder/IPCThreadState.h>
-#include <hwbinder/ProcessState.h>
+#include <hidl/HidlTransportSupport.h>
 
-using android::hardware::IPCThreadState;
-using android::hardware::ProcessState;
+using android::hardware::configureRpcThreadpool;
+using android::hardware::joinRpcThreadpool;
 using android::hidl::memory::V1_0::IAllocator;
 using android::hidl::memory::V1_0::implementation::AshmemAllocator;
 using android::sp;
 using android::status_t;
 
 int main() {
+    configureRpcThreadpool(1, true /* callerWillJoin */);
+
     sp<IAllocator> allocator = new AshmemAllocator();
 
     status_t status = allocator->registerAsService("ashmem");
@@ -23,9 +24,7 @@ int main() {
         LOG(FATAL) << "Unable to register allocator service: " << status;
     }
 
-    ProcessState::self()->setThreadPoolMaxThreadCount(0);
-    ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool();
+    joinRpcThreadpool();
 
     return -1;
 }
