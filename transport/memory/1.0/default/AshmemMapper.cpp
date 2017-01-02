@@ -27,10 +27,9 @@ namespace V1_0 {
 namespace implementation {
 
 // Methods from ::android::hidl::memory::V1_0::IMapper follow.
-Return<void> AshmemMapper::mapMemory(const hidl_memory& mem, mapMemory_cb _hidl_cb) {
+Return<sp<IMemory>> AshmemMapper::mapMemory(const hidl_memory& mem) {
     if (mem.handle()->numFds == 0) {
-        _hidl_cb(nullptr);
-        return Void();
+        return nullptr;
     }
 
     int fd = mem.handle()->data[0];
@@ -38,14 +37,10 @@ Return<void> AshmemMapper::mapMemory(const hidl_memory& mem, mapMemory_cb _hidl_
     if (data == MAP_FAILED) {
         // mmap never maps at address zero without MAP_FIXED, so we can avoid
         // exposing clients to MAP_FAILED.
-        _hidl_cb(nullptr);
-        return Void();
+        return nullptr;
     }
 
-    sp<IMemory> memory = new AshmemMemory(mem, data);
-
-    _hidl_cb(memory);
-    return Void();
+    return new AshmemMemory(mem, data);
 }
 
 }  // namespace implementation

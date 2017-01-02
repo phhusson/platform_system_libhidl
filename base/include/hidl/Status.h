@@ -23,6 +23,7 @@
 #include <android-base/macros.h>
 #include <hidl/HidlInternal.h>
 #include <utils/Errors.h>
+#include <utils/StrongPointer.h>
 
 namespace android {
 namespace hardware {
@@ -146,6 +147,13 @@ namespace details {
     private:
         Status mStatus {};
         mutable bool mCheckedStatus = false;
+    protected:
+        void checkStatus() const {
+            if (!isOk()) {
+                logAlwaysFatal("Attempted to retrieve value from hidl service, "
+                               "but there was a transport error.");
+            }
+        }
     public:
         return_status() {}
         return_status(Status s) : mStatus(s) {}
@@ -190,14 +198,32 @@ public:
     ~Return() = default;
 
     operator T() const {
-        if (!isOk()) {
-            logAlwaysFatal("Attempted to retrieve value from hidl service, "
-                           "but there was a transport error.");
-        }
+        checkStatus();
         return mVal;
     }
 
 };
+
+template<typename T> class Return<sp<T>> : public details::return_status {
+private:
+    sp<T> mVal {};
+public:
+    Return(sp<T> v) : details::return_status(), mVal{v} {}
+    Return(T* v) : details::return_status(), mVal{v} {}
+    // Constructors matching a different type (that is related by inheritance)
+    template<typename U> Return(sp<U> v) : details::return_status(), mVal{v} {}
+    template<typename U> Return(U* v) : details::return_status(), mVal{v} {}
+    Return(Status s) : details::return_status(s) {}
+
+    Return(const Return &) = default;
+    ~Return() = default;
+
+    operator sp<T>() const {
+        checkStatus();
+        return mVal;
+    }
+};
+
 
 template<> class Return<void> : public details::return_status {
 public:
