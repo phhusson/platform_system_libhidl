@@ -110,6 +110,30 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_FALSE(hs1 == stringNE);
 }
 
+TEST_F(LibHidlTest, MemoryTest) {
+    using android::hardware::hidl_memory;
+
+    hidl_memory mem1 = hidl_memory(); // default constructor
+    hidl_memory mem2 = mem1; // copy constructor (nullptr)
+
+    EXPECT_EQ(nullptr, mem2.handle());
+
+    native_handle_t* testHandle = native_handle_create(0 /* numInts */, 0 /* numFds */);
+
+    hidl_memory mem3 = hidl_memory("foo", testHandle, 42 /* size */); // owns testHandle
+    hidl_memory mem4 = mem3; // copy constructor (regular handle)
+
+    EXPECT_EQ(mem3.name(), mem4.name());
+    EXPECT_EQ(mem3.size(), mem4.size());
+    EXPECT_NE(nullptr, mem4.handle());
+    EXPECT_NE(mem3.handle(), mem4.handle()); // check handle cloned
+
+    hidl_memory mem5 = hidl_memory("foo", nullptr, 0); // hidl memory works with nullptr handle
+    hidl_memory mem6 = mem5;
+    EXPECT_EQ(nullptr, mem5.handle());
+    EXPECT_EQ(nullptr, mem6.handle());
+}
+
 TEST_F(LibHidlTest, VecInitTest) {
     using android::hardware::hidl_vec;
     using std::vector;

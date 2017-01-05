@@ -30,6 +30,7 @@ cc_test {
         "libhwbinder",
         "liblog",
         "libutils",
+        "libcutils",
     ],
     static_libs: ["libgtest"],
 
