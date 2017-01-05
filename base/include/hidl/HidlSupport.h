@@ -226,8 +226,15 @@ struct hidl_memory {
     // copy assignment
     hidl_memory &operator=(const hidl_memory &other) {
         if (this != &other) {
-            mOwnsHandle = true;
-            mHandle = native_handle_clone(other.mHandle);
+            cleanup();
+
+            if (other.mHandle == nullptr) {
+                mHandle = nullptr;
+                mOwnsHandle = false;
+            } else {
+                mOwnsHandle = true;
+                mHandle = native_handle_clone(other.mHandle);
+            }
             mSize = other.mSize;
             mName = other.mName;
         }
@@ -238,10 +245,7 @@ struct hidl_memory {
     // TODO move constructor/move assignment
 
     ~hidl_memory() {
-        // TODO if we had previously mapped from this object, unmap
-        if (mOwnsHandle) {
-            native_handle_close(mHandle);
-        }
+        cleanup();
     }
 
     const native_handle_t* handle() const {
@@ -260,11 +264,19 @@ struct hidl_memory {
     static const size_t kOffsetOfHandle;
     // offsetof(hidl_memory, mName) exposed since mHandle is private.
     static const size_t kOffsetOfName;
+
 private:
     bool mOwnsHandle;
     hidl_handle mHandle;
     size_t mSize;
     hidl_string mName;
+
+    void cleanup() {
+        // TODO(b/33812533): native_handle_delete
+        if (mOwnsHandle && mHandle != nullptr) {
+            native_handle_close(mHandle);
+        }
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
