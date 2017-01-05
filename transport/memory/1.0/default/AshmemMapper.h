@@ -28,6 +28,7 @@ namespace V1_0 {
 namespace implementation {
 
 using ::android::hidl::memory::V1_0::IMapper;
+using ::android::hidl::memory::V1_0::IMemory;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_memory;
 using ::android::hardware::hidl_string;
@@ -38,7 +39,7 @@ using ::android::sp;
 
 struct AshmemMapper : public IMapper {
     // Methods from ::android::hidl::memory::V1_0::IMapper follow.
-    Return<void> mapMemory(const hidl_memory& mem, mapMemory_cb _hidl_cb) override;
+    Return<sp<IMemory>> mapMemory(const hidl_memory& mem) override;
 
 };
 
