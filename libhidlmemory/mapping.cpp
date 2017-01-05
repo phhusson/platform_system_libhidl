@@ -40,18 +40,13 @@ sp<IMemory> mapMemory(const hidl_memory &memory) {
         LOG(FATAL) << "IMapper must be a passthrough service.";
     }
 
-    sp<IMemory> retMemory = nullptr;
-
-    Return<void> ret = mapper->mapMemory(memory,
-        [&retMemory](const auto &mapped) {
-            retMemory = mapped;
-        });
+    Return<sp<IMemory>> ret = mapper->mapMemory(memory);
 
     if (!ret.isOk()) {
         LOG(FATAL) << "hidl_memory map returned transport error.";
     }
 
-    return retMemory;
+    return ret;
 }
 
 }  // namespace hardware
