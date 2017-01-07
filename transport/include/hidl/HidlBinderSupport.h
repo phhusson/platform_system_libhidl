@@ -95,12 +95,12 @@ status_t readEmbeddedFromParcel(
         size_t parentHandle,
         size_t parentOffset,
         size_t *handle) {
-    const void *ptr = parcel.readEmbeddedBuffer(
+    const void *out;
+    return parcel.readEmbeddedBuffer(
             handle,
             parentHandle,
-            parentOffset + hidl_vec<T>::kOffsetOfBuffer);
-
-    return ptr != NULL ? OK : UNKNOWN_ERROR;
+            parentOffset + hidl_vec<T>::kOffsetOfBuffer,
+            &out);
 }
 
 template<typename T>
@@ -144,14 +144,13 @@ template<typename T, MQFlavor flavor>
 
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
-    const native_handle_t *_hidl_mq_handle_ptr = parcel.readEmbeddedNativeHandle(
+    const native_handle_t *_hidl_mq_handle_ptr;
+   _hidl_err = parcel.readEmbeddedNativeHandle(
             parentHandle,
-            parentOffset + MQDescriptor<T, flavor>::kOffsetOfHandle);
+            parentOffset + MQDescriptor<T, flavor>::kOffsetOfHandle,
+            &_hidl_mq_handle_ptr);
 
-    if (_hidl_mq_handle_ptr == nullptr) {
-        _hidl_err = ::android::UNKNOWN_ERROR;
-        return _hidl_err;
-    }
+    if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     return _hidl_err;
 }
