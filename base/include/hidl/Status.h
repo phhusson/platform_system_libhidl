@@ -172,12 +172,6 @@ namespace details {
             return mStatus.isOk();
         }
 
-        // TODO(b/31348667) deprecate and replace with 'string description()'
-        const Status& getStatus() const {
-            mCheckedStatus = true;
-            return mStatus;
-        }
-
         // For debugging purposes only
         std::string description() const {
             // Doesn't consider checked.
