@@ -153,18 +153,34 @@ bool hidl_string::empty() const {
 
 // ----------------------------------------------------------------------
 // HidlInstrumentor implementation.
-HidlInstrumentor::HidlInstrumentor(const std::string &prefix) {
-    mEnableInstrumentation = property_get_bool("hal.instrumentation.enable",
-                                               false);
-    if (mEnableInstrumentation) {
-        registerInstrumentationCallbacks(prefix, &mInstrumentationCallbacks);
-    }
+HidlInstrumentor::HidlInstrumentor(const std::string &prefix)
+        : mInstrumentationLibPrefix(prefix) {
+    configureInstrumentation(false);
 }
 
 HidlInstrumentor:: ~HidlInstrumentor() {}
 
+void HidlInstrumentor::configureInstrumentation(bool log) {
+    bool enable_instrumentation = property_get_bool(
+            "hal.instrumentation.enable",
+            false);
+    if (enable_instrumentation != mEnableInstrumentation) {
+        mEnableInstrumentation = enable_instrumentation;
+        if (mEnableInstrumentation) {
+            if (log) {
+                LOG(INFO) << "Enable instrumentation.";
+            }
+            registerInstrumentationCallbacks (&mInstrumentationCallbacks);
+        } else {
+            if (log) {
+                LOG(INFO) << "Disable instrumentation.";
+            }
+            mInstrumentationCallbacks.clear();
+        }
+    }
+}
+
 void HidlInstrumentor::registerInstrumentationCallbacks(
-        const std::string &profilerPrefix,
         std::vector<InstrumentationCallback> *instrumentationCallbacks) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     std::vector<std::string> instrumentationLibPaths;
@@ -188,7 +204,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
 
         struct dirent *file;
         while ((file = readdir(dir)) != NULL) {
-            if (!isInstrumentationLib(profilerPrefix, file))
+            if (!isInstrumentationLib(file))
                 continue;
 
             void *handle = dlopen((path + file->d_name).c_str(), RTLD_NOW);
@@ -224,13 +240,11 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
 #endif
 }
 
-bool HidlInstrumentor::isInstrumentationLib(
-        const std::string &profiler_prefix,
-        const dirent *file) {
+bool HidlInstrumentor::isInstrumentationLib(const dirent *file) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     if (file->d_type != DT_REG) return false;
     std::cmatch cm;
-    std::regex e("^" + profiler_prefix + "(.*).profiler.so$");
+    std::regex e("^" + mInstrumentationLibPrefix + "(.*).profiler.so$");
     if (std::regex_match(file->d_name, cm, e)) return true;
 #endif
     return false;
