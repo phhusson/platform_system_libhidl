@@ -34,16 +34,16 @@ interface IBase {
      * For example, for the following interface definition:
      *     package android.hardware.foo@1.0;
      *     interface IParent {};
-     *     interface IChild {};
+     *     interface IChild extends IParent {};
      * Calling interfaceChain on an IChild object will yield the following:
      *     ["android.hardware.foo@1.0::IChild",
      *      "android.hardware.foo@1.0::IParent"
      *      "android.hidl.base@1.0::IBase"]
      *
-     * @return indicator a vector of descriptors of the run-time type of the
+     * @return descriptors a vector of descriptors of the run-time type of the
      *         object.
      */
-    interfaceChain() generates (vec<string> indicator);
+    interfaceChain() generates (vec<string> descriptors);
 
     /*
      * This method notifies the interface that one or more system properties
@@ -77,4 +77,19 @@ interface IBase {
      * on system property hal.instrumentation.enable.
      */
     oneway setHALInstrumentation();
+
+    /*
+     * Provides run-time type information for this object.
+     * For example, for the following interface definition:
+     *     package android.hardware.foo@1.0;
+     *     interface IParent {};
+     *     interface IChild extends IParent {};
+     * Calling interfaceChain on an IChild object will yield
+     *     "android.hardware.foo@1.0::IChild"
+     *
+     * @return descriptor a descriptor of the run-time type of the
+     *         object (the first element of the vector returned by
+     *         interfaceChain())
+     */
+    interfaceDescriptor() generates (string descriptor);
 };
