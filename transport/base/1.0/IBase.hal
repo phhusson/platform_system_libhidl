@@ -71,4 +71,10 @@ interface IBase {
      * @return success whether the death recipient was unregistered successfully.
      */
     unlinkToDeath(death_recipient recipient) generates (bool success);
+
+    /*
+     * This method trigger the interface to enable/disable instrumentation based
+     * on system property hal.instrumentation.enable.
+     */
+    oneway setHALInstrumentation();
 };
