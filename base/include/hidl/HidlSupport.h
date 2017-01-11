@@ -851,6 +851,10 @@ struct HidlInstrumentor {
     virtual ~HidlInstrumentor();
 
  protected:
+    // Set mEnableInstrumentation based on system property
+    // hal.instrumentation.enable, register/de-register instrumentation
+    // callbacks if mEnableInstrumentation is true/false.
+    void configureInstrumentation(bool log=true);
     // Function that lookup and dynamically loads the hidl instrumentation
     // libraries and registers the instrumentation callback functions.
     //
@@ -864,18 +868,18 @@ struct HidlInstrumentor {
     //
     // A no-op for user build.
     void registerInstrumentationCallbacks(
-            const std::string &profilerPrefix,
             std::vector<InstrumentationCallback> *instrumentationCallbacks);
 
     // Utility function to determine whether a give file is a instrumentation
     // library (i.e. the file name follow the expected pattern).
-    bool isInstrumentationLib(
-            const std::string &profilerPrefix,
-            const dirent *file);
+    bool isInstrumentationLib(const dirent *file);
+
     // A list of registered instrumentation callbacks.
     std::vector<InstrumentationCallback> mInstrumentationCallbacks;
     // Flag whether to enable instrumentation.
     bool mEnableInstrumentation;
+    // Prefix to lookup the instrumentation libraries.
+    std::string mInstrumentationLibPrefix;
 };
 
 }  // namespace hardware
