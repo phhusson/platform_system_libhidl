@@ -128,6 +128,8 @@ struct hidl_string {
     hidl_string(const hidl_string &);
     // copy from a C-style string.
     hidl_string(const char *);
+    // copy the first length characters from a C-style string.
+    hidl_string(const char *, size_t length);
     // copy from an std::string.
     hidl_string(const std::string &);
 
