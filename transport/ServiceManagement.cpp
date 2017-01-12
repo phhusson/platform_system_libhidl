@@ -29,12 +29,12 @@
 #include <unistd.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
-#include <android/hidl/manager/1.0/BpServiceManager.h>
-#include <android/hidl/manager/1.0/BnServiceManager.h>
+#include <android/hidl/manager/1.0/BpHwServiceManager.h>
+#include <android/hidl/manager/1.0/BnHwServiceManager.h>
 
 using android::hidl::manager::V1_0::IServiceManager;
-using android::hidl::manager::V1_0::BpServiceManager;
-using android::hidl::manager::V1_0::BnServiceManager;
+using android::hidl::manager::V1_0::BpHwServiceManager;
+using android::hidl::manager::V1_0::BnHwServiceManager;
 
 namespace android {
 namespace hardware {
@@ -50,7 +50,7 @@ sp<IServiceManager> defaultServiceManager() {
     {
         AutoMutex _l(gDefaultServiceManagerLock);
         while (gDefaultServiceManager == NULL) {
-            gDefaultServiceManager = fromBinder<IServiceManager, BpServiceManager, BnServiceManager>(
+            gDefaultServiceManager = fromBinder<IServiceManager, BpHwServiceManager, BnHwServiceManager>(
                 ProcessState::self()->getContextObject(NULL));
             if (gDefaultServiceManager == NULL)
                 sleep(1);
