@@ -25,13 +25,13 @@ genrule {
     out: [
         "android/hidl/manager/1.0/IServiceManager.h",
         "android/hidl/manager/1.0/IHwServiceManager.h",
-        "android/hidl/manager/1.0/BnServiceManager.h",
-        "android/hidl/manager/1.0/BpServiceManager.h",
+        "android/hidl/manager/1.0/BnHwServiceManager.h",
+        "android/hidl/manager/1.0/BpHwServiceManager.h",
         "android/hidl/manager/1.0/BsServiceManager.h",
         "android/hidl/manager/1.0/IServiceNotification.h",
         "android/hidl/manager/1.0/IHwServiceNotification.h",
-        "android/hidl/manager/1.0/BnServiceNotification.h",
-        "android/hidl/manager/1.0/BpServiceNotification.h",
+        "android/hidl/manager/1.0/BnHwServiceNotification.h",
+        "android/hidl/manager/1.0/BpHwServiceNotification.h",
         "android/hidl/manager/1.0/BsServiceNotification.h",
     ],
 }

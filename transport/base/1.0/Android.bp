@@ -22,8 +22,8 @@ genrule {
     out: [
         "android/hidl/base/1.0/IBase.h",
         "android/hidl/base/1.0/IHwBase.h",
-        "android/hidl/base/1.0/BnBase.h",
-        "android/hidl/base/1.0/BpBase.h",
+        "android/hidl/base/1.0/BnHwBase.h",
+        "android/hidl/base/1.0/BpHwBase.h",
         "android/hidl/base/1.0/BsBase.h",
     ],
 }
