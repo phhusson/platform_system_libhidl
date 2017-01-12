@@ -44,6 +44,10 @@ hidl_string::hidl_string(const char *s) : hidl_string() {
     copyFrom(s, strlen(s));
 }
 
+hidl_string::hidl_string(const char *s, size_t length) : hidl_string() {
+    copyFrom(s, length);
+}
+
 hidl_string::hidl_string(const hidl_string &other): hidl_string() {
     copyFrom(other.c_str(), other.size());
 }
