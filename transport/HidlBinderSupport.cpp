@@ -30,21 +30,19 @@ const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
 
 status_t readEmbeddedFromParcel(hidl_memory * /* memory */,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
-    ::android::status_t _hidl_err = ::android::OK;
-    const native_handle_t *_hidl_memory_handle = parcel.readEmbeddedNativeHandle(
+    const native_handle_t *handle;
+    ::android::status_t _hidl_err = parcel.readNullableEmbeddedNativeHandle(
             parentHandle,
-            parentOffset + hidl_memory::kOffsetOfHandle);
+            parentOffset + hidl_memory::kOffsetOfHandle,
+            &handle);
 
-    if (_hidl_memory_handle == nullptr) {
-        _hidl_err = ::android::UNKNOWN_ERROR;
-        return _hidl_err;
+    if (_hidl_err == ::android::OK) {
+        _hidl_err = readEmbeddedFromParcel(
+                (hidl_string*) nullptr,
+                parcel,
+                parentHandle,
+                parentOffset + hidl_memory::kOffsetOfName);
     }
-
-    _hidl_err = readEmbeddedFromParcel(
-            (hidl_string*) nullptr,
-            parcel,
-            parentHandle,
-            parentOffset + hidl_memory::kOffsetOfName);
 
     return _hidl_err;
 }
@@ -71,12 +69,12 @@ const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 
 status_t readEmbeddedFromParcel(hidl_string * /* string */,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
-    const void *ptr = parcel.readEmbeddedBuffer(
+    const void *out;
+    return parcel.readEmbeddedBuffer(
             nullptr /* buffer_handle */,
             parentHandle,
-            parentOffset + hidl_string::kOffsetOfBuffer);
-
-    return ptr != NULL ? OK : UNKNOWN_ERROR;
+            parentOffset + hidl_string::kOffsetOfBuffer,
+            &out);
 }
 
 status_t writeEmbeddedToParcel(const hidl_string &string,
