@@ -61,16 +61,18 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_STREQ(s2.c_str(), "s2");
     hidl_string s3 = hidl_string("s3"); // move =
     EXPECT_STREQ(s3.c_str(), "s3");
-    hidl_string s4(hidl_string(hidl_string("s4"))); // move constructor
-    EXPECT_STREQ(s4.c_str(), "s4");
-    hidl_string s5(std::string("s5")); // copy constructor from std::string
-    EXPECT_STREQ(s5, "s5");
-    hidl_string s6 = std::string("s6"); // copy = from std::string
+    hidl_string s4 = hidl_string("12345", 3); // copy constructor from cstr w/ length
+    EXPECT_STREQ(s4.c_str(), "123");
+    hidl_string s5(hidl_string(hidl_string("s5"))); // move constructor
+    EXPECT_STREQ(s5.c_str(), "s5");
+    hidl_string s6(std::string("s6")); // copy constructor from std::string
     EXPECT_STREQ(s6, "s6");
-    hidl_string s7(s6); // copy constructor
-    EXPECT_STREQ(s7, "s6");
-    hidl_string s8 = s7; // copy =
-    EXPECT_STREQ(s8, "s6");
+    hidl_string s7 = std::string("s7"); // copy = from std::string
+    EXPECT_STREQ(s7, "s7");
+    hidl_string s8(s7); // copy constructor
+    EXPECT_STREQ(s8, "s7");
+    hidl_string s9 = s8; // copy =
+    EXPECT_STREQ(s9, "s7");
     char myCString[20] = "myCString";
     s.setToExternal(&myCString[0], strlen(myCString));
     EXPECT_STREQ(s, "myCString");
