@@ -30,7 +30,8 @@ namespace hardware {
  * Registers passthrough service implementation.
  */
 template<class Interface>
-status_t registerPassthroughServiceImplementation(std::string name) {
+status_t registerPassthroughServiceImplementation(
+      std::string name = "default") {
     sp<Interface> service = Interface::getService(name, true /* getStub */);
 
     if (service == nullptr) {
@@ -57,7 +58,8 @@ status_t registerPassthroughServiceImplementation(std::string name) {
  * Return value is exit status.
  */
 template<class Interface>
-int defaultPassthroughServiceImplementation(std::string name, size_t maxThreads = 1) {
+int defaultPassthroughServiceImplementation(std::string name = "default",
+                                            size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
     registerPassthroughServiceImplementation<Interface>(name);
     joinRpcThreadpool();
