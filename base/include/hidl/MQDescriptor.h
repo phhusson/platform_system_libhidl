@@ -21,6 +21,7 @@
 #include <cutils/native_handle.h>
 #include <hidl/HidlSupport.h>
 #include <utils/NativeHandle.h>
+#include <utils/Log.h>
 
 namespace android {
 namespace hardware {
@@ -107,6 +108,18 @@ struct MQDescriptor {
      * needed for blocking FMQ operations.
      */
     static constexpr int32_t kMinGrantorCountForEvFlagSupport = EVFLAGWORDPOS + 1;
+
+    //TODO(b/34160777) Identify a better solution that supports remoting.
+    static inline size_t alignToWordBoundary(size_t length) {
+        constexpr size_t kAlignmentSize = 64;
+        LOG_ALWAYS_FATAL_IF(kAlignmentSize % __WORDSIZE != 0, "Incompatible word size");
+        return (length + kAlignmentSize/8 - 1) & ~(kAlignmentSize/8 - 1U);
+    }
+
+    static inline size_t isAlignedToWordBoundary(size_t offset) {
+        constexpr size_t kAlignmentSize = 64;
+        return (offset & (kAlignmentSize/8 - 1)) == 0;
+    }
 private:
     ::android::hardware::hidl_vec<GrantorDescriptor> mGrantors;
     ::android::hardware::details::hidl_pointer<native_handle_t> mHandle;
@@ -144,6 +157,8 @@ MQDescriptor<T, flavor>::MQDescriptor(
       mFlags(flavor) {
     mGrantors.resize(grantors.size());
     for (size_t i = 0; i < grantors.size(); ++i) {
+        LOG_ALWAYS_FATAL_IF(isAlignedToWordBoundary(grantors[i].offset) == false,
+                            "Grantor offsets need to be aligned");
         mGrantors[i] = grantors[i];
     }
 }
@@ -176,7 +191,7 @@ MQDescriptor<T, flavor>::MQDescriptor(size_t bufferSize, native_handle_t *nHandl
         mGrantors[grantorPos] = {
             0 /* grantor flags */,
             0 /* fdIndex */,
-            static_cast<uint32_t>(offset),
+            static_cast<uint32_t>(alignToWordBoundary(offset)),
             memSize[grantorPos]
         };
     }
