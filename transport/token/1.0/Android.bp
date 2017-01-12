@@ -22,8 +22,8 @@ genrule {
     out: [
         "android/hidl/token/1.0/ITokenManager.h",
         "android/hidl/token/1.0/IHwTokenManager.h",
-        "android/hidl/token/1.0/BnTokenManager.h",
-        "android/hidl/token/1.0/BpTokenManager.h",
+        "android/hidl/token/1.0/BnHwTokenManager.h",
+        "android/hidl/token/1.0/BpHwTokenManager.h",
         "android/hidl/token/1.0/BsTokenManager.h",
     ],
 }
