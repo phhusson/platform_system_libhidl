@@ -28,6 +28,7 @@
 #include <hidl/HidlInternal.h>
 #include <hidl/Status.h>
 #include <map>
+#include <sstream>
 #include <stddef.h>
 #include <tuple>
 #include <type_traits>
@@ -601,7 +602,7 @@ namespace details {
             : mBase(base) {
         }
 
-        const_accessor<T, SIZES...> operator[](size_t index) {
+        const_accessor<T, SIZES...> operator[](size_t index) const {
             return const_accessor<T, SIZES...>(
                     &mBase[index * product<SIZES...>::value]);
         }
@@ -883,6 +884,120 @@ struct HidlInstrumentor {
     // Prefix to lookup the instrumentation libraries.
     std::string mInstrumentationLibPrefix;
 };
+
+///////////////////// toString functions
+
+namespace details {
+
+// toString alias for numeric types
+template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+inline std::string toString(T t) {
+    return std::to_string(t);
+}
+
+template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+inline std::string toHexString(T t, bool prefix = true) {
+    std::ostringstream os;
+    if (prefix) { os << std::showbase; }
+    os << std::hex << t;
+    return os.str();
+}
+
+template<>
+inline std::string toHexString(uint8_t t, bool prefix) {
+    return toHexString(static_cast<int32_t>(t), prefix);
+}
+
+template<>
+inline std::string toHexString(int8_t t, bool prefix) {
+    return toHexString(static_cast<int32_t>(t), prefix);
+}
+
+inline std::string toString(const void *t, bool prefix = true) {
+    return toHexString(reinterpret_cast<uintptr_t>(t), prefix);
+}
+
+// debug string dump. There will be quotes around the string!
+inline std::string toString(const hidl_string &hs) {
+    return std::string{"\""} + hs.c_str() + "\"";
+}
+
+// debug string dump
+inline std::string toString(const hidl_handle &hs) {
+    return toString(hs.getNativeHandle());
+}
+
+inline std::string toString(const hidl_memory &mem) {
+    return std::string{"memory {.name = "} + toString(mem.name()) + ", .size = "
+              + toString(mem.size())
+              + ", .handle = " + toString(mem.handle()) + "}";
+}
+
+inline std::string toString(const sp<hidl_death_recipient> &dr) {
+    return std::string{"death_recipient@"} + toString(dr.get());
+}
+
+template<typename Array>
+std::string arrayToString(const Array &a, size_t size);
+
+// debug string dump, assuming that toString(T) is defined.
+template<typename T>
+std::string toString(const hidl_vec<T> &a) {
+    std::string os;
+    os += "[" + toString(a.size()) + "]";
+    os += arrayToString(a, a.size());
+    return os;
+}
+
+template<size_t SIZE1>
+std::string arraySizeToString() {
+    return std::string{"["} + toString(SIZE1) + "]";
+}
+
+template<typename T, size_t SIZE1>
+std::string toString(const_accessor<T, SIZE1> a) {
+    return arrayToString(a, SIZE1);
+}
+
+template<typename T, size_t SIZE1>
+std::string toString(const hidl_array<T, SIZE1> &a) {
+    return arraySizeToString<SIZE1>()
+            + toString(const_accessor<T, SIZE1>(a.data()));
+}
+
+template<size_t SIZE1, size_t SIZE2, size_t... SIZES>
+std::string arraySizeToString() {
+    return std::string{"["} + toString(SIZE1) + "]" + arraySizeToString<SIZE2, SIZES...>();
+}
+
+
+template<typename T, size_t SIZE1, size_t SIZE2, size_t... SIZES>
+std::string toString(const_accessor<T, SIZE1, SIZE2, SIZES...> a) {
+    return arrayToString(a, SIZE1);
+}
+
+template<typename T, size_t SIZE1, size_t SIZE2, size_t... SIZES>
+std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
+    return arraySizeToString<SIZE1, SIZE2, SIZES...>()
+            + toString(const_accessor<T, SIZE1, SIZE2, SIZES...>(a.data()));
+}
+
+template<typename Array>
+std::string arrayToString(const Array &a, size_t size) {
+    std::string os;
+    os += "{";
+    for (size_t i = 0; i < size; ++i) {
+        if (i > 0) {
+            os += ", ";
+        }
+        os += toString(a[i]);
+    }
+    os += "}";
+    return os;
+}
+
+}  // namespace details
+
 
 }  // namespace hardware
 }  // namespace android
