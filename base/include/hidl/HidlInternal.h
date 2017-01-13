@@ -85,6 +85,7 @@ struct hidl_pointer {
     const T &operator[](size_t index) const {
         return mPointer[index];
     }
+
 private:
     union {
         T* mPointer;

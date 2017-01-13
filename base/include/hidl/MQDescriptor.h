@@ -259,6 +259,26 @@ const sp<NativeHandle> MQDescriptor<T, flavor>::getNativeHandle() const {
    */
   return NativeHandle::create(mHandle, false /* ownsHandle */);
 }
+
+namespace details {
+template<typename T, MQFlavor flavor>
+std::string toString(const MQDescriptor<T, flavor> &q) {
+    std::string os;
+    if (flavor & kSynchronizedReadWrite) {
+        os += "fmq_sync";
+    }
+    if (flavor & kUnsynchronizedWrite) {
+        os += "fmq_unsync";
+    }
+    os += " {"
+       + toString(q.getGrantors().size()) + " grantor(s), "
+       + "size = " + toString(q.getSize())
+       + ", .handle = " + toString(q.getNativeHandle().get())
+       + ", .quantum = " + toString(q.getQuantum()) + "}";
+    return os;
+}
+}  // namespace details
+
 }  // namespace hardware
 }  // namespace android
 
