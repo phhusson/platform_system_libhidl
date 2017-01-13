@@ -96,7 +96,7 @@ status_t readEmbeddedFromParcel(
         size_t parentOffset,
         size_t *handle) {
     const void *out;
-    return parcel.readEmbeddedBuffer(
+    return parcel.readNullableEmbeddedBuffer(
             handle,
             parentHandle,
             parentOffset + hidl_vec<T>::kOffsetOfBuffer,
