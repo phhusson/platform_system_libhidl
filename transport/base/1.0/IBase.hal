@@ -46,6 +46,21 @@ interface IBase {
     interfaceChain() generates (vec<string> descriptors);
 
     /*
+     * Provides run-time type information for this object.
+     * For example, for the following interface definition:
+     *     package android.hardware.foo@1.0;
+     *     interface IParent {};
+     *     interface IChild extends IParent {};
+     * Calling interfaceDescriptor on an IChild object will yield
+     *     "android.hardware.foo@1.0::IChild"
+     *
+     * @return descriptor a descriptor of the run-time type of the
+     *         object (the first element of the vector returned by
+     *         interfaceChain())
+     */
+    interfaceDescriptor() generates (string descriptor);
+
+    /*
      * This method notifies the interface that one or more system properties
      * have changed. The default implementation calls
      * (C++)  report_sysprop_change() in libcutils or
@@ -78,18 +93,4 @@ interface IBase {
      */
     oneway setHALInstrumentation();
 
-    /*
-     * Provides run-time type information for this object.
-     * For example, for the following interface definition:
-     *     package android.hardware.foo@1.0;
-     *     interface IParent {};
-     *     interface IChild extends IParent {};
-     * Calling interfaceChain on an IChild object will yield
-     *     "android.hardware.foo@1.0::IChild"
-     *
-     * @return descriptor a descriptor of the run-time type of the
-     *         object (the first element of the vector returned by
-     *         interfaceChain())
-     */
-    interfaceDescriptor() generates (string descriptor);
 };
