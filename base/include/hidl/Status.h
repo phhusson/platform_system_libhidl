@@ -21,7 +21,6 @@
 #include <sstream>
 
 #include <android-base/macros.h>
-#include <hidl/HidlInternal.h>
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
 
@@ -143,29 +142,19 @@ private:
 std::ostream& operator<< (std::ostream& stream, const Status& s);
 
 namespace details {
-    class return_status : public details::hidl_log_base {
+    class return_status {
     private:
         Status mStatus {};
         mutable bool mCheckedStatus = false;
     protected:
-        void checkStatus() const {
-            if (!isOk()) {
-                logAlwaysFatal("Attempted to retrieve value from hidl service, "
-                               "but there was a transport error.");
-            }
-        }
+        void checkStatus() const;
     public:
         return_status() {}
         return_status(Status s) : mStatus(s) {}
 
         return_status(const return_status &) = default;
 
-        ~return_status() {
-            // mCheckedStatus must be checked before isOk since isOk modifies mCheckedStatus
-            if (!mCheckedStatus && !isOk()) {
-                logAlwaysFatal("HIDL return status not checked and transport error occured.");
-            }
-        }
+        ~return_status();
 
         bool isOk() const {
             mCheckedStatus = true;
