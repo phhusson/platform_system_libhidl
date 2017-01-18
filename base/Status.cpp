@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "HidlStatus"
 
 #include <hidl/Status.h>
+
+#include <android-base/logging.h>
 
 namespace android {
 namespace hardware {
@@ -93,6 +96,21 @@ std::ostream& operator<< (std::ostream& stream, const Status& s) {
     }
     return stream;
 }
+
+namespace details {
+    void return_status::checkStatus() const {
+        if (!isOk()) {
+            LOG(FATAL) << "Attempted to retrieve value from failed HIDL call: " << description();
+        }
+    }
+
+    return_status::~return_status() {
+        // mCheckedStatus must be checked before isOk since isOk modifies mCheckedStatus
+        if (!mCheckedStatus && !isOk()) {
+            LOG(FATAL) << "Failed HIDL return status not checked: " << description();
+        }
+    }
+}  // namespace details
 
 }  // namespace hardware
 }  // namespace android
