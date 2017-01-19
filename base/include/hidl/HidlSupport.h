@@ -72,57 +72,54 @@ struct hidl_death_recipient : public virtual RefBase {
 
 // hidl_handle wraps a pointer to a native_handle_t in a hidl_pointer,
 // so that it can safely be transferred between 32-bit and 64-bit processes.
+// The ownership semantics for this are:
+// 1) The conversion constructor and assignment operator taking a const native_handle_t*
+//    do not take ownership of the handle; this is because these operations are usually
+//    just done for IPC, and cloning by default is a waste of resources. If you want
+//    a hidl_handle to take ownership, call setTo(handle, true /*shouldOwn*/);
+// 2) The copy constructor/assignment operator taking a hidl_handle *DO* take ownership;
+//    that is because it's not intuitive that this class encapsulates a native_handle_t
+//    which needs cloning to be valid; in particular, this allows constructs like this:
+//    hidl_handle copy;
+//    foo->someHidlCall([&](auto incoming_handle) {
+//            copy = incoming_handle;
+//    });
+//    // copy and its enclosed file descriptors will remain valid here.
+// 3) The move constructor does what you would expect; it only owns the handle if the
+//    original did.
 struct hidl_handle {
-    hidl_handle() {
-        mHandle = nullptr;
-    }
-    ~hidl_handle() {
-    }
+    hidl_handle();
+    ~hidl_handle();
 
-    // copy constructors.
-    hidl_handle(const native_handle_t *handle) {
-        mHandle = handle;
-    }
+    hidl_handle(const native_handle_t *handle);
 
-    hidl_handle(const hidl_handle &other) {
-        mHandle = other.mHandle;
-    }
+    // copy constructor.
+    hidl_handle(const hidl_handle &other);
 
     // move constructor.
-    hidl_handle(hidl_handle &&other) {
-        *this = std::move(other);
-    }
+    hidl_handle(hidl_handle &&other);
 
     // assignment operators
-    hidl_handle &operator=(const hidl_handle &other) {
-        mHandle = other.mHandle;
-        return *this;
-    }
+    hidl_handle &operator=(const hidl_handle &other);
 
-    hidl_handle &operator=(const native_handle_t *native_handle) {
-        mHandle = native_handle;
-        return *this;
-    }
+    hidl_handle &operator=(const native_handle_t *native_handle);
 
-    hidl_handle &operator=(hidl_handle &&other) {
-        mHandle = other.mHandle;
-        other.mHandle = nullptr;
-        return *this;
-    }
+    hidl_handle &operator=(hidl_handle &&other);
 
-    const native_handle_t* operator->() const {
-        return mHandle;
-    }
+    void setTo(native_handle_t* handle, bool shouldOwn = false);
+
+    const native_handle_t* operator->() const;
+
     // implicit conversion to const native_handle_t*
-    operator const native_handle_t *() const {
-        return mHandle;
-    }
+    operator const native_handle_t *() const;
+
     // explicit conversion
-    const native_handle_t *getNativeHandle() const {
-        return mHandle;
-    }
+    const native_handle_t *getNativeHandle() const;
 private:
+    void freeHandle();
+
     details::hidl_pointer<const native_handle_t> mHandle;
+    bool mOwnsHandle;
 };
 
 struct hidl_string {
@@ -214,15 +211,17 @@ inline bool operator!=(const char *s, const hidl_string &hs) {
 // - as well as all of its cross-process dups() - remain opened.
 struct hidl_memory {
 
-    hidl_memory() : mOwnsHandle(false), mHandle(nullptr), mSize(0), mName("") {
+    hidl_memory() : mHandle(nullptr), mSize(0), mName("") {
     }
 
     /**
-     * Creates a hidl_memory object and takes ownership of the handle.
+     * Creates a hidl_memory object, but doesn't take ownership of
+     * the passed in native_handle_t; callers are responsible for
+     * making sure the handle remains valid while this object is
+     * used.
      */
-    hidl_memory(const hidl_string &name, const hidl_handle &handle, size_t size)
-       : mOwnsHandle(true),
-         mHandle(handle),
+    hidl_memory(const hidl_string &name, const native_handle_t *handle, size_t size)
+      :  mHandle(handle),
          mSize(size),
          mName(name)
     {}
@@ -235,15 +234,7 @@ struct hidl_memory {
     // copy assignment
     hidl_memory &operator=(const hidl_memory &other) {
         if (this != &other) {
-            cleanup();
-
-            if (other.mHandle == nullptr) {
-                mHandle = nullptr;
-                mOwnsHandle = false;
-            } else {
-                mOwnsHandle = true;
-                mHandle = native_handle_clone(other.mHandle);
-            }
+            mHandle = other.mHandle;
             mSize = other.mSize;
             mName = other.mName;
         }
@@ -254,7 +245,6 @@ struct hidl_memory {
     // TODO move constructor/move assignment
 
     ~hidl_memory() {
-        cleanup();
     }
 
     const native_handle_t* handle() const {
@@ -275,17 +265,9 @@ struct hidl_memory {
     static const size_t kOffsetOfName;
 
 private:
-    bool mOwnsHandle;
     hidl_handle mHandle;
     size_t mSize;
     hidl_string mName;
-
-    void cleanup() {
-        // TODO(b/33812533): native_handle_delete
-        if (mOwnsHandle && mHandle != nullptr) {
-            native_handle_close(mHandle);
-        }
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
