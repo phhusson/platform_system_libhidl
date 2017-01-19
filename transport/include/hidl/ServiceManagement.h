@@ -31,7 +31,11 @@ namespace V1_0 {
 
 namespace hardware {
 
+// These functions are for internal use by hidl. If you want to get ahold
+// of an interface, the best way to do this is by calling IFoo::getService()
+
 sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
+sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
 
 }; // namespace hardware
 }; // namespace android

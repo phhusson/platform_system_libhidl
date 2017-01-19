@@ -29,6 +29,7 @@ cc_library_shared {
         "libhidlbase",
         "libhwbinder",
         "libcutils",
+        "libhidl-gen-utils"
     ],
     export_shared_lib_headers: [
         "libbase",

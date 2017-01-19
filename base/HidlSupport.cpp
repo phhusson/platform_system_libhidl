@@ -21,6 +21,7 @@
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <cutils/properties.h>
+#include <dlfcn.h>
 #include <regex>
 #include <utility>
 #endif
