@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <array>
 #include <dirent.h>
-#include <dlfcn.h>
 #include <iterator>
 #include <cutils/native_handle.h>
 #include <cutils/properties.h>

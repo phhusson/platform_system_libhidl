@@ -21,11 +21,11 @@
 #include <hidl/Static.h>
 #include <hidl/Status.h>
 
+#include <android-base/logging.h>
+#include <dlfcn.h>
+#include <hidl-util/FQName.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
-#include <utils/Log.h>
-#include <utils/SystemClock.h>
-
 #include <unistd.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
@@ -33,6 +33,7 @@
 #include <android/hidl/manager/1.0/BnHwServiceManager.h>
 
 using android::hidl::manager::V1_0::IServiceManager;
+using android::hidl::manager::V1_0::IServiceNotification;
 using android::hidl::manager::V1_0::BpHwServiceManager;
 using android::hidl::manager::V1_0::BnHwServiceManager;
 
@@ -58,6 +59,79 @@ sp<IServiceManager> defaultServiceManager() {
     }
 
     return gDefaultServiceManager;
+}
+
+struct PassthroughServiceManager : IServiceManager {
+    Return<sp<IBase>> get(const hidl_string& fqName,
+                     const hidl_string& name) override {
+        FQName iface(fqName);
+
+        if (!iface.isValid() ||
+            !iface.isFullyQualified() ||
+            iface.isIdentifier()) {
+            LOG(ERROR) << "Invalid interface name passthrough lookup: " << fqName;
+            return nullptr;
+        }
+
+        const int dlMode = RTLD_LAZY;
+        void *handle = nullptr;
+
+        for (const std::string &path : {
+            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
+        }) {
+            const std::string lib = path + iface.getPackageAndVersion().string() + "-impl.so";
+            handle = dlopen(lib.c_str(), dlMode);
+            if (handle != nullptr) {
+                break;
+            }
+        }
+
+        if (handle == nullptr) {
+            return nullptr;
+        }
+
+        const std::string sym = "HIDL_FETCH_" + iface.name();
+
+        IBase* (*generator)(const char* name);
+        *(void **)(&generator) = dlsym(handle, sym.c_str());
+        if(!generator) {
+            return nullptr;
+        }
+        return (*generator)(name);
+    }
+
+    Return<bool> add(const hidl_vec<hidl_string>& /* interfaceChain */,
+                     const hidl_string& /* name */,
+                     const sp<IBase>& /* service */) override {
+        LOG(FATAL) << "Cannot register services with passthrough service manager.";
+        return false;
+    }
+
+    Return<void> list(list_cb /* _hidl_cb */) override {
+        // TODO: add this functionality
+        LOG(FATAL) << "Cannot list services with passthrough service manager.";
+        return Void();
+    }
+    Return<void> listByInterface(const hidl_string& /* fqInstanceName */,
+                                 listByInterface_cb /* _hidl_cb */) override {
+        // TODO: add this functionality
+        LOG(FATAL) << "Cannot list services with passthrough service manager.";
+        return Void();
+    }
+
+    Return<bool> registerForNotifications(const hidl_string& /* fqName */,
+                                          const hidl_string& /* name */,
+                                          const sp<IServiceNotification>& /* callback */) override {
+        // This makes no sense.
+        LOG(FATAL) << "Cannot register for notifications with passthrough service manager.";
+        return false;
+    }
+
+};
+
+sp<IServiceManager> getPassthroughServiceManager() {
+    static sp<PassthroughServiceManager> manager(new PassthroughServiceManager());
+    return manager;
 }
 
 }; // namespace hardware
