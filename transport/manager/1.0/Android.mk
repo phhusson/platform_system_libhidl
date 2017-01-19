@@ -30,7 +30,6 @@ $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
         -randroid.hidl:system/libhidl/transport \
-        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceManager
 
 $(GEN): $(LOCAL_PATH)/IServiceManager.hal
@@ -48,7 +47,6 @@ $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
-        -randroid.hidl:system/libhidl/transport \
         -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceNotification
 
@@ -86,7 +84,6 @@ $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
         -randroid.hidl:system/libhidl/transport \
-        -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceManager
 
 $(GEN): $(LOCAL_PATH)/IServiceManager.hal
@@ -104,7 +101,6 @@ $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
-        -randroid.hidl:system/libhidl/transport \
         -randroid.hidl:system/libhidl/transport \
         android.hidl.manager@1.0::IServiceNotification
 
