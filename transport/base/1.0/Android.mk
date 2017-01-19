@@ -24,7 +24,6 @@ $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
         -randroid.hidl:system/libhidl/transport \
-        -randroid.hidl:system/libhidl/transport \
         android.hidl.base@1.0::IBase
 
 $(GEN): $(LOCAL_PATH)/IBase.hal
@@ -54,7 +53,6 @@ $(GEN): PRIVATE_OUTPUT_DIR := $(intermediates)
 $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
-        -randroid.hidl:system/libhidl/transport \
         -randroid.hidl:system/libhidl/transport \
         android.hidl.base@1.0::IBase
 
