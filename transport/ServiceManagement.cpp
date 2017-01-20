@@ -22,11 +22,16 @@
 #include <hidl/Status.h>
 
 #include <android-base/logging.h>
+#include <array>
+#include <cstdio>
 #include <dlfcn.h>
 #include <hidl-util/FQName.h>
+#include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
+#include <iostream>
 #include <unistd.h>
+#include <vector>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hidl/manager/1.0/BpHwServiceManager.h>
@@ -61,6 +66,46 @@ sp<IServiceManager> defaultServiceManager() {
     return gDefaultServiceManager;
 }
 
+std::vector<std::string> command(const std::string &command) {
+    std::array<char, 128> buffer;
+    std::vector<std::string> results;
+
+    std::unique_ptr<FILE, std::function<decltype(pclose)>>
+        pipe(popen(command.c_str(), "r"), pclose);
+    std::string result;
+
+    while (!feof(pipe.get())) {
+        if (fgets(buffer.data(), buffer.size(), pipe.get()) == nullptr) {
+            break;
+        }
+
+        std::string partialResult(buffer.data());
+
+        if (!partialResult.size()) {
+            LOG(ERROR) << "Command failed: " << command;
+            return {}; // this should never happen
+        }
+
+        result += partialResult;
+
+        if (result.at(result.size() - 1) != '\n') {
+            continue; // keep on reading line
+        }
+
+        result = StringHelper::RTrim(result, "\n");
+
+        results.push_back(result);
+        result.clear();
+    }
+
+    if (ferror(pipe.get())) {
+        LOG(ERROR) << "Command failed: " << command;
+        return {};
+    }
+
+    return results;
+}
+
 struct PassthroughServiceManager : IServiceManager {
     Return<sp<IBase>> get(const hidl_string& fqName,
                      const hidl_string& name) override {
@@ -76,25 +121,38 @@ struct PassthroughServiceManager : IServiceManager {
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
 
+        std::string library;
+
+        // TODO: lookup in VINTF instead
+        // TODO: warn if multiple are found
+        // TODO(b/34135607): Remove HAL_LIBRARY_PATH_SYSTEM
         for (const std::string &path : {
             HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
         }) {
-            const std::string lib = path + iface.getPackageAndVersion().string() + "-impl.so";
-            handle = dlopen(lib.c_str(), dlMode);
-            if (handle != nullptr) {
-                break;
+            std::string find = "find " + path + iface.getPackageAndVersion().string()
+                             + "-impl*.so 2>/dev/null";
+
+            for (const std::string &lib : command(find)) {
+                handle = dlopen(lib.c_str(), dlMode);
+                if (handle != nullptr) {
+                    library = lib;
+                    goto beginLookup;
+                }
             }
         }
 
         if (handle == nullptr) {
             return nullptr;
         }
+beginLookup:
 
         const std::string sym = "HIDL_FETCH_" + iface.name();
 
         IBase* (*generator)(const char* name);
         *(void **)(&generator) = dlsym(handle, sym.c_str());
         if(!generator) {
+            LOG(ERROR) << "Passthrough lookup opened " << library
+                       << " but could not find symbol " << sym;
             return nullptr;
         }
         return (*generator)(name);
