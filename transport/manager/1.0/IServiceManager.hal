@@ -70,14 +70,14 @@ interface IServiceManager {
         generates (bool success);
 
     /**
-     * List all registered services.
+     * List all registered services. Must be sorted.
      *
      * @return fqInstanceNames List of fully-qualified instance names.
      */
     list() generates (vec<string> fqInstanceNames);
 
     /**
-     * List all instances of a particular service.
+     * List all instances of a particular service. Must be sorted.
      *
      * @param fqName         Fully-qualified interface name.
      *

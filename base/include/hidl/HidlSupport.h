@@ -154,6 +154,8 @@ struct hidl_string {
     // to maintain this hidl_string alive.
     operator const char *() const;
 
+    bool operator< (const hidl_string &rhs) const;
+
     void clear();
 
     // Reference an external char array. Ownership is _not_ transferred.
