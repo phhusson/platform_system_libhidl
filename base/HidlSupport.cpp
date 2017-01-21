@@ -90,6 +90,10 @@ hidl_string &hidl_string::operator=(const std::string &s) {
     return *this;
 }
 
+bool hidl_string::operator< (const hidl_string &rhs) const {
+    return strcmp(mBuffer, rhs.mBuffer) < 0;
+}
+
 hidl_string::operator std::string() const {
     return std::string(mBuffer, mSize);
 }
