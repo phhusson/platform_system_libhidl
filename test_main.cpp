@@ -81,6 +81,9 @@ TEST_F(LibHidlTest, StringTest) {
     s.clear(); // should not affect myCString
     EXPECT_STREQ(myCString, "myDString");
 
+    // operator <
+    EXPECT_LT("ab", "bcd");
+
     // casts
     s = "great";
     std::string myString = s;
