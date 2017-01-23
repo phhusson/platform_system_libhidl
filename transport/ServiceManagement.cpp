@@ -23,7 +23,9 @@
 
 #include <android-base/logging.h>
 #include <dlfcn.h>
+#include <dirent.h>
 #include <hidl-util/FQName.h>
+#include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 #include <unistd.h>
@@ -61,6 +63,27 @@ sp<IServiceManager> defaultServiceManager() {
     return gDefaultServiceManager;
 }
 
+std::vector<std::string> search(const std::string &path,
+                              const std::string &prefix,
+                              const std::string &suffix) {
+    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
+    if (!dir) return {};
+
+    std::vector<std::string> results{};
+
+    dirent* dp;
+    while ((dp = readdir(dir.get())) != nullptr) {
+        std::string name = dp->d_name;
+
+        if (StringHelper::StartsWith(name, prefix) &&
+                StringHelper::EndsWith(name, suffix)) {
+            results.push_back(name);
+        }
+    }
+
+    return results;
+}
+
 struct PassthroughServiceManager : IServiceManager {
     Return<sp<IBase>> get(const hidl_string& fqName,
                      const hidl_string& name) override {
@@ -76,25 +99,43 @@ struct PassthroughServiceManager : IServiceManager {
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
 
+        std::string library;
+
+        // TODO: lookup in VINTF instead
+        // TODO(b/34135607): Remove HAL_LIBRARY_PATH_SYSTEM
+
         for (const std::string &path : {
             HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
         }) {
-            const std::string lib = path + iface.getPackageAndVersion().string() + "-impl.so";
-            handle = dlopen(lib.c_str(), dlMode);
-            if (handle != nullptr) {
-                break;
+            const std::string prefix = iface.getPackageAndVersion().string() + "-impl";
+
+            std::vector<std::string> libs = search(path, prefix, ".so");
+
+            if (libs.size() > 1) {
+                LOG(WARNING) << "Multiple libraries found: " << StringHelper::JoinStrings(libs, ", ");
+            }
+
+            for (const std::string &lib : libs) {
+                handle = dlopen((path + lib).c_str(), dlMode);
+                if (handle != nullptr) {
+                    library = lib;
+                    goto beginLookup;
+                }
             }
         }
 
         if (handle == nullptr) {
             return nullptr;
         }
+beginLookup:
 
         const std::string sym = "HIDL_FETCH_" + iface.name();
 
         IBase* (*generator)(const char* name);
         *(void **)(&generator) = dlsym(handle, sym.c_str());
         if(!generator) {
+            LOG(ERROR) << "Passthrough lookup opened " << library
+                       << " but could not find symbol " << sym;
             return nullptr;
         }
         return (*generator)(name);
