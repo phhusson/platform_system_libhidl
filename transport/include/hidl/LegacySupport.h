@@ -61,7 +61,12 @@ template<class Interface>
 int defaultPassthroughServiceImplementation(std::string name = "default",
                                             size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
-    registerPassthroughServiceImplementation<Interface>(name);
+    status_t result = registerPassthroughServiceImplementation<Interface>(name);
+
+    if (result != OK) {
+        return result;
+    }
+
     joinRpcThreadpool();
     return 0;
 }
