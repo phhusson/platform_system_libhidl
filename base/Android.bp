@@ -16,15 +16,13 @@ cc_library_shared {
     name: "libhidlbase",
     shared_libs: [
         "libbase",
-        "libcutils",
         "liblog",
         "libutils",
-        "libvintf",
+        "libcutils",
     ],
     export_shared_lib_headers: [
         "libbase",
         "libutils",
-        "libvintf",
     ],
     local_include_dirs: ["include"],
     export_include_dirs: ["include"],
