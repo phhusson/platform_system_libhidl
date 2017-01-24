@@ -88,7 +88,7 @@ struct hidl_handle {
         *this = std::move(other);
     }
 
-    // assingment operators
+    // assignment operators
     hidl_handle &operator=(const hidl_handle &other) {
         mHandle = other.mHandle;
         return *this;
