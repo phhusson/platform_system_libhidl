@@ -18,7 +18,6 @@
 #include <hidl/HidlSupport.h>
 
 #include <android-base/logging.h>
-#include <vintf/VendorManifest.h>
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <cutils/properties.h>
@@ -29,20 +28,6 @@
 
 namespace android {
 namespace hardware {
-
-vintf::Transport getTransportFromManifest(const std::string &iface) {
-    const vintf::VendorManifest *vm = vintf::VendorManifest::Get();
-    if (vm == nullptr) {
-        LOG(ERROR) << "Cannot find vendor interface manifest.";
-        return vintf::Transport::EMPTY;
-    }
-    auto it = vm->hals.find(iface);
-    if (it == vm->hals.end()) {
-        LOG(ERROR) << "Vendor interface manifest does not contain entry for " << iface;
-        return vintf::Transport::EMPTY;
-    }
-    return it->second.transport;
-}
 
 static const char *const kEmptyString = "";
 
