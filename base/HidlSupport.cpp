@@ -48,6 +48,105 @@ vintf::Transport getTransportFromManifest(const std::string &package) {
     return tr;
 }
 
+hidl_handle::hidl_handle() {
+    mHandle = nullptr;
+    mOwnsHandle = false;
+}
+
+hidl_handle::~hidl_handle() {
+    freeHandle();
+}
+
+hidl_handle::hidl_handle(const native_handle_t *handle) {
+    mHandle = handle;
+    mOwnsHandle = false;
+}
+
+// copy constructor.
+hidl_handle::hidl_handle(const hidl_handle &other) {
+    mOwnsHandle = false;
+    *this = other;
+}
+
+// move constructor.
+hidl_handle::hidl_handle(hidl_handle &&other) {
+    mOwnsHandle = false;
+    *this = std::move(other);
+}
+
+// assignment operators
+hidl_handle &hidl_handle::operator=(const hidl_handle &other) {
+    if (this == &other) {
+        return *this;
+    }
+    freeHandle();
+    if (other.mHandle != nullptr) {
+        mHandle = native_handle_clone(other.mHandle);
+        if (mHandle == nullptr) {
+            LOG(FATAL) << "Failed to clone native_handle in hidl_handle.";
+        }
+        mOwnsHandle = true;
+    } else {
+        mHandle = nullptr;
+        mOwnsHandle = false;
+    }
+    return *this;
+}
+
+hidl_handle &hidl_handle::operator=(const native_handle_t *native_handle) {
+    freeHandle();
+    mHandle = native_handle;
+    mOwnsHandle = false;
+    return *this;
+}
+
+hidl_handle &hidl_handle::operator=(hidl_handle &&other) {
+    if (this != &other) {
+        freeHandle();
+        mHandle = other.mHandle;
+        mOwnsHandle = other.mOwnsHandle;
+        other.mHandle = nullptr;
+        other.mOwnsHandle = false;
+    }
+    return *this;
+}
+
+void hidl_handle::setTo(native_handle_t* handle, bool shouldOwn) {
+    mHandle = handle;
+    mOwnsHandle = shouldOwn;
+}
+
+const native_handle_t* hidl_handle::operator->() const {
+    return mHandle;
+}
+
+// implicit conversion to const native_handle_t*
+hidl_handle::operator const native_handle_t *() const {
+    return mHandle;
+}
+
+// explicit conversion
+const native_handle_t *hidl_handle::getNativeHandle() const {
+    return mHandle;
+}
+
+void hidl_handle::freeHandle() {
+    if (mOwnsHandle && mHandle != nullptr) {
+        // This can only be true if:
+        // 1. Somebody called setTo() with shouldOwn=true, so we know the handle
+        //    wasn't const to begin with.
+        // 2. Copy/assignment from another hidl_handle, in which case we have
+        //    cloned the handle.
+        // 3. Move constructor from another hidl_handle, in which case the original
+        //    hidl_handle must have been non-const as well.
+        native_handle_t *handle = const_cast<native_handle_t*>(
+                static_cast<const native_handle_t*>(mHandle));
+        native_handle_close(handle);
+        native_handle_delete(handle);
+        mHandle = nullptr;
+    }
+}
+
 static const char *const kEmptyString = "";
 
 hidl_string::hidl_string()

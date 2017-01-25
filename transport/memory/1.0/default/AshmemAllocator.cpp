@@ -37,6 +37,8 @@ Return<void> AshmemAllocator::allocate(uint64_t size, allocate_cb _hidl_cb) {
     hidl_memory memory("ashmem", handle, size);
 
     _hidl_cb(true /* success */, memory);
+    native_handle_close(handle);
+    native_handle_delete(handle);
     return Void();
 }
 
