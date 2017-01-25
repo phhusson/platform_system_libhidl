@@ -34,6 +34,7 @@
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
+#include <vintf/Transport.h>
 #include <vector>
 
 namespace android {
@@ -57,6 +58,10 @@ namespace V1_0 {
 }; // namespace hidl
 
 namespace hardware {
+
+// Get transport method from vendor interface manifest.
+// name has the format "android.hardware.foo"
+vintf::Transport getTransportFromManifest(const std::string &name);
 
 // hidl_death_recipient is a callback interfaced that can be used with
 // linkToDeath() / unlinkToDeath()
