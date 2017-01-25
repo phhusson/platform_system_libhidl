@@ -18,6 +18,8 @@
 #include <hidl/HidlSupport.h>
 
 #include <android-base/logging.h>
+#include <vintf/VendorManifest.h>
+#include <vintf/parse_string.h>
 
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <cutils/properties.h>
@@ -28,6 +30,23 @@
 
 namespace android {
 namespace hardware {
+
+vintf::Transport getTransportFromManifest(const std::string &package) {
+    const vintf::VendorManifest *vm = vintf::VendorManifest::Get();
+    if (vm == nullptr) {
+        LOG(ERROR) << "getTransportFromManifest: Cannot find vendor interface manifest.";
+        return vintf::Transport::EMPTY;
+    }
+    vintf::Transport tr = vm->getTransport(package);
+    if (tr == vintf::Transport::EMPTY) {
+        LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
+                     << package << " in vendor interface manifest.";
+    } else {
+        LOG(INFO) << "getTransportFromManifest: " << package
+                  << " declares transport method " << to_string(tr);
+  }
+    return tr;
+}
 
 static const char *const kEmptyString = "";
 
