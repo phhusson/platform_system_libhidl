@@ -17,9 +17,9 @@
 
 #include <hidl/LegacySupport.h>
 
-#include <condition_variable>
+#include <chrono>
 #include <cutils/properties.h>
-#include <mutex>
+#include <thread>
 #include <utils/misc.h>
 #include <utils/Log.h>
 
@@ -27,56 +27,14 @@ namespace android {
 namespace hardware {
 
 static const char* kDataProperty = "vold.post_fs_data_done";
-static std::mutex gDataMutex;
-static std::condition_variable gDataCondition;
-static bool gDataDone = false;
-static bool gDataStarted = false;
-
-static void voldDecryptCallback() {
-    std::lock_guard<std::mutex> lock(gDataMutex);
-
-    if (gDataDone) {
-        return; // TODO: add remove_sysprop_change_callback
-    }
-
-    // more expensive to query property_get_bool than to check the lock
-    if (!property_get_bool(kDataProperty, false)) {
-        return; // other sysprop set, and this hasn't been set yet
-    }
-
-    // file system is mounted!
-
-    gDataDone = true;
-    gDataCondition.notify_all();
-}
 
 void waitForData() {
-    {
-        std::unique_lock<std::mutex> lock(gDataMutex);
+    using namespace std::literals::chrono_literals;
 
-        // unlikely, but we should make sure two threads in the same process
-        // don't call this method at the same time
-        if (gDataStarted) {
-            // just wait to be notified
-            gDataCondition.wait(lock, [] () {
-                return gDataDone;
-            });
-            return;
-        }
+    // TODO(b/34274385) remove this
+    while (!property_get_bool(kDataProperty, false)) {
+        std::this_thread::sleep_for(300ms);
     }
-
-    add_sysprop_change_callback(voldDecryptCallback, 0 /* priority */);
-
-    // if it already got setup before we registered the decrypt callback,
-    // we must still wake up.
-    voldDecryptCallback();
-
-    std::unique_lock<std::mutex> lock(gDataMutex);
-    gDataCondition.wait(lock, [] () {
-        return gDataDone;
-    });
-
-    gDataStarted = true;
 }
 
 namespace details {
