@@ -17,6 +17,7 @@
 #ifndef ANDROID_HARDWARE_ISERVICE_MANAGER_H
 #define ANDROID_HARDWARE_ISERVICE_MANAGER_H
 
+#include <string>
 #include <utils/StrongPointer.h>
 
 namespace android {
@@ -36,6 +37,10 @@ namespace hardware {
 
 sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
 sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
+
+namespace details {
+void waitForHwService(const std::string &interface, const std::string &instanceName);
+};
 
 }; // namespace hardware
 }; // namespace android
