@@ -107,4 +107,17 @@ interface IServiceManager {
                              string name,
                              IServiceNotification callback)
         generates (bool success);
+
+    struct InstanceDebugInfo {
+        string interfaceName;
+        string instanceName;
+        uint64_t refCount;
+    };
+
+    /*
+     * Similar to list, but contains more information for each instance.
+     * @return info a vector where each item contains debug information for each
+     *         instance.
+     */
+    debugDump() generates (vec<InstanceDebugInfo> info);
 };

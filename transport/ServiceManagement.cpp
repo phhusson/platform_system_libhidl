@@ -16,25 +16,32 @@
 
 #define LOG_TAG "ServiceManagement"
 
+#include <condition_variable>
+#include <dlfcn.h>
+#include <dirent.h>
+#include <unistd.h>
+
+#include <mutex>
+#include <regex>
+
 #include <hidl/HidlBinderSupport.h>
 #include <hidl/ServiceManagement.h>
 #include <hidl/Static.h>
 #include <hidl/Status.h>
 
 #include <android-base/logging.h>
-#include <condition_variable>
-#include <dlfcn.h>
-#include <dirent.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
-#include <mutex>
-#include <unistd.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hidl/manager/1.0/BpHwServiceManager.h>
 #include <android/hidl/manager/1.0/BnHwServiceManager.h>
+
+#define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
+#define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
+static const std::regex gLibraryFileNamePattern("(" RE_PATH "@[0-9]+[.][0-9]+)-impl(.*?).so");
 
 using android::hidl::manager::V1_0::IServiceManager;
 using android::hidl::manager::V1_0::IServiceNotification;
@@ -84,6 +91,15 @@ std::vector<std::string> search(const std::string &path,
     }
 
     return results;
+}
+
+bool matchPackageName(const std::string &lib, std::string *matchedName) {
+    std::smatch match;
+    if (std::regex_match(lib, match, gLibraryFileNamePattern)) {
+        *matchedName = match.str(1) + "::I*";
+        return true;
+    }
+    return false;
 }
 
 struct PassthroughServiceManager : IServiceManager {
@@ -168,6 +184,27 @@ beginLookup:
         // This makes no sense.
         LOG(FATAL) << "Cannot register for notifications with passthrough service manager.";
         return false;
+    }
+
+    Return<void> debugDump(debugDump_cb _cb) override {
+        std::vector<InstanceDebugInfo> vec;
+        for (const std::string &path : {
+            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
+        }) {
+            std::vector<std::string> libs = search(path, "", ".so");
+            for (const std::string &lib : libs) {
+                std::string matchedName;
+                if (matchPackageName(lib, &matchedName)) {
+                    vec.push_back({
+                        .interfaceName = matchedName,
+                        .instanceName = "",
+                        .refCount = 0,
+                    });
+                }
+            }
+        }
+        _cb(vec);
+        return Void();
     }
 
 };
