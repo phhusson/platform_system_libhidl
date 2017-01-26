@@ -22,12 +22,14 @@
 #include <hidl/Status.h>
 
 #include <android-base/logging.h>
+#include <condition_variable>
 #include <dlfcn.h>
 #include <dirent.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
+#include <mutex>
 #include <unistd.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
@@ -174,6 +176,66 @@ sp<IServiceManager> getPassthroughServiceManager() {
     static sp<PassthroughServiceManager> manager(new PassthroughServiceManager());
     return manager;
 }
+
+namespace details {
+
+struct Waiter : IServiceNotification {
+    Return<void> onRegistration(const hidl_string& /* fqName */,
+                                const hidl_string& /* name */,
+                                bool /* preexisting */) override {
+        std::unique_lock<std::mutex> lock(mMutex);
+        if (mRegistered) {
+            return Void();
+        }
+        mRegistered = true;
+        lock.unlock();
+
+        mCondition.notify_one();
+        return Void();
+    }
+
+    void wait() {
+        std::unique_lock<std::mutex> lock(mMutex);
+        mCondition.wait(lock, [this]{
+            return mRegistered;
+        });
+    }
+
+private:
+    std::mutex mMutex;
+    std::condition_variable mCondition;
+    bool mRegistered = false;
+};
+
+void waitForHwService(
+        const std::string &interface, const std::string &instanceName) {
+    const sp<IServiceManager> manager = defaultServiceManager();
+
+    if (manager == nullptr) {
+        LOG(ERROR) << "Could not get default service manager.";
+        return;
+    }
+
+    sp<Waiter> waiter = new Waiter();
+    Return<bool> ret = manager->registerForNotifications(interface, instanceName, waiter);
+
+    if (!ret.isOk()) {
+        LOG(ERROR) << "Transport error, " << ret.description()
+            << ", during notification registration for "
+            << interface << "/" << instanceName << ".";
+        return;
+    }
+
+    if (!ret) {
+        LOG(ERROR) << "Could not register for notifications for "
+            << interface << "/" << instanceName << ".";
+        return;
+    }
+
+    waiter->wait();
+}
+
+}; // namespace details
 
 }; // namespace hardware
 }; // namespace android
