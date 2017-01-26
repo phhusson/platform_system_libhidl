@@ -55,6 +55,7 @@ cc_library_shared {
     srcs: [
         "HidlBinderSupport.cpp",
         "HidlPassthroughSupport.cpp",
+        "LegacySupport.cpp",
         "ServiceManagement.cpp",
         "Static.cpp"
     ],
