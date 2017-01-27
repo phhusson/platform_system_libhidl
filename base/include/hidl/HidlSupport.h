@@ -838,7 +838,9 @@ struct HidlInstrumentor {
             const char *method,
             std::vector<void *> *args)>;
 
-    explicit HidlInstrumentor(const std::string &prefix);
+    explicit HidlInstrumentor(
+            const std::string &package,
+            const std::string &insterface);
     virtual ~HidlInstrumentor();
 
  protected:
@@ -870,7 +872,10 @@ struct HidlInstrumentor {
     // Flag whether to enable instrumentation.
     bool mEnableInstrumentation;
     // Prefix to lookup the instrumentation libraries.
-    std::string mInstrumentationLibPrefix;
+    std::string mInstrumentationLibPackage;
+    // Used for dlsym to load the profiling method for given interface.
+    std::string mInterfaceName;
+
 };
 
 ///////////////////// toString functions
