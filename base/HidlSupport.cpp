@@ -280,8 +280,10 @@ bool hidl_string::empty() const {
 
 // ----------------------------------------------------------------------
 // HidlInstrumentor implementation.
-HidlInstrumentor::HidlInstrumentor(const std::string &prefix)
-        : mInstrumentationLibPrefix(prefix) {
+HidlInstrumentor::HidlInstrumentor(
+        const std::string &package,
+        const std::string &interface)
+        : mInstrumentationLibPackage(package), mInterfaceName(interface) {
     configureInstrumentation(false);
 }
 
@@ -335,11 +337,15 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                 continue;
 
             void *handle = dlopen((path + file->d_name).c_str(), RTLD_NOW);
+            char *error;
             if (handle == nullptr) {
                 LOG(WARNING) << "couldn't load file: " << file->d_name
                     << " error: " << dlerror();
                 continue;
             }
+
+            dlerror(); /* Clear any existing error */
+
             using cb_fun = void (*)(
                     const InstrumentationEvent,
                     const char *,
@@ -347,12 +353,12 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                     const char *,
                     const char *,
                     std::vector<void *> *);
-            auto cb = (cb_fun)dlsym(handle, "HIDL_INSTRUMENTATION_FUNCTION");
-            if (cb == nullptr) {
+            auto cb = (cb_fun)dlsym(handle,
+                    ("HIDL_INSTRUMENTATION_FUNCTION_" + mInterfaceName).c_str());
+            if ((error = dlerror()) != NULL) {
                 LOG(WARNING)
-                    << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION, "
-                       "error: "
-                    << dlerror();
+                    << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION_"
+                    << mInterfaceName << ", error: " << error;
                 continue;
             }
             instrumentationCallbacks->push_back(cb);
@@ -371,7 +377,7 @@ bool HidlInstrumentor::isInstrumentationLib(const dirent *file) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     if (file->d_type != DT_REG) return false;
     std::cmatch cm;
-    std::regex e("^" + mInstrumentationLibPrefix + "(.*).profiler.so$");
+    std::regex e("^" + mInstrumentationLibPackage + "(.*).profiler.so$");
     if (std::regex_match(file->d_name, cm, e)) return true;
 #endif
     return false;
