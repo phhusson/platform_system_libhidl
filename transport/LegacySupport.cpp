@@ -47,6 +47,18 @@ bool blockingHalBinderizationEnabled() {
 void blockIfBinderizationDisabled(const std::string& interface,
                                   const std::string& instance) {
     // TODO(b/34274385) remove this
+
+    size_t loc = interface.find_first_of("@");
+    if (loc == std::string::npos) {
+        LOG_ALWAYS_FATAL("Bad interface name: %s", interface.c_str());
+    }
+    std::string package = interface.substr(0, loc);
+
+    // only block if this is supposed to be toggled
+    if (getTransportFromManifest(package) != vintf::Transport::TOGGLED) {
+        return;
+    }
+
     // Must wait for data to be mounted and persistant properties to be read,
     // but only delay the start of hals which require reading this property.
     bool enabled = blockingHalBinderizationEnabled();
