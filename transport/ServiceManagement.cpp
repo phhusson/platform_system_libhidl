@@ -198,7 +198,7 @@ beginLookup:
                     vec.push_back({
                         .interfaceName = matchedName,
                         .instanceName = "",
-                        .refCount = 0,
+                        .refCount = -1,
                     });
                 }
             }
