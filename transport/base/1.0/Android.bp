@@ -5,9 +5,11 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.base@1.0",
     srcs: [
+        "types.hal",
         "IBase.hal",
     ],
     out: [
+        "android/hidl/base/1.0/types.cpp",
         "android/hidl/base/1.0/BaseAll.cpp",
     ],
 }
@@ -17,9 +19,11 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.base@1.0",
     srcs: [
+        "types.hal",
         "IBase.hal",
     ],
     out: [
+        "android/hidl/base/1.0/types.h",
         "android/hidl/base/1.0/IBase.h",
         "android/hidl/base/1.0/IHwBase.h",
         "android/hidl/base/1.0/BnHwBase.h",

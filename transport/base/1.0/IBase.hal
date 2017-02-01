@@ -93,4 +93,11 @@ interface IBase {
      */
     oneway setHALInstrumentation();
 
+    /*
+     * Get debug information on references on this interface.
+     * @return info has the following information:
+     *         - refCount: -1 if not available; or
+     *                     ref count on the stub for remote binderized servers.
+     */
+    getReferenceInfo() generates (ReferenceInfo info);
 };
