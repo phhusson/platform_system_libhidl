@@ -111,7 +111,8 @@ interface IServiceManager {
     struct InstanceDebugInfo {
         string interfaceName;
         string instanceName;
-        uint64_t refCount;
+        // negative values means N/A.
+        int64_t refCount;
     };
 
     /*
