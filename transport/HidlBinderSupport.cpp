@@ -18,6 +18,13 @@
 
 #include <hidl/HidlBinderSupport.h>
 
+// C includes
+#include <unistd.h>
+
+// C++ includes
+#include <fstream>
+#include <sstream>
+
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <android-base/logging.h>
 #endif
