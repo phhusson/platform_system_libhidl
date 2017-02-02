@@ -17,9 +17,10 @@
 package android.hidl.base@1.0;
 
 /*
- * The returned object for getReferenceInfo.
- * refCount: strong reference count on the stub object.
+ * The returned object for getDebugInfo.
+ * pid: pid of current process. -1 if not available.
  */
-struct ReferenceInfo {
-    int64_t refCount;
+struct DebugInfo {
+    int32_t pid;
+    uint64_t ptr;
 };
