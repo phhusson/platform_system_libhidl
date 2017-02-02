@@ -95,9 +95,7 @@ interface IBase {
 
     /*
      * Get debug information on references on this interface.
-     * @return info has the following information:
-     *         - refCount: -1 if not available; or
-     *                     ref count on the stub for remote binderized servers.
+     * @return info debugging information. See comments of DebugInfo.
      */
-    getReferenceInfo() generates (ReferenceInfo info);
+    getDebugInfo() generates (DebugInfo info);
 };

@@ -13,9 +13,9 @@ intermediates := $(local-generated-sources-dir)
 HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 
 #
-# Build types.hal (ReferenceInfo)
+# Build types.hal (DebugInfo)
 #
-GEN := $(intermediates)/android/hidl/base/V1_0/ReferenceInfo.java
+GEN := $(intermediates)/android/hidl/base/V1_0/DebugInfo.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
@@ -24,7 +24,7 @@ $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
         -randroid.hidl:system/libhidl/transport \
-        android.hidl.base@1.0::types.ReferenceInfo
+        android.hidl.base@1.0::types.DebugInfo
 
 $(GEN): $(LOCAL_PATH)/types.hal
 	$(transform-generated-source)
@@ -63,9 +63,9 @@ intermediates := $(local-generated-sources-dir)
 HIDL := $(HOST_OUT_EXECUTABLES)/hidl-gen$(HOST_EXECUTABLE_SUFFIX)
 
 #
-# Build types.hal (ReferenceInfo)
+# Build types.hal (DebugInfo)
 #
-GEN := $(intermediates)/android/hidl/base/V1_0/ReferenceInfo.java
+GEN := $(intermediates)/android/hidl/base/V1_0/DebugInfo.java
 $(GEN): $(HIDL)
 $(GEN): PRIVATE_HIDL := $(HIDL)
 $(GEN): PRIVATE_DEPS := $(LOCAL_PATH)/types.hal
@@ -74,7 +74,7 @@ $(GEN): PRIVATE_CUSTOM_TOOL = \
         $(PRIVATE_HIDL) -o $(PRIVATE_OUTPUT_DIR) \
         -Ljava \
         -randroid.hidl:system/libhidl/transport \
-        android.hidl.base@1.0::types.ReferenceInfo
+        android.hidl.base@1.0::types.DebugInfo
 
 $(GEN): $(LOCAL_PATH)/types.hal
 	$(transform-generated-source)
