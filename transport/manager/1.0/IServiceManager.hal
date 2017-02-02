@@ -112,7 +112,9 @@ interface IServiceManager {
         string interfaceName;
         string instanceName;
         // negative values means N/A.
-        int64_t refCount;
+        int32_t pid;
+        // 0 means N/A.
+        uint64_t ptr;
     };
 
     /*

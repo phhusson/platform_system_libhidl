@@ -17,6 +17,9 @@
 #ifndef ANDROID_HIDL_BINDER_SUPPORT_H
 #define ANDROID_HIDL_BINDER_SUPPORT_H
 
+#include <sys/types.h>
+
+#include <android/hidl/base/1.0/BnHwBase.h>
 #include <android/hidl/base/1.0/IBase.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
@@ -26,7 +29,6 @@
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 #include <hwbinder/ProcessState.h>
-#include <android/hidl/base/1.0/BnHwBase.h>
 // Defines functions for hidl_string, hidl_version, Status, hidl_vec, MQDescriptor,
 // etc. to interact with Parcel.
 
