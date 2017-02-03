@@ -58,7 +58,7 @@ vintf::Transport getTransportForHals(const FQName &fqName) {
     const std::string package = fqName.package();
     const vintf::VendorManifest *vm = vintf::VendorManifest::Get();
     if (vm == nullptr) {
-        LOG(ERROR) << "getTransportFromManifest: Cannot find vendor interface manifest.";
+        LOG(WARNING) << "getTransportFromManifest: Cannot find vendor interface manifest.";
         return vintf::Transport::EMPTY;
     }
     size_t majorVer;
