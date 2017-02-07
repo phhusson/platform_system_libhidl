@@ -33,11 +33,11 @@ sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
         // interfaceChain fails
         return nullptr;
     }
-    auto iter = gBsConstructorMap.find(myDescriptor);
-    if (iter == gBsConstructorMap.end()) {
+    auto func = gBsConstructorMap.get(myDescriptor, nullptr);
+    if (!func) {
         return nullptr;
     }
-    return (iter->second)(reinterpret_cast<void *>(iface.get()));
+    return func(reinterpret_cast<void *>(iface.get()));
 }
 
 

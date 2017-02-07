@@ -19,6 +19,7 @@
 
 #include <android/hidl/base/1.0/IBase.h>
 #include <android/hidl/manager/1.0/IServiceManager.h>
+#include <hidl/ConcurrentMap.h>
 #include <hwbinder/IBinder.h>
 #include <utils/threads.h>
 
@@ -32,14 +33,14 @@ extern sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 // For HidlBinderSupport
 // value function receives reinterpret_cast<void *>(static_cast<IFoo *>(foo)),
 // returns sp<IBinder>
-extern std::map<std::string, std::function<sp<IBinder>(void *)>>
-        gBnConstructorMap;
+extern ConcurrentMap<std::string,
+        std::function<sp<IBinder>(void *)>> gBnConstructorMap;
 
 // For HidlPassthroughSupport
 // value function receives reinterpret_cast<void *>(static_cast<IFoo *>(foo)),
 // returns sp<IBase>
-extern std::map<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
-        gBsConstructorMap;
+extern ConcurrentMap<std::string,
+        std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>> gBsConstructorMap;
 
 }   // namespace hardware
 }   // namespace android

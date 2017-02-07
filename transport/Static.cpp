@@ -25,10 +25,10 @@ namespace hardware {
 Mutex gDefaultServiceManagerLock;
 sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 
-std::map<std::string, std::function<sp<IBinder>(void *)>>
+ConcurrentMap<std::string, std::function<sp<IBinder>(void *)>>
         gBnConstructorMap{};
 
-std::map<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
+ConcurrentMap<std::string, std::function<sp<::android::hidl::base::V1_0::IBase>(void *)>>
         gBsConstructorMap;
 
 }   // namespace hardware
