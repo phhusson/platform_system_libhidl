@@ -328,11 +328,11 @@ sp<IBinder> toBinder(sp<IType> iface) {
             // interfaceChain fails
             return nullptr;
         }
-        auto iter = gBnConstructorMap.find(myDescriptor);
-        if (iter == gBnConstructorMap.end()) {
+        auto func = gBnConstructorMap.get(myDescriptor, nullptr);
+        if (!func) {
             return nullptr;
         }
-        return sp<IBinder>((iter->second)(reinterpret_cast<void *>(ifacePtr)));
+        return sp<IBinder>(func(reinterpret_cast<void *>(ifacePtr)));
     }
 }
 
