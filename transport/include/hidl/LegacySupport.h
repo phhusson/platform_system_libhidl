@@ -71,7 +71,7 @@ status_t registerPassthroughServiceImplementation(
  * Return value is exit status.
  */
 template<class Interface>
-int defaultPassthroughServiceImplementation(std::string name = "default",
+int defaultPassthroughServiceImplementation(std::string name,
                                             size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
     status_t result = registerPassthroughServiceImplementation<Interface>(name);
@@ -82,6 +82,10 @@ int defaultPassthroughServiceImplementation(std::string name = "default",
 
     joinRpcThreadpool();
     return 0;
+}
+template<class Interface>
+int defaultPassthroughServiceImplementation(size_t maxThreads = 1) {
+    return defaultPassthroughServiceImplementation<Interface>("default", maxThreads);
 }
 
 }  // namespace hardware
