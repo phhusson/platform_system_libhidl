@@ -25,7 +25,7 @@ package android.hidl.base@1.0;
  *
  * Methods defined here are shared by all interfaces (this is like
  * java.lang.Object.notify(), for example.) However, the behavior of these
- * functions cannot be overridden.
+ * functions cannot be overridden (with the exception of the "debug" method).
  */
 interface IBase {
 
@@ -98,4 +98,16 @@ interface IBase {
      * @return info debugging information. See comments of DebugInfo.
      */
     getDebugInfo() generates (DebugInfo info);
+
+    /*
+     * Emit diagnostic information to the given file.
+     *
+     * Optionally overriden.
+     *
+     * @param fd      File descriptor to dump data to.
+     *                Must only be used for the duration of this call.
+     * @param options Arguments for debugging.
+     *                Must support empty for default debug information.
+     */
+    debug(handle fd, vec<string> options);
 };
