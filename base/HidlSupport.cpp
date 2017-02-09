@@ -397,8 +397,10 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                     const char *,
                     const char *,
                     std::vector<void *> *);
-            auto cb = (cb_fun)dlsym(handle,
-                    ("HIDL_INSTRUMENTATION_FUNCTION_" + mInterfaceName).c_str());
+            FQName package_name = FQName(mInstrumentationLibPackage);
+            auto cb = (cb_fun)dlsym(handle, ("HIDL_INSTRUMENTATION_FUNCTION_"
+                        + package_name.tokenName() + "_"
+                        + mInterfaceName).c_str());
             if ((error = dlerror()) != NULL) {
                 LOG(WARNING)
                     << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION_"
