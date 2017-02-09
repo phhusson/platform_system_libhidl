@@ -35,6 +35,9 @@ void waitForData() {
     while (!property_get_bool(kDataProperty, false)) {
         std::this_thread::sleep_for(300ms);
     }
+
+    // TODO(b/35178781) wait a bit longer
+    std::this_thread::sleep_for(300ms);
 }
 
 namespace details {
