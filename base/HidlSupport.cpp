@@ -61,13 +61,15 @@ vintf::Transport getTransportForHals(const FQName &fqName) {
         LOG(WARNING) << "getTransportFromManifest: Cannot find vendor interface manifest.";
         return vintf::Transport::EMPTY;
     }
-    if (!fqName.hasVersion()) {
+    size_t majorVer;
+    size_t minorVer;
+    if (   !::android::base::ParseUint(fqName.getPackageMajorVersion(), &majorVer)
+        || !::android::base::ParseUint(fqName.getPackageMinorVersion(), &minorVer)) {
         LOG(ERROR) << "getTransportFromManifest: " << fqName.string()
                    << " does not specify a version.";
         return vintf::Transport::EMPTY;
     }
-    vintf::Transport tr = vm->getTransport(package,
-            vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()});
+    vintf::Transport tr = vm->getTransport(package, vintf::Version{majorVer, minorVer});
     if (tr == vintf::Transport::EMPTY) {
         LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
                      << package << fqName.atVersion() << " in vendor interface manifest.";
