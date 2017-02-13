@@ -102,6 +102,24 @@ bool matchPackageName(const std::string &lib, std::string *matchedName) {
     return false;
 }
 
+static void registerReference(const hidl_string &interfaceName, const hidl_string &instanceName) {
+    sp<IServiceManager> binderizedManager = defaultServiceManager();
+    if (binderizedManager == nullptr) {
+        LOG(WARNING) << "Could not registerReference for "
+                     << interfaceName << "/" << instanceName
+                     << ": null binderized manager.";
+        return;
+    }
+    auto ret = binderizedManager->registerPassthroughClient(interfaceName, instanceName, getpid());
+    if (!ret.isOk()) {
+        LOG(WARNING) << "Could not registerReference for "
+                     << interfaceName << "/" << instanceName
+                     << ": " << ret.description();
+    }
+    LOG(INFO) << "Successfully registerReference for "
+              << interfaceName << "/" << instanceName;
+}
+
 struct PassthroughServiceManager : IServiceManager {
     Return<sp<IBase>> get(const hidl_string& fqName,
                      const hidl_string& name) override {
@@ -156,6 +174,9 @@ beginLookup:
                        << " but could not find symbol " << sym;
             return nullptr;
         }
+
+        registerReference(fqName, name);
+
         return (*generator)(name);
     }
 
@@ -166,9 +187,20 @@ beginLookup:
         return false;
     }
 
-    Return<void> list(list_cb /* _hidl_cb */) override {
-        // TODO: add this functionality
-        LOG(FATAL) << "Cannot list services with passthrough service manager.";
+    Return<void> list(list_cb _hidl_cb) override {
+        std::vector<hidl_string> vec;
+        for (const std::string &path : {
+            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
+        }) {
+            std::vector<std::string> libs = search(path, "", ".so");
+            for (const std::string &lib : libs) {
+                std::string matchedName;
+                if (matchPackageName(lib, &matchedName)) {
+                    vec.push_back(matchedName + "/*");
+                }
+            }
+        }
+        _hidl_cb(vec);
         return Void();
     }
     Return<void> listByInterface(const hidl_string& /* fqInstanceName */,
@@ -186,25 +218,17 @@ beginLookup:
         return false;
     }
 
-    Return<void> debugDump(debugDump_cb _cb) override {
-        std::vector<InstanceDebugInfo> vec;
-        for (const std::string &path : {
-            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
-        }) {
-            std::vector<std::string> libs = search(path, "", ".so");
-            for (const std::string &lib : libs) {
-                std::string matchedName;
-                if (matchPackageName(lib, &matchedName)) {
-                    vec.push_back({
-                        .interfaceName = matchedName,
-                        .instanceName = "",
-                        .pid = -1,
-                        .ptr = 0,
-                    });
-                }
-            }
-        }
-        _cb(vec);
+    Return<void> debugDump(debugDump_cb) override {
+        // This makes no sense.
+        LOG(FATAL) << "Cannot call debugDump on passthrough service manager."
+                   << "Call it on defaultServiceManager() instead.";
+        return Void();
+    }
+
+    Return<void> registerPassthroughClient(const hidl_string &, const hidl_string &, int32_t) override {
+        // This makes no sense.
+        LOG(FATAL) << "Cannot call registerPassthroughClient on passthrough service manager. "
+                   << "Call it on defaultServiceManager() instead.";
         return Void();
     }
 
