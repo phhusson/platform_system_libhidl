@@ -81,9 +81,6 @@ TEST_F(LibHidlTest, StringTest) {
     s.clear(); // should not affect myCString
     EXPECT_STREQ(myCString, "myDString");
 
-    // operator <
-    EXPECT_LT("ab", "bcd");
-
     // casts
     s = "great";
     std::string myString = s;
@@ -101,18 +98,33 @@ TEST_F(LibHidlTest, StringTest) {
     const char * cstrNE = "ABC";
     std::string stringNE(cstrNE);
     hidl_string hsNE(cstrNE);
+    const char * cstr2 = "def";
+    std::string string2(cstr2);
+    hidl_string hs2(cstr2);
+
     EXPECT_TRUE(hs1  == hsE);
-    EXPECT_FALSE(hs1 != hsE);
-    EXPECT_TRUE(hs1  != hsNE);
     EXPECT_FALSE(hs1 == hsNE);
     EXPECT_TRUE(hs1  == cstrE);
-    EXPECT_FALSE(hs1 != cstrE);
-    EXPECT_TRUE(hs1  != cstrNE);
     EXPECT_FALSE(hs1 == cstrNE);
     EXPECT_TRUE(hs1  == stringE);
+    EXPECT_FALSE(hs1 == stringNE);
+    EXPECT_FALSE(hs1 != hsE);
+    EXPECT_TRUE(hs1  != hsNE);
+    EXPECT_FALSE(hs1 != cstrE);
+    EXPECT_TRUE(hs1  != cstrNE);
     EXPECT_FALSE(hs1 != stringE);
     EXPECT_TRUE(hs1  != stringNE);
-    EXPECT_FALSE(hs1 == stringNE);
+
+    EXPECT_TRUE(hs1 < hs2);
+    EXPECT_FALSE(hs2 < hs1);
+    EXPECT_TRUE(hs2 > hs1);
+    EXPECT_FALSE(hs1 > hs2);
+    EXPECT_TRUE(hs1 <= hs1);
+    EXPECT_TRUE(hs1 <= hs2);
+    EXPECT_FALSE(hs2 <= hs1);
+    EXPECT_TRUE(hs1 >= hs1);
+    EXPECT_TRUE(hs2 >= hs1);
+    EXPECT_FALSE(hs2 <= hs1);
 }
 
 TEST_F(LibHidlTest, MemoryTest) {
