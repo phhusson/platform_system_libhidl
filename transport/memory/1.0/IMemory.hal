@@ -19,12 +19,24 @@ package android.hidl.memory@1.0;
 interface IMemory {
 
     /**
-     * Notify that you are about to use this memory.
+     * Notify that you are about to use all of this memory.
      */
     update();
 
     /**
+     * Notify that you are about to use the specific range.
+     *
+     * start + length must be < size
+     *
+     * @param start Offset from start of buffer about to be updated.
+     * @param length Number of bytes to be updated.
+     */
+    updateRange(uint64_t start, uint64_t length);
+
+    /**
      * Notify that you are done modifying this memory.
+     *
+     * Must commit all previous update's and updateAll's.
      */
     commit();
 
