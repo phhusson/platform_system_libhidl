@@ -37,12 +37,17 @@ AshmemMemory::~AshmemMemory()
 
 // Methods from ::android::hidl::memory::V1_0::IMemory follow.
 Return<void> AshmemMemory::update() {
-    // NOOP
+    // NOOP (since non-remoted memory)
+    return Void();
+}
+
+Return<void> AshmemMemory::updateRange(uint64_t start, uint64_t length) {
+    // NOOP (since non-remoted memory)
     return Void();
 }
 
 Return<void> AshmemMemory::commit() {
-    // NOOP
+    // NOOP (since non-remoted memory)
     return Void();
 }
 

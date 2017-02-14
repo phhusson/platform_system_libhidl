@@ -43,6 +43,7 @@ struct AshmemMemory : public IMemory {
 
     // Methods from ::android::hidl::memory::V1_0::IMemory follow.
     Return<void> update() override;
+    Return<void> updateRange(uint64_t start, uint64_t length) override;
     Return<void> commit() override;
     Return<void*> getPointer() override;
     Return<uint64_t> getSize() override;
