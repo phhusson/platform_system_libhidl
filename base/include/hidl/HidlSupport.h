@@ -157,8 +157,6 @@ struct hidl_string {
     // to maintain this hidl_string alive.
     operator const char *() const;
 
-    bool operator< (const hidl_string &rhs) const;
-
     void clear();
 
     // Reference an external char array. Ownership is _not_ transferred.
@@ -181,29 +179,25 @@ private:
     void moveFrom(hidl_string &&);
 };
 
-inline bool operator==(const hidl_string &hs1, const hidl_string &hs2) {
-    return strcmp(hs1.c_str(), hs2.c_str()) == 0;
-}
+#define HIDL_STRING_OPERATOR(OP)                                               \
+    inline bool operator OP(const hidl_string &hs1, const hidl_string &hs2) {  \
+        return strcmp(hs1.c_str(), hs2.c_str()) OP 0;                          \
+    }                                                                          \
+    inline bool operator OP(const hidl_string &hs, const char *s) {            \
+        return strcmp(hs.c_str(), s) OP 0;                                     \
+    }                                                                          \
+    inline bool operator OP(const char *s, const hidl_string &hs) {            \
+        return strcmp(hs.c_str(), s) OP 0;                                     \
+    }
 
-inline bool operator!=(const hidl_string &hs1, const hidl_string &hs2) {
-    return !(hs1 == hs2);
-}
+HIDL_STRING_OPERATOR(==)
+HIDL_STRING_OPERATOR(!=)
+HIDL_STRING_OPERATOR(<)
+HIDL_STRING_OPERATOR(<=)
+HIDL_STRING_OPERATOR(>)
+HIDL_STRING_OPERATOR(>=)
 
-inline bool operator==(const hidl_string &hs, const char *s) {
-    return strcmp(hs.c_str(), s) == 0;
-}
-
-inline bool operator!=(const hidl_string &hs, const char *s) {
-    return !(hs == s);
-}
-
-inline bool operator==(const char *s, const hidl_string &hs) {
-    return strcmp(hs.c_str(), s) == 0;
-}
-
-inline bool operator!=(const char *s, const hidl_string &hs) {
-    return !(s == hs);
-}
+#undef HIDL_STRING_OPERATOR
 
 // hidl_memory is a structure that can be used to transfer
 // pieces of shared memory between processes. The assumption
