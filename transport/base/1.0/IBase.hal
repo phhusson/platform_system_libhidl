@@ -30,6 +30,12 @@ package android.hidl.base@1.0;
 interface IBase {
 
     /*
+     * Provides way to determine if interface is running without requesting
+     * any functionality.
+     */
+    ping();
+
+    /*
      * Provides run-time type information for this object.
      * For example, for the following interface definition:
      *     package android.hardware.foo@1.0;
