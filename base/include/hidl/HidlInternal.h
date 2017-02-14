@@ -41,7 +41,7 @@ struct hidl_log_base {
 template<typename T>
 struct hidl_pointer {
     hidl_pointer()
-        : mPointer(nullptr) {
+        : _pad(0) {
     }
     hidl_pointer(T* ptr)
         : mPointer(ptr) {
