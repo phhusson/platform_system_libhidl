@@ -121,5 +121,12 @@ interface IServiceManager {
      */
     debugDump() generates (vec<InstanceDebugInfo> info);
 
+    /*
+     * When the passthrough service manager returns a service via
+     * get(string, string), it must dispatch a registerPassthroughClient call
+     * to the binderized service manager to indicate which process has called
+     * get. Binderized service manager must record this PID, which can
+     * be retrieved via debugDump.
+     */
     oneway registerPassthroughClient(string fqName, string name, int32_t pid);
 };
