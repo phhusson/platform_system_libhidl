@@ -18,6 +18,10 @@
 #define ANDROID_HIDL_INTERNAL_H
 
 #include <cstdint>
+#include <dirent.h>
+#include <functional>
+#include <string>
+#include <vector>
 #include <utility>
 
 namespace android {
@@ -91,6 +95,84 @@ private:
         T* mPointer;
         uint64_t _pad;
     };
+};
+
+#if defined(__LP64__)
+#define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
+#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib64/hw/"
+#define HAL_LIBRARY_PATH_ODM "/odm/lib64/hw/"
+#else
+#define HAL_LIBRARY_PATH_SYSTEM "/system/lib/hw/"
+#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib/hw/"
+#define HAL_LIBRARY_PATH_ODM "/odm/lib/hw/"
+#endif
+
+// ----------------------------------------------------------------------
+// Class that provides Hidl instrumentation utilities.
+struct HidlInstrumentor {
+    // Event that triggers the instrumentation. e.g. enter of an API call on
+    // the server/client side, exit of an API call on the server/client side
+    // etc.
+    enum InstrumentationEvent {
+        SERVER_API_ENTRY = 0,
+        SERVER_API_EXIT,
+        CLIENT_API_ENTRY,
+        CLIENT_API_EXIT,
+        SYNC_CALLBACK_ENTRY,
+        SYNC_CALLBACK_EXIT,
+        ASYNC_CALLBACK_ENTRY,
+        ASYNC_CALLBACK_EXIT,
+        PASSTHROUGH_ENTRY,
+        PASSTHROUGH_EXIT,
+    };
+
+    // Signature of the instrumentation callback function.
+    using InstrumentationCallback = std::function<void(
+            const InstrumentationEvent event,
+            const char *package,
+            const char *version,
+            const char *interface,
+            const char *method,
+            std::vector<void *> *args)>;
+
+    explicit HidlInstrumentor(
+            const std::string &package,
+            const std::string &insterface);
+    virtual ~HidlInstrumentor();
+
+ protected:
+    // Set mEnableInstrumentation based on system property
+    // hal.instrumentation.enable, register/de-register instrumentation
+    // callbacks if mEnableInstrumentation is true/false.
+    void configureInstrumentation(bool log=true);
+    // Function that lookup and dynamically loads the hidl instrumentation
+    // libraries and registers the instrumentation callback functions.
+    //
+    // The instrumentation libraries should be stored under any of the following
+    // directories: HAL_LIBRARY_PATH_SYSTEM, HAL_LIBRARY_PATH_VENDOR and
+    // HAL_LIBRARY_PATH_ODM. The name of instrumentation libraries should
+    // follow pattern: ^profilerPrefix(.*).profiler.so$
+    //
+    // Each instrumentation library is expected to implement the instrumentation
+    // function called HIDL_INSTRUMENTATION_FUNCTION.
+    //
+    // A no-op for user build.
+    void registerInstrumentationCallbacks(
+            std::vector<InstrumentationCallback> *instrumentationCallbacks);
+
+    // Utility function to determine whether a give file is a instrumentation
+    // library (i.e. the file name follow the expected pattern).
+    bool isInstrumentationLib(const dirent *file);
+
+    // A list of registered instrumentation callbacks.
+    std::vector<InstrumentationCallback> mInstrumentationCallbacks;
+    // Flag whether to enable instrumentation.
+    bool mEnableInstrumentation;
+    // Prefix to lookup the instrumentation libraries.
+    std::string mInstrumentationLibPackage;
+    // Used for dlsym to load the profiling method for given interface.
+    std::string mInterfaceName;
+
 };
 
 }  // namespace details
