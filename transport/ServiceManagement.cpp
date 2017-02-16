@@ -116,8 +116,8 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
                      << interfaceName << "/" << instanceName
                      << ": " << ret.description();
     }
-    LOG(INFO) << "Successfully registerReference for "
-              << interfaceName << "/" << instanceName;
+    LOG(VERBOSE) << "Successfully registerReference for "
+                 << interfaceName << "/" << instanceName;
 }
 
 struct PassthroughServiceManager : IServiceManager {
