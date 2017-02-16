@@ -126,7 +126,7 @@ struct hidl_string {
 
     // copy constructor.
     hidl_string(const hidl_string &);
-    // copy from a C-style string.
+    // copy from a C-style string. nullptr will create an empty string
     hidl_string(const char *);
     // copy the first length characters from a C-style string.
     hidl_string(const char *, size_t length);
