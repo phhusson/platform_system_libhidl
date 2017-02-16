@@ -156,6 +156,7 @@ hidl_handle &hidl_handle::operator=(hidl_handle &&other) {
 }
 
 void hidl_handle::setTo(native_handle_t* handle, bool shouldOwn) {
+    freeHandle();
     mHandle = handle;
     mOwnsHandle = shouldOwn;
 }
