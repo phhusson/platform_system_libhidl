@@ -152,7 +152,8 @@ namespace details {
         return_status() {}
         return_status(Status s) : mStatus(s) {}
 
-        return_status(const return_status &) = default;
+        return_status(const return_status &) = delete;
+        return_status &operator=(const return_status &) = delete;
 
         return_status(return_status &&other) {
             *this = std::move(other);
@@ -186,8 +187,6 @@ public:
     Return(T v) : details::return_status(), mVal{v} {}
     Return(Status s) : details::return_status(s) {}
 
-    Return(const Return &) = default;
-
     // move-able.
     // precondition: "this" has checked status
     // postcondition: other is safe to destroy after moving to *this.
@@ -214,8 +213,6 @@ public:
     template<typename U> Return(U* v) : details::return_status(), mVal{v} {}
     Return(Status s) : details::return_status(s) {}
 
-    Return(const Return &) = default;
-
     // move-able.
     // precondition: "this" has checked status
     // postcondition: other is safe to destroy after moving to *this.
@@ -235,8 +232,6 @@ template<> class Return<void> : public details::return_status {
 public:
     Return() : details::return_status() {}
     Return(Status s) : details::return_status(s) {}
-
-    Return(const Return &) = default;
 
     // move-able.
     // precondition: "this" has checked status
