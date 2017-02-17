@@ -195,6 +195,10 @@ hidl_string::~hidl_string() {
 }
 
 hidl_string::hidl_string(const char *s) : hidl_string() {
+    if (s == nullptr) {
+        return;
+    }
+
     copyFrom(s, strlen(s));
 }
 
