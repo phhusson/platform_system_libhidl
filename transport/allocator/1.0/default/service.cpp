@@ -1,15 +1,15 @@
-#define LOG_TAG "android.hidl.memory@1.0-service"
+#define LOG_TAG "android.hidl.allocator@1.0-service"
 
 #include "AshmemAllocator.h"
 
 #include <android-base/logging.h>
-#include <android/hidl/memory/1.0/IAllocator.h>
+#include <android/hidl/allocator/1.0/IAllocator.h>
 #include <hidl/HidlTransportSupport.h>
 
 using android::hardware::configureRpcThreadpool;
 using android::hardware::joinRpcThreadpool;
-using android::hidl::memory::V1_0::IAllocator;
-using android::hidl::memory::V1_0::implementation::AshmemAllocator;
+using android::hidl::allocator::V1_0::IAllocator;
+using android::hidl::allocator::V1_0::implementation::AshmemAllocator;
 using android::sp;
 using android::status_t;
 

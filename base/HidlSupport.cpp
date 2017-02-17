@@ -28,10 +28,10 @@
 namespace android {
 namespace hardware {
 vintf::Transport getTransportForFrameworkPackages(const std::string &name) {
-    // TODO(b/34772739): check with VNDK team to see if this should be in an XML.
+    // TODO(b/34772739): move to framework vintf
     const static std::unordered_map<std::string, vintf::Transport> sTransports {
         {"android.hidl.manager@1.0::IServiceManager", vintf::Transport::HWBINDER},
-        {"android.hidl.memory@1.0::IAllocator"      , vintf::Transport::HWBINDER},
+        {"android.hidl.allocator@1.0::IAllocator"   , vintf::Transport::HWBINDER},
         {"android.hidl.memory@1.0::IMapper"         , vintf::Transport::PASSTHROUGH},
         {"android.hidl.memory@1.0::IMemory"         , vintf::Transport::PASSTHROUGH},
     };

@@ -7,6 +7,7 @@ if [ ! -d system/libhidl/transport ] ; then
 fi
 
 packages=(
+    android.hidl.allocator@1.0
     android.hidl.base@1.0
     android.hidl.manager@1.0
     android.hidl.memory@1.0
