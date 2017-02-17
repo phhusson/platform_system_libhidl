@@ -12,7 +12,7 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.token@1.0",
     srcs: [
-        "ITokenManager.hal",
+        ":android.hidl.token@1.0_hal",
     ],
     out: [
         "android/hidl/token/1.0/TokenManagerAll.cpp",
@@ -24,7 +24,7 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.token@1.0",
     srcs: [
-        "ITokenManager.hal",
+        ":android.hidl.token@1.0_hal",
     ],
     out: [
         "android/hidl/token/1.0/ITokenManager.h",

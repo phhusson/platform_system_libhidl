@@ -3,7 +3,6 @@
 filegroup {
     name: "android.hidl.memory@1.0_hal",
     srcs: [
-        "IAllocator.hal",
         "IMapper.hal",
         "IMemory.hal",
     ],
@@ -14,12 +13,9 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.memory@1.0",
     srcs: [
-        "IAllocator.hal",
-        "IMapper.hal",
-        "IMemory.hal",
+        ":android.hidl.memory@1.0_hal",
     ],
     out: [
-        "android/hidl/memory/1.0/AllocatorAll.cpp",
         "android/hidl/memory/1.0/MapperAll.cpp",
         "android/hidl/memory/1.0/MemoryAll.cpp",
     ],
@@ -30,16 +26,9 @@ genrule {
     tools: ["hidl-gen"],
     cmd: "$(location hidl-gen) -o $(genDir) -Lc++ -randroid.hidl:system/libhidl/transport android.hidl.memory@1.0",
     srcs: [
-        "IAllocator.hal",
-        "IMapper.hal",
-        "IMemory.hal",
+        ":android.hidl.memory@1.0_hal",
     ],
     out: [
-        "android/hidl/memory/1.0/IAllocator.h",
-        "android/hidl/memory/1.0/IHwAllocator.h",
-        "android/hidl/memory/1.0/BnHwAllocator.h",
-        "android/hidl/memory/1.0/BpHwAllocator.h",
-        "android/hidl/memory/1.0/BsAllocator.h",
         "android/hidl/memory/1.0/IMapper.h",
         "android/hidl/memory/1.0/IHwMapper.h",
         "android/hidl/memory/1.0/BnHwMapper.h",
