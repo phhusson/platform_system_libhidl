@@ -16,7 +16,6 @@
 
 #include "HidlFetch.h"
 
-#include "AshmemAllocator.h"
 #include "AshmemMapper.h"
 
 static std::string kAshmemMemoryName = "ashmem";
