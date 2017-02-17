@@ -22,7 +22,7 @@
 #include <android-base/logging.h>
 #include <android-base/parseint.h>
 #include <hidl-util/FQName.h>
-#include <vintf/VendorManifest.h>
+#include <vintf/HalManifest.h>
 #include <vintf/parse_string.h>
 
 namespace android {
@@ -49,7 +49,7 @@ vintf::Transport getTransportForFrameworkPackages(const std::string &name) {
 
 vintf::Transport getTransportForHals(const FQName &fqName) {
     const std::string package = fqName.package();
-    const vintf::VendorManifest *vm = vintf::VendorManifest::Get();
+    const vintf::HalManifest *vm = vintf::HalManifest::Get();
     if (vm == nullptr) {
         LOG(WARNING) << "getTransportFromManifest: Cannot find vendor interface manifest.";
         return vintf::Transport::EMPTY;
