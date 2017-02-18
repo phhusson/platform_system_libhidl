@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.hidl.memory@1.0;
+package android.hidl.allocator@1.0;
 
 /**
  * Interface which allocates the required memory.

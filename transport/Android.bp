@@ -13,6 +13,8 @@
 // limitations under the License.
 
 subdirs = [
+    "allocator/1.0",
+    "allocator/1.0/default",
     "base/1.0",
     "manager/1.0",
     "memory/1.0",

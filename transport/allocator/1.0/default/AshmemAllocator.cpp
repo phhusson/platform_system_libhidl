@@ -20,11 +20,11 @@
 
 namespace android {
 namespace hidl {
-namespace memory {
+namespace allocator {
 namespace V1_0 {
 namespace implementation {
 
-// Methods from ::android::hidl::memory::V1_0::IAllocator follow.
+// Methods from ::android::hidl::allocator::V1_0::IAllocator follow.
 Return<void> AshmemAllocator::allocate(uint64_t size, allocate_cb _hidl_cb) {
     int fd = ashmem_create_region("AshmemAllocator_hidl", size);
     if (fd < 0) {
@@ -44,6 +44,6 @@ Return<void> AshmemAllocator::allocate(uint64_t size, allocate_cb _hidl_cb) {
 
 }  // namespace implementation
 }  // namespace V1_0
-}  // namespace memory
+}  // namespace allocator
 }  // namespace hidl
 }  // namespace android
