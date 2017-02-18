@@ -154,6 +154,16 @@ namespace details {
 
         return_status(const return_status &) = default;
 
+        return_status(return_status &&other) {
+            *this = std::move(other);
+        }
+        return_status &operator=(return_status &&other) {
+            checkStatus();
+            std::swap(mStatus, other.mStatus);
+            std::swap(mCheckedStatus, other.mCheckedStatus);
+            return *this;
+        }
+
         ~return_status();
 
         bool isOk() const {
@@ -178,6 +188,12 @@ public:
 
     Return(const Return &) = default;
 
+    // move-able.
+    // precondition: "this" has checked status
+    // postcondition: other is safe to destroy after moving to *this.
+    Return(Return &&other) = default;
+    Return &operator=(Return &&) = default;
+
     ~Return() = default;
 
     operator T() const {
@@ -199,6 +215,13 @@ public:
     Return(Status s) : details::return_status(s) {}
 
     Return(const Return &) = default;
+
+    // move-able.
+    // precondition: "this" has checked status
+    // postcondition: other is safe to destroy after moving to *this.
+    Return(Return &&other) = default;
+    Return &operator=(Return &&) = default;
+
     ~Return() = default;
 
     operator sp<T>() const {
@@ -214,6 +237,12 @@ public:
     Return(Status s) : details::return_status(s) {}
 
     Return(const Return &) = default;
+
+    // move-able.
+    // precondition: "this" has checked status
+    // postcondition: other is safe to destroy after moving to *this.
+    Return(Return &&) = default;
+    Return &operator=(Return &&) = default;
 
     ~Return() = default;
 };
