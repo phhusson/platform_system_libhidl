@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HIDL_ASHMEM_MEMORY_V1_0_ALLOCATOR_H
-#define ANDROID_HIDL_ASHMEM_MEMORY_V1_0_ALLOCATOR_H
+#ifndef ANDROID_HIDL_ASHMEM_ALLOCATOR_V1_0_ALLOCATOR_H
+#define ANDROID_HIDL_ASHMEM_ALLOCATOR_V1_0_ALLOCATOR_H
 
-#include <android/hidl/memory/1.0/IAllocator.h>
+#include <android/hidl/allocator/1.0/IAllocator.h>
 #include <hidl/MQDescriptor.h>
 #include <hidl/Status.h>
 
 namespace android {
 namespace hidl {
-namespace memory {
+namespace allocator {
 namespace V1_0 {
 namespace implementation {
 
-using ::android::hidl::memory::V1_0::IAllocator;
+using ::android::hidl::allocator::V1_0::IAllocator;
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_memory;
 using ::android::hardware::hidl_string;
@@ -37,15 +37,15 @@ using ::android::hardware::Void;
 using ::android::sp;
 
 struct AshmemAllocator : public IAllocator {
-    // Methods from ::android::hidl::memory::V1_0::IAllocator follow.
+    // Methods from ::android::hidl::allocator::V1_0::IAllocator follow.
     Return<void> allocate(uint64_t size, allocate_cb _hidl_cb) override;
 
 };
 
 }  // namespace implementation
 }  // namespace V1_0
-}  // namespace memory
+}  // namespace allocator
 }  // namespace hidl
 }  // namespace android
 
-#endif  // ANDROID_HIDL_ASHMEM_MEMORY_V1_0_ALLOCATOR_H
+#endif  // ANDROID_HIDL_ASHMEM_ALLOCATOR_V1_0_ALLOCATOR_H
