@@ -17,7 +17,6 @@
 #ifndef HIDL_FETCH_H
 #define HIDL_FETCH_H
 
-#include <android/hidl/memory/1.0/IAllocator.h>
 #include <android/hidl/memory/1.0/IMapper.h>
 
 namespace android {
