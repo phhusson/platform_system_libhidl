@@ -41,7 +41,7 @@ Return<void> AshmemMemory::update() {
     return Void();
 }
 
-Return<void> AshmemMemory::updateRange(uint64_t start, uint64_t length) {
+Return<void> AshmemMemory::updateRange(uint64_t /* start */, uint64_t /* length */) {
     // NOOP (since non-remoted memory)
     return Void();
 }

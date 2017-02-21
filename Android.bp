@@ -18,6 +18,11 @@ subdirs = [
     "transport",      // libhidltransport
 ]
 
+libhidl_flags = [
+    "-Wall",
+    "-Werror",
+]
+
 cc_test {
     name: "libhidl_test",
     gtest: false,
@@ -37,5 +42,5 @@ cc_test {
     cflags: [
         "-O0",
         "-g",
-    ],
+    ] + libhidl_flags,
 }
