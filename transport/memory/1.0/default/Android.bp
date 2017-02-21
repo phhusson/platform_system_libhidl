@@ -16,6 +16,7 @@ cc_library_shared {
     name: "android.hidl.memory@1.0-impl",
     compile_multilib: "both",
     relative_install_path: "hw",
+    cflags: libhidl_flags,
     srcs: [
         "AshmemMapper.cpp",
         "AshmemMemory.cpp",
