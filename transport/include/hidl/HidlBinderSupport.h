@@ -356,13 +356,8 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
     }
 }
 
-inline void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
-    ProcessState::self()->setThreadPoolConfiguration(maxThreads, callerWillJoin /*callerJoinsPool*/);
-}
-
-inline void joinBinderRpcThreadpool() {
-    IPCThreadState::self()->joinThreadPool();
-}
+void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin);
+void joinBinderRpcThreadpool();
 
 }  // namespace hardware
 }  // namespace android
