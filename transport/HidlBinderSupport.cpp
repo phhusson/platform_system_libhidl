@@ -185,5 +185,13 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
     return status;
 }
 
+void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
+    ProcessState::self()->setThreadPoolConfiguration(maxThreads, callerWillJoin /*callerJoinsPool*/);
+}
+
+void joinBinderRpcThreadpool() {
+    IPCThreadState::self()->joinThreadPool();
+}
+
 }  // namespace hardware
 }  // namespace android
