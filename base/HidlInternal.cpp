@@ -129,6 +129,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
     }
 #else
     // No-op for user builds.
+    (void) instrumentationCallbacks;
     return;
 #endif
 }
@@ -139,6 +140,8 @@ bool HidlInstrumentor::isInstrumentationLib(const dirent *file) {
     std::cmatch cm;
     std::regex e("^" + mInstrumentationLibPackage + "(.*).profiler.so$");
     if (std::regex_match(file->d_name, cm, e)) return true;
+#else
+    (void) file;
 #endif
     return false;
 }
