@@ -21,7 +21,8 @@
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <hidl/ConcurrentMap.h>
 #include <hwbinder/IBinder.h>
-#include <utils/threads.h>
+#include <utils/StrongPointer.h>
+#include <utils/Mutex.h>
 
 namespace android {
 namespace hardware {
