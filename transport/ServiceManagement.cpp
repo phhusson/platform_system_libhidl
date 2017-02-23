@@ -175,9 +175,13 @@ beginLookup:
             return nullptr;
         }
 
-        registerReference(fqName, name);
+        IBase *interface = (*generator)(name);
 
-        return (*generator)(name);
+        if (interface != nullptr) {
+            registerReference(fqName, name);
+        }
+
+        return interface;
     }
 
     Return<bool> add(const hidl_vec<hidl_string>& /* interfaceChain */,
