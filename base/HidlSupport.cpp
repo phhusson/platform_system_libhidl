@@ -37,8 +37,8 @@ vintf::Transport getTransportForFrameworkPackages(const std::string &name) {
     };
     auto it = sTransports.find(name);
     if (it == sTransports.end()) {
-        LOG(WARNING) << "getTransportForFrameworkPackages: Cannot find entry "
-                     << name << " in the static map.";
+        LOG(ERROR) << "getTransportForFrameworkPackages: Cannot find entry "
+                     << name << " in the static map. Using default transport.";
         return vintf::Transport::EMPTY;
     } else {
         LOG(INFO) << "getTransportForFrameworkPackages: " << name
@@ -51,21 +51,18 @@ vintf::Transport getTransportForHals(const FQName &fqName) {
     const std::string package = fqName.package();
     const vintf::HalManifest *vm = vintf::HalManifest::Get();
     if (vm == nullptr) {
-        LOG(WARNING) << "getTransportFromManifest: Cannot find vendor interface manifest.";
-        return vintf::Transport::EMPTY;
-    }
-    if (!fqName.hasVersion()) {
-        LOG(ERROR) << "getTransportFromManifest: " << fqName.string()
-                   << " does not specify a version.";
+        LOG(WARNING) << "getTransportForHals: No VINTF defined, using default transport for "
+                     << fqName.string() << ".";
         return vintf::Transport::EMPTY;
     }
     vintf::Transport tr = vm->getTransport(package,
             vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()});
     if (tr == vintf::Transport::EMPTY) {
-        LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
-                     << package << fqName.atVersion() << " in vendor interface manifest.";
+        LOG(WARNING) << "getTransportForHals: Cannot find entry "
+                     << package << fqName.atVersion()
+                     << " in vendor interface manifest. Using default transport.";
     } else {
-        LOG(INFO) << "getTransportFromManifest: " << package << fqName.atVersion()
+        LOG(INFO) << "getTransportForHals: " << package << fqName.atVersion()
                   << " declares transport method " << to_string(tr);
     }
     return tr;
@@ -74,7 +71,12 @@ vintf::Transport getTransportForHals(const FQName &fqName) {
 vintf::Transport getTransport(const std::string &name) {
     FQName fqName(name);
     if (!fqName.isValid()) {
-        LOG(WARNING) << name << " is not a valid fully-qualified name.";
+        LOG(ERROR) << "getTransport: " << name << " is not a valid fully-qualified name.";
+        return vintf::Transport::EMPTY;
+    }
+    if (!fqName.hasVersion()) {
+        LOG(ERROR) << "getTransport: " << fqName.string()
+                   << " does not specify a version. Using default transport.";
         return vintf::Transport::EMPTY;
     }
     if (fqName.inPackage("android.hidl")) {
