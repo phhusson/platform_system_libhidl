@@ -323,9 +323,9 @@ sp<IBinder> toBinder(sp<IType> iface) {
     if (ifacePtr->isRemote()) {
         return ::android::hardware::IInterface::asBinder(static_cast<ProxyType *>(ifacePtr));
     } else {
-        std::string myDescriptor = getDescriptor(ifacePtr);
+        std::string myDescriptor = details::getDescriptor(ifacePtr);
         if (myDescriptor.empty()) {
-            // interfaceChain fails
+            // interfaceDescriptor fails
             return nullptr;
         }
         auto func = gBnConstructorMap.get(myDescriptor, nullptr);
@@ -348,7 +348,7 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
         return new ProxyType(binderIface);
     }
     sp<IBase> base = static_cast<BnHwBase*>(binderIface.get())->getImpl();
-    if (canCastInterface(base.get(), IType::descriptor)) {
+    if (details::canCastInterface(base.get(), IType::descriptor)) {
         StubType* stub = static_cast<StubType*>(binderIface.get());
         return stub->getImpl();
     } else {
