@@ -21,6 +21,7 @@
 
 namespace android {
 namespace hardware {
+namespace details {
 
 /*
  * Verifies the interface chain of 'interface' contains 'castTo'
@@ -44,14 +45,14 @@ inline bool canCastInterface(::android::hidl::base::V1_0::IBase* interface, cons
 
 inline std::string getDescriptor(::android::hidl::base::V1_0::IBase* interface) {
     std::string myDescriptor{};
-    auto ret = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
-        if (types.size() > 0) {
-            myDescriptor = types[0].c_str();
-        }
+    auto ret = interface->interfaceDescriptor([&](const hidl_string &types) {
+        myDescriptor = types.c_str();
     });
-    return ret.isOk() ? myDescriptor : "";
+    ret.isOk(); // ignored, return empty string if not isOk()
+    return myDescriptor;
 }
 
+}   // namespace details
 }   // namespace hardware
 }   // namespace android
 
