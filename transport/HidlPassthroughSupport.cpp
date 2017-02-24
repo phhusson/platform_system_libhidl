@@ -28,9 +28,9 @@ sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
         // doesn't know how to handle it.
         return iface;
     }
-    std::string myDescriptor = getDescriptor(iface.get());
+    std::string myDescriptor = details::getDescriptor(iface.get());
     if (myDescriptor.empty()) {
-        // interfaceChain fails
+        // interfaceDescriptor fails
         return nullptr;
     }
     auto func = gBsConstructorMap.get(myDescriptor, nullptr);

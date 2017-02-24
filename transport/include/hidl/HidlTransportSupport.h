@@ -61,7 +61,7 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
         // casts always succeed with nullptrs.
         return nullptr;
     }
-    bool canCast = canCastInterface(parent.get(), childIndicator);
+    bool canCast = details::canCastInterface(parent.get(), childIndicator);
 
     if (!canCast) {
         return sp<IChild>(nullptr); // cast failed.
