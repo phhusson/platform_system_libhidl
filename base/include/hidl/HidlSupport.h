@@ -234,7 +234,23 @@ struct hidl_memory {
         return *this;
     }
 
-    // TODO move constructor/move assignment
+    // move constructor
+    hidl_memory(hidl_memory&& other) {
+        *this = std::move(other);
+    }
+
+    // move assignment
+    hidl_memory &operator=(hidl_memory &&other) {
+        if (this != &other) {
+            mHandle = std::move(other.mHandle);
+            mSize = other.mSize;
+            mName = std::move(other.mName);
+            other.mSize = 0;
+        }
+
+        return *this;
+    }
+
 
     ~hidl_memory() {
     }
