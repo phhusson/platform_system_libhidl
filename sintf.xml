@@ -1,0 +1,31 @@
+<!-- TODO(b/35434793): move to frameworks/interfaces -->
+
+<manifest version="1.0">
+    <hal>
+        <name>android.hidl.manager</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IServiceManager</name>
+            <instance>manager</instance>
+        </interface>
+    </hal>
+    <hal>
+        <name>android.hidl.allocator</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IAllocator</name>
+            <instance>ashmem</instance>
+        </interface>
+    </hal>
+    <hal>
+        <name>android.hidl.memory</name>
+        <transport>passthrough</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IMapper</name>
+            <instance>ashmem</instance>
+        </interface>
+    </hal>
+</manifest>
