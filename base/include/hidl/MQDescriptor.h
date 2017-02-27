@@ -20,7 +20,6 @@
 #include <android-base/macros.h>
 #include <cutils/native_handle.h>
 #include <hidl/HidlSupport.h>
-#include <utils/NativeHandle.h>
 #include <utils/Log.h>
 
 namespace android {
@@ -80,8 +79,6 @@ struct MQDescriptor {
 
     bool isHandleValid() const { return mHandle != nullptr; }
     size_t countGrantors() const { return mGrantors.size(); }
-    std::vector<GrantorDescriptor> getGrantors() const;
-    const sp<NativeHandle> getNativeHandle() const;
 
     inline const ::android::hardware::hidl_vec<GrantorDescriptor> &grantors() const {
         return mGrantors;
@@ -249,24 +246,6 @@ size_t MQDescriptor<T, flavor>::getQuantum() const { return mQuantum; }
 template<typename T, MQFlavor flavor>
 int32_t MQDescriptor<T, flavor>::getFlags() const { return mFlags; }
 
-template<typename T, MQFlavor flavor>
-std::vector<GrantorDescriptor> MQDescriptor<T, flavor>::getGrantors() const {
-  size_t grantor_count = mGrantors.size();
-  std::vector<GrantorDescriptor> grantors(grantor_count);
-  for (size_t i = 0; i < grantor_count; i++) {
-    grantors[i] = mGrantors[i];
-  }
-  return grantors;
-}
-
-template<typename T, MQFlavor flavor>
-const sp<NativeHandle> MQDescriptor<T, flavor>::getNativeHandle() const {
-  /*
-   * Create an sp<NativeHandle> from mHandle.
-   */
-  return NativeHandle::create(mHandle, false /* ownsHandle */);
-}
-
 namespace details {
 template<typename T, MQFlavor flavor>
 std::string toString(const MQDescriptor<T, flavor> &q) {
@@ -278,9 +257,9 @@ std::string toString(const MQDescriptor<T, flavor> &q) {
         os += "fmq_unsync";
     }
     os += " {"
-       + toString(q.getGrantors().size()) + " grantor(s), "
+       + toString(q.grantors().size()) + " grantor(s), "
        + "size = " + toString(q.getSize())
-       + ", .handle = " + toString(q.getNativeHandle().get())
+       + ", .handle = " + toString(q.handle())
        + ", .quantum = " + toString(q.getQuantum()) + "}";
     return os;
 }
