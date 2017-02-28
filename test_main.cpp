@@ -61,6 +61,8 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_STREQ(s2.c_str(), "s2");
     hidl_string s2a(nullptr); // copy constructor from null cstr
     EXPECT_STREQ("", s2a);
+    s2a = nullptr; // = from nullptr cstr
+    EXPECT_STREQ(s2a.c_str(), "");
     hidl_string s3 = hidl_string("s3"); // move =
     EXPECT_STREQ(s3.c_str(), "s3");
     hidl_string s4 = hidl_string("12345", 3); // copy constructor from cstr w/ length
