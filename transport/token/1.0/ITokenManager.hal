@@ -43,8 +43,7 @@ interface ITokenManager {
     unregister(uint64_t token) generates (bool success);
 
     /**
-     * Fetches an interface from a provided token. This must also unregister the
-     * token.
+     * Fetches an interface from a provided token.
      *
      * @param token Token recieved from createToken
      * @return store Interface registered with createToken and the corresponding
