@@ -239,6 +239,11 @@ hidl_string &hidl_string::operator=(const hidl_string &other) {
 
 hidl_string &hidl_string::operator=(const char *s) {
     clear();
+
+    if (s == nullptr) {
+        return *this;
+    }
+
     copyFrom(s, strlen(s));
     return *this;
 }
