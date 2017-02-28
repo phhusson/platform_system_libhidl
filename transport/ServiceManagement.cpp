@@ -123,7 +123,7 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
 struct PassthroughServiceManager : IServiceManager {
     Return<sp<IBase>> get(const hidl_string& fqName,
                      const hidl_string& name) override {
-        FQName iface(fqName);
+        const FQName iface(fqName);
 
         if (!iface.isValid() ||
             !iface.isFullyQualified() ||
@@ -132,10 +132,11 @@ struct PassthroughServiceManager : IServiceManager {
             return nullptr;
         }
 
+        const std::string prefix = iface.getPackageAndVersion().string() + "-impl";
+        const std::string sym = "HIDL_FETCH_" + iface.name();
+
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
-
-        std::string library;
 
         // TODO: lookup in VINTF instead
         // TODO(b/34135607): Remove HAL_LIBRARY_PATH_SYSTEM
@@ -143,41 +144,44 @@ struct PassthroughServiceManager : IServiceManager {
         for (const std::string &path : {
             HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
         }) {
-            const std::string prefix = iface.getPackageAndVersion().string() + "-impl";
-
             std::vector<std::string> libs = search(path, prefix, ".so");
 
-            if (libs.size() > 1) {
-                LOG(WARNING) << "Multiple libraries found: " << StringHelper::JoinStrings(libs, ", ");
-            }
-
             for (const std::string &lib : libs) {
-                handle = dlopen((path + lib).c_str(), dlMode);
-                if (handle != nullptr) {
-                    library = lib;
-                    goto beginLookup;
+                const std::string fullPath = path + lib;
+
+                handle = dlopen(fullPath.c_str(), dlMode);
+                if (handle == nullptr) {
+                    const char* error = dlerror();
+                    LOG(ERROR) << "Failed to dlopen " << lib << ": "
+                               << (error == nullptr ? "unknown error" : error);
+                    continue;
                 }
+
+                IBase* (*generator)(const char* name);
+                *(void **)(&generator) = dlsym(handle, sym.c_str());
+                if(!generator) {
+                    const char* error = dlerror();
+                    LOG(ERROR) << "Passthrough lookup opened " << lib
+                               << " but could not find symbol " << sym << ": "
+                               << (error == nullptr ? "unknown error" : error);
+                    dlclose(handle);
+                    continue;
+                }
+
+                IBase *interface = (*generator)(name);
+
+                if (interface == nullptr) {
+                    dlclose(handle);
+                    continue; // this module doesn't provide this instance name
+                }
+
+                registerReference(fqName, name);
+
+                return interface;
             }
         }
 
-        if (handle == nullptr) {
-            return nullptr;
-        }
-beginLookup:
-
-        const std::string sym = "HIDL_FETCH_" + iface.name();
-
-        IBase* (*generator)(const char* name);
-        *(void **)(&generator) = dlsym(handle, sym.c_str());
-        if(!generator) {
-            LOG(ERROR) << "Passthrough lookup opened " << library
-                       << " but could not find symbol " << sym;
-            return nullptr;
-        }
-
-        registerReference(fqName, name);
-
-        return (*generator)(name);
+        return nullptr;
     }
 
     Return<bool> add(const hidl_vec<hidl_string>& /* interfaceChain */,
