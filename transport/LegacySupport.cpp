@@ -61,7 +61,7 @@ void blockIfBinderizationDisabled(const std::string& interface,
     std::string package = interface.substr(0, loc);
 
     // only block if this is supposed to be toggled
-    if (getTransport(interface) != vintf::Transport::TOGGLED) {
+    if (getTransport(interface, instance) != vintf::Transport::TOGGLED) {
         return;
     }
 
