@@ -22,48 +22,30 @@
 #include <android-base/logging.h>
 #include <android-base/parseint.h>
 #include <hidl-util/FQName.h>
-#include <vintf/HalManifest.h>
+#include <vintf/VintfObject.h>
 #include <vintf/parse_string.h>
 
 namespace android {
 namespace hardware {
-vintf::Transport getTransportForFrameworkPackages(const std::string &name) {
-    // TODO(b/34772739): move to framework vintf
-    const static std::unordered_map<std::string, vintf::Transport> sTransports {
-        {"android.hidl.manager@1.0::IServiceManager", vintf::Transport::HWBINDER},
-        {"android.hidl.allocator@1.0::IAllocator"   , vintf::Transport::HWBINDER},
-        {"android.hidl.memory@1.0::IMapper"         , vintf::Transport::PASSTHROUGH},
-        {"android.hidl.memory@1.0::IMemory"         , vintf::Transport::PASSTHROUGH},
-    };
-    auto it = sTransports.find(name);
-    if (it == sTransports.end()) {
-        LOG(ERROR) << "getTransportForFrameworkPackages: Cannot find entry "
-                     << name << " in the static map. Using default transport.";
-        return vintf::Transport::EMPTY;
-    } else {
-        LOG(INFO) << "getTransportForFrameworkPackages: " << name
-                  << " declares transport method " << to_string(it->second);
-    }
-    return it->second;
-}
 
-vintf::Transport getTransportForHals(const FQName &fqName) {
-    const std::string package = fqName.package();
-    const vintf::HalManifest *vm = vintf::HalManifest::Get();
+vintf::Transport getTransportFromManifest(
+        const FQName &fqName, const std::string &manifestName,
+        const vintf::HalManifest *vm) {
     if (vm == nullptr) {
-        LOG(WARNING) << "getTransportForHals: No VINTF defined, using default transport for "
-                     << fqName.string() << ".";
+        LOG(WARNING) << "getTransportFromManifest: No " << manifestName << " manifest defined, "
+                     << "using default transport for " << fqName.string();
         return vintf::Transport::EMPTY;
     }
-    vintf::Transport tr = vm->getTransport(package,
+    vintf::Transport tr = vm->getTransport(fqName.package(),
             vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()});
     if (tr == vintf::Transport::EMPTY) {
-        LOG(WARNING) << "getTransportForHals: Cannot find entry "
-                     << package << fqName.atVersion()
-                     << " in vendor interface manifest. Using default transport.";
+        LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
+                     << fqName.string()
+                     << " in " << manifestName << " manifest, using default transport.";
     } else {
-        LOG(INFO) << "getTransportForHals: " << package << fqName.atVersion()
-                  << " declares transport method " << to_string(tr);
+        LOG(DEBUG) << "getTransportFromManifest: " << fqName.string()
+                   << " declares transport method " << to_string(tr)
+                   << " in " << manifestName << " manifest";
     }
     return tr;
 }
@@ -79,10 +61,13 @@ vintf::Transport getTransport(const std::string &name) {
                    << " does not specify a version. Using default transport.";
         return vintf::Transport::EMPTY;
     }
+    // TODO(b/34772739): modify the list if other packages are added to system/manifest.xml
     if (fqName.inPackage("android.hidl")) {
-        return getTransportForFrameworkPackages(name);
+        return getTransportFromManifest(fqName, "framework",
+                vintf::VintfObject::GetFrameworkHalManifest());
     }
-    return getTransportForHals(fqName);
+    return getTransportFromManifest(fqName, "device",
+            vintf::VintfObject::GetDeviceHalManifest());
 }
 
 hidl_handle::hidl_handle() {
