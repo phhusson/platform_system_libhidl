@@ -29,7 +29,8 @@ namespace android {
 namespace hardware {
 
 vintf::Transport getTransportFromManifest(
-        const FQName &fqName, const std::string &manifestName,
+        const FQName &fqName, const std::string &instanceName,
+        const std::string &manifestName,
         const vintf::HalManifest *vm) {
     if (vm == nullptr) {
         LOG(WARNING) << "getTransportFromManifest: No " << manifestName << " manifest defined, "
@@ -37,7 +38,8 @@ vintf::Transport getTransportFromManifest(
         return vintf::Transport::EMPTY;
     }
     vintf::Transport tr = vm->getTransport(fqName.package(),
-            vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()});
+            vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()},
+            fqName.name(), instanceName);
     if (tr == vintf::Transport::EMPTY) {
         LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
                      << fqName.string()
@@ -50,10 +52,10 @@ vintf::Transport getTransportFromManifest(
     return tr;
 }
 
-vintf::Transport getTransport(const std::string &name) {
-    FQName fqName(name);
+vintf::Transport getTransport(const std::string &interfaceName, const std::string &instanceName) {
+    FQName fqName(interfaceName);
     if (!fqName.isValid()) {
-        LOG(ERROR) << "getTransport: " << name << " is not a valid fully-qualified name.";
+        LOG(ERROR) << "getTransport: " << interfaceName << " is not a valid fully-qualified name.";
         return vintf::Transport::EMPTY;
     }
     if (!fqName.hasVersion()) {
@@ -61,12 +63,17 @@ vintf::Transport getTransport(const std::string &name) {
                    << " does not specify a version. Using default transport.";
         return vintf::Transport::EMPTY;
     }
+    if (fqName.name().empty()) {
+        LOG(ERROR) << "getTransport: " << fqName.string()
+                   << " does not specify an interface name. Using default transport.";
+        return vintf::Transport::EMPTY;
+    }
     // TODO(b/34772739): modify the list if other packages are added to system/manifest.xml
     if (fqName.inPackage("android.hidl")) {
-        return getTransportFromManifest(fqName, "framework",
+        return getTransportFromManifest(fqName, instanceName, "framework",
                 vintf::VintfObject::GetFrameworkHalManifest());
     }
-    return getTransportFromManifest(fqName, "device",
+    return getTransportFromManifest(fqName, instanceName, "device",
             vintf::VintfObject::GetDeviceHalManifest());
 }
 
