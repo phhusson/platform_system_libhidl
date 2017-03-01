@@ -57,9 +57,11 @@ namespace V1_0 {
 namespace hardware {
 
 // Get transport method from vendor interface manifest.
-// name has the format "android.hardware.foo@1.0::IFoo"
+// interfaceName has the format "android.hardware.foo@1.0::IFoo"
+// instanceName is "default", "ashmem", etc.
 // If it starts with "android.hidl.", a static map is looked up instead.
-vintf::Transport getTransport(const std::string &name);
+vintf::Transport getTransport(const std::string &interfaceName,
+                              const std::string &instanceName);
 
 // hidl_death_recipient is a callback interfaced that can be used with
 // linkToDeath() / unlinkToDeath()
