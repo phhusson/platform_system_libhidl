@@ -266,11 +266,12 @@ void hidl_string::copyFrom(const char *data, size_t size) {
 void hidl_string::moveFrom(hidl_string &&other) {
     // assume my resources are freed.
 
-    mBuffer = other.mBuffer;
+    mBuffer = std::move(other.mBuffer);
     mSize = other.mSize;
     mOwnsBuffer = other.mOwnsBuffer;
 
     other.mOwnsBuffer = false;
+    other.clear();
 }
 
 void hidl_string::clear() {
