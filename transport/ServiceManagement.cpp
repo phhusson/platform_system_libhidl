@@ -141,6 +141,8 @@ struct PassthroughServiceManager : IServiceManager {
         // TODO: lookup in VINTF instead
         // TODO(b/34135607): Remove HAL_LIBRARY_PATH_SYSTEM
 
+        dlerror(); // clear
+
         for (const std::string &path : {
             HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
         }) {
