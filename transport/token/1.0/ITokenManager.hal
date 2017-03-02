@@ -23,9 +23,8 @@ package android.hidl.token@1.0;
 interface ITokenManager {
 
     /**
-     * Register an interface. The server must only keep a weak reference
-     * to the token. The lifetime of the token is thus linked to the
-     * lifetime of the stored interface.
+     * Register an interface. The server must keep a strong reference
+     * to the interface until the token is destroyed by calling unregister.
      *
      * @param store Interface which can later be fetched with the returned token.
      * @return token Opaque value which may be used as inputs to other functions.
@@ -33,19 +32,17 @@ interface ITokenManager {
     createToken(interface store) generates (uint64_t token);
 
     /**
-     * Explicitly unregister an interface. If the server still holds a weak reference
-     * to an interface, but that interface interface is deleted and the reference
-     * cannot be promoted, then success must be false.
+     * Destory a token and the strong reference to the associated interface.
      *
-     * @param token Token recieved from createToken
-     * @return success Whether or not an interface was successfully unregistered.
+     * @param token Token received from createToken
+     * @return success Whether or not the token was successfully unregistered.
      */
     unregister(uint64_t token) generates (bool success);
 
     /**
-     * Fetches an interface from a provided token.
+     * Fetch an interface from a provided token.
      *
-     * @param token Token recieved from createToken
+     * @param token Token received from createToken
      * @return store Interface registered with createToken and the corresponding
      *               token or nullptr.
      */
