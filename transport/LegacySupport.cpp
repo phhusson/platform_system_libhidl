@@ -33,15 +33,13 @@ namespace hardware {
 namespace details {
 
 using android::base::GetBoolProperty;
-using android::base::GetUintProperty;
 using android::base::WaitForPropertyCreation;
 
-static const char* kPersistPropReadyProperty = "ro.boottime.persistent_properties";
+static const char* kPersistPropReadyProperty = "ro.persistent_properties.ready";
 static const char* kBinderizationProperty = "persist.hal.binderization";
 
 bool blockingHalBinderizationEnabled() {
-    uint64_t t = GetUintProperty<uint64_t>(kPersistPropReadyProperty, 0, UINT64_MAX);
-    if (t == 0) { // not set yet
+    if (!GetBoolProperty(kPersistPropReadyProperty, false)) { // not set yet
         int64_t startTime = elapsedRealtime();
         WaitForPropertyCreation(kPersistPropReadyProperty, std::chrono::milliseconds::max());
         ALOGI("Waiting for %s took %" PRId64 " ms", kPersistPropReadyProperty,
