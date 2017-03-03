@@ -17,6 +17,7 @@
 package android.hidl.manager@1.0;
 
 import IServiceNotification;
+import android.hidl.base@1.0::DebugInfo.Architecture;
 
 /**
  * Manages all the hidl hals on a device.
@@ -108,20 +109,24 @@ interface IServiceManager {
                              IServiceNotification callback)
         generates (bool success);
 
+    /**
+     * Returned object for debugDump().
+     */
     struct InstanceDebugInfo {
         string interfaceName;
         string instanceName;
         vec<int32_t> clientPids;
+        Architecture arch;
     };
 
-    /*
+    /**
      * Similar to list, but contains more information for each instance.
      * @return info a vector where each item contains debug information for each
      *         instance.
      */
     debugDump() generates (vec<InstanceDebugInfo> info);
 
-    /*
+    /**
      * When the passthrough service manager returns a service via
      * get(string, string), it must dispatch a registerPassthroughClient call
      * to the binderized service manager to indicate which process has called
