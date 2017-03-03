@@ -19,8 +19,18 @@ package android.hidl.base@1.0;
 /*
  * The returned object for getDebugInfo.
  * pid: pid of current process. -1 if not available.
+ * ptr: address of this object
+ * arch: 64bit or 32bit
  */
 struct DebugInfo {
+
+    enum Architecture : int32_t {
+        UNKNOWN = 0,
+        IS_64BIT,
+        IS_32BIT,
+    };
+
     int32_t pid;
     uint64_t ptr;
+    Architecture arch;
 };
