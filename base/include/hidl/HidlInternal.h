@@ -97,14 +97,21 @@ private:
     };
 };
 
+#define HAL_LIBRARY_PATH_SYSTEM_64BIT "/system/lib64/hw/"
+#define HAL_LIBRARY_PATH_VENDOR_64BIT "/vendor/lib64/hw/"
+#define HAL_LIBRARY_PATH_ODM_64BIT    "/odm/lib64/hw/"
+#define HAL_LIBRARY_PATH_SYSTEM_32BIT "/system/lib/hw/"
+#define HAL_LIBRARY_PATH_VENDOR_32BIT "/vendor/lib/hw/"
+#define HAL_LIBRARY_PATH_ODM_32BIT    "/odm/lib/hw/"
+
 #if defined(__LP64__)
-#define HAL_LIBRARY_PATH_SYSTEM "/system/lib64/hw/"
-#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib64/hw/"
-#define HAL_LIBRARY_PATH_ODM "/odm/lib64/hw/"
+#define HAL_LIBRARY_PATH_SYSTEM HAL_LIBRARY_PATH_SYSTEM_64BIT
+#define HAL_LIBRARY_PATH_VENDOR HAL_LIBRARY_PATH_VENDOR_64BIT
+#define HAL_LIBRARY_PATH_ODM    HAL_LIBRARY_PATH_ODM_64BIT
 #else
-#define HAL_LIBRARY_PATH_SYSTEM "/system/lib/hw/"
-#define HAL_LIBRARY_PATH_VENDOR "/vendor/lib/hw/"
-#define HAL_LIBRARY_PATH_ODM "/odm/lib/hw/"
+#define HAL_LIBRARY_PATH_SYSTEM HAL_LIBRARY_PATH_SYSTEM_32BIT
+#define HAL_LIBRARY_PATH_VENDOR HAL_LIBRARY_PATH_VENDOR_32BIT
+#define HAL_LIBRARY_PATH_ODM    HAL_LIBRARY_PATH_ODM_32BIT
 #endif
 
 // ----------------------------------------------------------------------

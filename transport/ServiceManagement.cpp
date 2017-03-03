@@ -193,20 +193,8 @@ struct PassthroughServiceManager : IServiceManager {
         return false;
     }
 
-    Return<void> list(list_cb _hidl_cb) override {
-        std::vector<hidl_string> vec;
-        for (const std::string &path : {
-            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
-        }) {
-            std::vector<std::string> libs = search(path, "", ".so");
-            for (const std::string &lib : libs) {
-                std::string matchedName;
-                if (matchPackageName(lib, &matchedName)) {
-                    vec.push_back(matchedName + "/*");
-                }
-            }
-        }
-        _hidl_cb(vec);
+    Return<void> list(list_cb /* _hidl_cb */) override {
+        LOG(FATAL) << "Cannot list services with passthrough service manager.";
         return Void();
     }
     Return<void> listByInterface(const hidl_string& /* fqInstanceName */,
@@ -224,10 +212,35 @@ struct PassthroughServiceManager : IServiceManager {
         return false;
     }
 
-    Return<void> debugDump(debugDump_cb) override {
-        // This makes no sense.
-        LOG(FATAL) << "Cannot call debugDump on passthrough service manager."
-                   << "Call it on defaultServiceManager() instead.";
+    Return<void> debugDump(debugDump_cb _hidl_cb) override {
+        using Arch = ::android::hidl::base::V1_0::DebugInfo::Architecture;
+        static std::vector<std::pair<Arch, std::vector<const char *>>> sAllPaths{
+            {Arch::IS_64BIT, {HAL_LIBRARY_PATH_ODM_64BIT,
+                                      HAL_LIBRARY_PATH_VENDOR_64BIT,
+                                      HAL_LIBRARY_PATH_SYSTEM_64BIT}},
+            {Arch::IS_32BIT, {HAL_LIBRARY_PATH_ODM_32BIT,
+                                      HAL_LIBRARY_PATH_VENDOR_32BIT,
+                                      HAL_LIBRARY_PATH_SYSTEM_32BIT}}
+        };
+        std::vector<InstanceDebugInfo> vec;
+        for (const auto &pair : sAllPaths) {
+            Arch arch = pair.first;
+            for (const auto &path : pair.second) {
+                std::vector<std::string> libs = search(path, "", ".so");
+                for (const std::string &lib : libs) {
+                    std::string matchedName;
+                    if (matchPackageName(lib, &matchedName)) {
+                        vec.push_back({
+                            .interfaceName = matchedName,
+                            .instanceName = "*",
+                            .clientPids = {},
+                            .arch = arch
+                        });
+                    }
+                }
+            }
+        }
+        _hidl_cb(vec);
         return Void();
     }
 
