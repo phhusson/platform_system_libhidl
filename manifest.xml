@@ -7,7 +7,7 @@
         <version>1.0</version>
         <interface>
             <name>IServiceManager</name>
-            <instance>manager</instance>
+            <instance>default</instance>
         </interface>
     </hal>
     <hal>
