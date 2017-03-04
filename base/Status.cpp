@@ -98,7 +98,7 @@ std::ostream& operator<< (std::ostream& stream, const Status& s) {
 }
 
 namespace details {
-    void return_status::checkStatus() const {
+    void return_status::assertOk() const {
         if (!isOk()) {
             LOG(FATAL) << "Attempted to retrieve value from failed HIDL call: " << description();
         }
@@ -110,6 +110,16 @@ namespace details {
             LOG(FATAL) << "Failed HIDL return status not checked: " << description();
         }
     }
+
+    return_status &return_status::operator=(return_status &&other) {
+        if (!mCheckedStatus && !isOk()) {
+            LOG(FATAL) << "Failed HIDL return status not checked: " << description();
+        }
+        std::swap(mStatus, other.mStatus);
+        std::swap(mCheckedStatus, other.mCheckedStatus);
+        return *this;
+    }
+
 }  // namespace details
 
 }  // namespace hardware
