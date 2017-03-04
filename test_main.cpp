@@ -17,8 +17,10 @@
 #define LOG_TAG "LibHidlTest"
 
 #include <android-base/logging.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <hidl/HidlSupport.h>
+#include <hidl/Status.h>
 #include <hidl/TaskRunner.h>
 #include <vector>
 
@@ -342,6 +344,33 @@ TEST_F(LibHidlTest, ReturnMoveTest) {
     ret.isOk();
     ret = {Status::fromStatusT(DEAD_OBJECT)};
     ret.isOk();
+}
+
+std::string toString(const ::android::hardware::Status &s) {
+    using ::android::hardware::operator<<;
+    std::ostringstream oss;
+    oss << s;
+    return oss.str();
+}
+
+TEST_F(LibHidlTest, StatusStringTest) {
+    using namespace ::android;
+    using ::android::hardware::Status;
+    using ::testing::HasSubstr;
+
+    EXPECT_EQ(toString(Status::ok()), "No error");
+
+    EXPECT_THAT(toString(Status::fromStatusT(DEAD_OBJECT)), HasSubstr("DEAD_OBJECT"));
+
+    EXPECT_THAT(toString(Status::fromStatusT(-EBUSY)), HasSubstr("busy"));
+
+    auto s = toString(Status::fromServiceSpecificError(20));
+    EXPECT_THAT(s, HasSubstr("EX_SERVICE_SPECIFIC"));
+    EXPECT_THAT(s, HasSubstr("20"));
+
+    EXPECT_THAT(toString(Status::fromExceptionCode(Status::EX_NULL_POINTER)),
+            HasSubstr("EX_NULL_POINTER"));
+
 }
 
 int main(int argc, char **argv) {
