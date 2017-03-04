@@ -334,6 +334,15 @@ TEST_F(LibHidlTest, HidlVersionTest) {
     EXPECT_TRUE(v3_0 >= v2_2);
 }
 
+TEST_F(LibHidlTest, ReturnMoveTest) {
+    using namespace ::android;
+    using ::android::hardware::Return;
+    using ::android::hardware::Status;
+    Return<void> ret{Status::fromStatusT(DEAD_OBJECT)};
+    ret.isOk();
+    ret = {Status::fromStatusT(DEAD_OBJECT)};
+    ret.isOk();
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
