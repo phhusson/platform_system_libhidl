@@ -147,7 +147,7 @@ namespace details {
         Status mStatus {};
         mutable bool mCheckedStatus = false;
     protected:
-        void checkStatus() const;
+        void assertOk() const;
     public:
         return_status() {}
         return_status(Status s) : mStatus(s) {}
@@ -158,12 +158,7 @@ namespace details {
         return_status(return_status &&other) {
             *this = std::move(other);
         }
-        return_status &operator=(return_status &&other) {
-            checkStatus();
-            std::swap(mStatus, other.mStatus);
-            std::swap(mCheckedStatus, other.mCheckedStatus);
-            return *this;
-        }
+        return_status &operator=(return_status &&other);
 
         ~return_status();
 
@@ -196,7 +191,7 @@ public:
     ~Return() = default;
 
     operator T() const {
-        checkStatus();
+        assertOk();
         return mVal;
     }
 
@@ -222,7 +217,7 @@ public:
     ~Return() = default;
 
     operator sp<T>() const {
-        checkStatus();
+        assertOk();
         return mVal;
     }
 };
