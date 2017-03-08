@@ -63,6 +63,11 @@ namespace hardware {
 vintf::Transport getTransport(const std::string &interfaceName,
                               const std::string &instanceName);
 
+namespace details {
+// Return true on userdebug / eng builds and false on user builds.
+bool debuggable();
+} //  namespace details
+
 // hidl_death_recipient is a callback interfaced that can be used with
 // linkToDeath() / unlinkToDeath()
 struct hidl_death_recipient : public virtual RefBase {
