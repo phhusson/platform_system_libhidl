@@ -288,7 +288,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-struct hidl_vec : private details::hidl_log_base {
+struct hidl_vec {
     hidl_vec()
         : mBuffer(NULL),
           mSize(0),
@@ -308,7 +308,7 @@ struct hidl_vec : private details::hidl_log_base {
     hidl_vec(const std::initializer_list<T> list)
             : mOwnsBuffer(true) {
         if (list.size() > UINT32_MAX) {
-            logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
+            details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
         }
         mSize = static_cast<uint32_t>(list.size());
         mBuffer = new T[mSize];
@@ -339,7 +339,7 @@ struct hidl_vec : private details::hidl_log_base {
         }
         mBuffer = data;
         if (size > UINT32_MAX) {
-            logAlwaysFatal("external vector size exceeds 2^32 elements.");
+            details::logAlwaysFatal("external vector size exceeds 2^32 elements.");
         }
         mSize = static_cast<uint32_t>(size);
         mOwnsBuffer = shouldOwn;
@@ -433,7 +433,7 @@ struct hidl_vec : private details::hidl_log_base {
 
     void resize(size_t size) {
         if (size > UINT32_MAX) {
-            logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
+            details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
         }
         T *newBuffer = new T[size];
 
