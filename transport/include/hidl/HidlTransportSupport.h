@@ -40,18 +40,12 @@ namespace hardware {
  *   configureRpcThreadPool(1, true); // transport won't launch any threads by itself
  *
  */
-inline void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
-    // TODO(b/32756130) this should be transport-dependent
-    configureBinderRpcThreadpool(maxThreads, callerWillJoin);
-}
+void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin);
 
 /* Joins a threadpool that you configured earlier with
  * configureRpcThreadPool(x, true);
  */
-inline void joinRpcThreadpool() {
-    // TODO(b/32756130) this should be transport-dependent
-    joinBinderRpcThreadpool();
-}
+void joinRpcThreadpool();
 
 // cast the interface IParent to IChild.
 // Return nullptr if parent is null or any failure.
