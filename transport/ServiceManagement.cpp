@@ -186,8 +186,7 @@ struct PassthroughServiceManager : IServiceManager {
         return nullptr;
     }
 
-    Return<bool> add(const hidl_vec<hidl_string>& /* interfaceChain */,
-                     const hidl_string& /* name */,
+    Return<bool> add(const hidl_string& /* name */,
                      const sp<IBase>& /* service */) override {
         LOG(FATAL) << "Cannot register services with passthrough service manager.";
         return false;
