@@ -25,10 +25,6 @@
 #include <fstream>
 #include <sstream>
 
-#ifdef LIBHIDL_TARGET_DEBUGGABLE
-#include <android-base/logging.h>
-#endif
-
 namespace android {
 namespace hardware {
 

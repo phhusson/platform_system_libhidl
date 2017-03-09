@@ -77,6 +77,16 @@ vintf::Transport getTransport(const std::string &interfaceName, const std::strin
             vintf::VintfObject::GetDeviceHalManifest());
 }
 
+namespace details {
+bool debuggable() {
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
+    return true;
+#else
+    return false;
+#endif
+}
+}  // namespace details
+
 hidl_handle::hidl_handle() {
     mHandle = nullptr;
     mOwnsHandle = false;
