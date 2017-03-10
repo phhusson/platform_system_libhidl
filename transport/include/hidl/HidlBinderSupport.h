@@ -147,7 +147,7 @@ template<typename T, MQFlavor flavor>
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     const native_handle_t *_hidl_mq_handle_ptr;
-   _hidl_err = parcel.readEmbeddedNativeHandle(
+   _hidl_err = parcel.readNullableEmbeddedNativeHandle(
             parentHandle,
             parentOffset + MQDescriptor<T, flavor>::kOffsetOfHandle,
             &_hidl_mq_handle_ptr);
