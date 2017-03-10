@@ -30,6 +30,8 @@ namespace hardware {
 
 const size_t hidl_memory::kOffsetOfHandle = offsetof(hidl_memory, mHandle);
 const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
+static_assert(hidl_memory::kOffsetOfHandle == 0, "wrong offset");
+static_assert(hidl_memory::kOffsetOfName == 24, "wrong offset");
 
 status_t readEmbeddedFromParcel(hidl_memory * /* memory */,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
@@ -69,6 +71,7 @@ status_t writeEmbeddedToParcel(const hidl_memory &memory,
 }
 // static
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
+static_assert(hidl_string::kOffsetOfBuffer == 0, "wrong offset");
 
 status_t readEmbeddedFromParcel(hidl_string * /* string */,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
