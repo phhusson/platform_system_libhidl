@@ -109,7 +109,6 @@ hidl_version* readFromParcel(const android::hardware::Parcel& parcel) {
 
 status_t readFromParcel(Status *s, const Parcel& parcel) {
     int32_t exception;
-    int32_t errorCode;
     status_t status = parcel.readInt32(&exception);
     if (status != OK) {
         s->setFromStatusT(status);
@@ -145,19 +144,7 @@ status_t readFromParcel(Status *s, const Parcel& parcel) {
         return status;
     }
 
-    if (exception == Status::EX_SERVICE_SPECIFIC) {
-        status = parcel.readInt32(&errorCode);
-    }
-    if (status != OK) {
-        s->setFromStatusT(status);
-        return status;
-    }
-
-    if (exception == Status::EX_SERVICE_SPECIFIC) {
-        s->setServiceSpecificError(errorCode, String8(message));
-    } else {
-        s->setException(exception, String8(message));
-    }
+    s->setException(exception, String8(message));
 
     return status;
 }
@@ -176,11 +163,6 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
         return status;
     }
     status = parcel->writeString16(String16(s.exceptionMessage()));
-    if (s.exceptionCode() != Status::EX_SERVICE_SPECIFIC) {
-        // We have no more information to write.
-        return status;
-    }
-    status = parcel->writeInt32(s.serviceSpecificErrorCode());
     return status;
 }
 
