@@ -364,10 +364,6 @@ TEST_F(LibHidlTest, StatusStringTest) {
 
     EXPECT_THAT(toString(Status::fromStatusT(-EBUSY)), HasSubstr("busy"));
 
-    auto s = toString(Status::fromServiceSpecificError(20));
-    EXPECT_THAT(s, HasSubstr("EX_SERVICE_SPECIFIC"));
-    EXPECT_THAT(s, HasSubstr("20"));
-
     EXPECT_THAT(toString(Status::fromExceptionCode(Status::EX_NULL_POINTER)),
             HasSubstr("EX_NULL_POINTER"));
 

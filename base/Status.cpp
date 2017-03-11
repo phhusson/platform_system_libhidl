@@ -70,7 +70,6 @@ static std::string exceptionToString(int32_t ex) {
         EXCEPTION_TO_STRING_PAIR(EX_ILLEGAL_STATE),
         EXCEPTION_TO_STRING_PAIR(EX_NETWORK_MAIN_THREAD),
         EXCEPTION_TO_STRING_PAIR(EX_UNSUPPORTED_OPERATION),
-        EXCEPTION_TO_STRING_PAIR(EX_SERVICE_SPECIFIC),
         EXCEPTION_TO_STRING_PAIR(EX_HAS_REPLY_HEADER),
         EXCEPTION_TO_STRING_PAIR(EX_TRANSACTION_FAILED)
     }};
@@ -89,15 +88,6 @@ Status Status::fromExceptionCode(int32_t exceptionCode) {
 Status Status::fromExceptionCode(int32_t exceptionCode,
                                  const char *message) {
     return Status(exceptionCode, OK, message);
-}
-
-Status Status::fromServiceSpecificError(int32_t serviceSpecificErrorCode) {
-    return Status(EX_SERVICE_SPECIFIC, serviceSpecificErrorCode);
-}
-
-Status Status::fromServiceSpecificError(int32_t serviceSpecificErrorCode,
-                                        const char *message) {
-    return Status(EX_SERVICE_SPECIFIC, serviceSpecificErrorCode, message);
 }
 
 Status Status::fromStatusT(status_t status) {
@@ -121,11 +111,6 @@ void Status::setException(int32_t ex, const char *message) {
     mMessage = message;
 }
 
-void Status::setServiceSpecificError(int32_t errorCode, const char *message) {
-    setException(EX_SERVICE_SPECIFIC, message);
-    mErrorCode = errorCode;
-}
-
 void Status::setFromStatusT(status_t status) {
     mException = (status == NO_ERROR) ? EX_NONE : EX_TRANSACTION_FAILED;
     mErrorCode = status;
@@ -143,9 +128,7 @@ std::ostream& operator<< (std::ostream& stream, const Status& s) {
         stream << "No error";
     } else {
         stream << "Status(" << exceptionToString(s.exceptionCode()) << "): '";
-        if (s.exceptionCode() == Status::EX_SERVICE_SPECIFIC) {
-            stream << s.serviceSpecificErrorCode() << ": ";
-        } else if (s.exceptionCode() == Status::EX_TRANSACTION_FAILED) {
+        if (s.exceptionCode() == Status::EX_TRANSACTION_FAILED) {
             stream << statusToString(s.transactionError()) << ": ";
         }
         stream << s.exceptionMessage() << "'";
