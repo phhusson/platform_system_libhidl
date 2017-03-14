@@ -21,6 +21,7 @@
 
 namespace android {
 namespace hardware {
+namespace details {
 
 /*
  * Wrap the given interface with the smallest BsChild possible. Will return the
@@ -29,6 +30,7 @@ namespace hardware {
 sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
         sp<::android::hidl::base::V1_0::IBase> iface);
 
+}  // namespace details
 }  // namespace hardware
 }  // namespace android
 
