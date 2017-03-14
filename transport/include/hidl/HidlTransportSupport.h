@@ -47,6 +47,8 @@ void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin);
  */
 void joinRpcThreadpool();
 
+namespace details {
+
 // cast the interface IParent to IChild.
 // Return nullptr if parent is null or any failure.
 template<typename IChild, typename IParent, typename BpChild, typename BpParent>
@@ -68,6 +70,8 @@ sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
     // Passthrough mode. Got BnChild and BsChild.
     return sp<IChild>(static_cast<IChild *>(parent.get()));
 }
+
+}  // namespace details
 
 }  // namespace hardware
 }  // namespace android
