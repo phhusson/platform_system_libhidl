@@ -30,26 +30,13 @@ namespace hardware {
 
 vintf::Transport getTransportFromManifest(
         const FQName &fqName, const std::string &instanceName,
-        const std::string &manifestName,
         const vintf::HalManifest *vm) {
     if (vm == nullptr) {
-        LOG(WARNING) << "getTransportFromManifest: No " << manifestName << " manifest defined, "
-                     << "using default transport for " << fqName.string();
         return vintf::Transport::EMPTY;
     }
-    vintf::Transport tr = vm->getTransport(fqName.package(),
+    return vm->getTransport(fqName.package(),
             vintf::Version{fqName.getPackageMajorVersion(), fqName.getPackageMinorVersion()},
             fqName.name(), instanceName);
-    if (tr == vintf::Transport::EMPTY) {
-        LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
-                     << fqName.string()
-                     << " in " << manifestName << " manifest, using default transport.";
-    } else {
-        LOG(DEBUG) << "getTransportFromManifest: " << fqName.string()
-                   << " declares transport method " << to_string(tr)
-                   << " in " << manifestName << " manifest";
-    }
-    return tr;
 }
 
 vintf::Transport getTransport(const std::string &interfaceName, const std::string &instanceName) {
@@ -68,13 +55,22 @@ vintf::Transport getTransport(const std::string &interfaceName, const std::strin
                    << " does not specify an interface name. Using default transport.";
         return vintf::Transport::EMPTY;
     }
-    // TODO(b/34772739): modify the list if other packages are added to system/manifest.xml
-    if (fqName.inPackage("android.hidl")) {
-        return getTransportFromManifest(fqName, instanceName, "framework",
-                vintf::VintfObject::GetFrameworkHalManifest());
+
+    vintf::Transport tr = getTransportFromManifest(fqName, instanceName,
+            vintf::VintfObject::GetFrameworkHalManifest());
+    if (tr != vintf::Transport::EMPTY) {
+        return tr;
     }
-    return getTransportFromManifest(fqName, instanceName, "device",
+    tr = getTransportFromManifest(fqName, instanceName,
             vintf::VintfObject::GetDeviceHalManifest());
+    if (tr != vintf::Transport::EMPTY) {
+        return tr;
+    }
+
+    LOG(WARNING) << "getTransportFromManifest: Cannot find entry "
+                 << fqName.string()
+                 << " in either framework or device manifest, using default transport.";
+    return vintf::Transport::EMPTY;
 }
 
 namespace details {
