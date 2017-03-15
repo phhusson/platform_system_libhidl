@@ -246,7 +246,6 @@ size_t MQDescriptor<T, flavor>::getQuantum() const { return mQuantum; }
 template<typename T, MQFlavor flavor>
 int32_t MQDescriptor<T, flavor>::getFlags() const { return mFlags; }
 
-namespace details {
 template<typename T, MQFlavor flavor>
 std::string toString(const MQDescriptor<T, flavor> &q) {
     std::string os;
@@ -263,7 +262,6 @@ std::string toString(const MQDescriptor<T, flavor> &q) {
        + ", .quantum = " + toString(q.getQuantum()) + "}";
     return os;
 }
-}  // namespace details
 
 }  // namespace hardware
 }  // namespace android
