@@ -818,13 +818,15 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 ///////////////////// toString functions
 
-namespace details {
+std::string toString(const void *t);
 
 // toString alias for numeric types
 template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 inline std::string toString(T t) {
     return std::to_string(t);
 }
+
+namespace details {
 
 template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 inline std::string toHexString(T t, bool prefix = true) {
@@ -844,8 +846,48 @@ inline std::string toHexString(int8_t t, bool prefix) {
     return toHexString(static_cast<int32_t>(t), prefix);
 }
 
-inline std::string toString(const void *t, bool prefix = true) {
-    return toHexString(reinterpret_cast<uintptr_t>(t), prefix);
+template<typename Array>
+std::string arrayToString(const Array &a, size_t size);
+
+template<size_t SIZE1>
+std::string arraySizeToString() {
+    return std::string{"["} + toString(SIZE1) + "]";
+}
+
+template<size_t SIZE1, size_t SIZE2, size_t... SIZES>
+std::string arraySizeToString() {
+    return std::string{"["} + toString(SIZE1) + "]" + arraySizeToString<SIZE2, SIZES...>();
+}
+
+template<typename T, size_t SIZE1>
+std::string toString(details::const_accessor<T, SIZE1> a) {
+    return arrayToString(a, SIZE1);
+}
+
+template<typename Array>
+std::string arrayToString(const Array &a, size_t size) {
+    using android::hardware::toString;
+    std::string os;
+    os += "{";
+    for (size_t i = 0; i < size; ++i) {
+        if (i > 0) {
+            os += ", ";
+        }
+        os += toString(a[i]);
+    }
+    os += "}";
+    return os;
+}
+
+template<typename T, size_t SIZE1, size_t SIZE2, size_t... SIZES>
+std::string toString(details::const_accessor<T, SIZE1, SIZE2, SIZES...> a) {
+    return arrayToString(a, SIZE1);
+}
+
+}  //namespace details
+
+inline std::string toString(const void *t) {
+    return details::toHexString(reinterpret_cast<uintptr_t>(t));
 }
 
 // debug string dump. There will be quotes around the string!
@@ -868,67 +910,26 @@ inline std::string toString(const sp<hidl_death_recipient> &dr) {
     return std::string{"death_recipient@"} + toString(dr.get());
 }
 
-template<typename Array>
-std::string arrayToString(const Array &a, size_t size);
-
 // debug string dump, assuming that toString(T) is defined.
 template<typename T>
 std::string toString(const hidl_vec<T> &a) {
     std::string os;
     os += "[" + toString(a.size()) + "]";
-    os += arrayToString(a, a.size());
+    os += details::arrayToString(a, a.size());
     return os;
-}
-
-template<size_t SIZE1>
-std::string arraySizeToString() {
-    return std::string{"["} + toString(SIZE1) + "]";
-}
-
-template<typename T, size_t SIZE1>
-std::string toString(const_accessor<T, SIZE1> a) {
-    return arrayToString(a, SIZE1);
 }
 
 template<typename T, size_t SIZE1>
 std::string toString(const hidl_array<T, SIZE1> &a) {
-    return arraySizeToString<SIZE1>()
-            + toString(const_accessor<T, SIZE1>(a.data()));
-}
-
-template<size_t SIZE1, size_t SIZE2, size_t... SIZES>
-std::string arraySizeToString() {
-    return std::string{"["} + toString(SIZE1) + "]" + arraySizeToString<SIZE2, SIZES...>();
-}
-
-
-template<typename T, size_t SIZE1, size_t SIZE2, size_t... SIZES>
-std::string toString(const_accessor<T, SIZE1, SIZE2, SIZES...> a) {
-    return arrayToString(a, SIZE1);
+    return details::arraySizeToString<SIZE1>()
+            + details::toString(details::const_accessor<T, SIZE1>(a.data()));
 }
 
 template<typename T, size_t SIZE1, size_t SIZE2, size_t... SIZES>
 std::string toString(const hidl_array<T, SIZE1, SIZE2, SIZES...> &a) {
-    return arraySizeToString<SIZE1, SIZE2, SIZES...>()
-            + toString(const_accessor<T, SIZE1, SIZE2, SIZES...>(a.data()));
+    return details::arraySizeToString<SIZE1, SIZE2, SIZES...>()
+            + details::toString(details::const_accessor<T, SIZE1, SIZE2, SIZES...>(a.data()));
 }
-
-template<typename Array>
-std::string arrayToString(const Array &a, size_t size) {
-    std::string os;
-    os += "{";
-    for (size_t i = 0; i < size; ++i) {
-        if (i > 0) {
-            os += ", ";
-        }
-        os += toString(a[i]);
-    }
-    os += "}";
-    return os;
-}
-
-}  // namespace details
-
 
 }  // namespace hardware
 }  // namespace android
