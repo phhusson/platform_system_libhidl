@@ -20,6 +20,7 @@ subdirs = [
     "memory/1.0",
     "memory/1.0/default",
     "token/1.0",
+    "token/1.0/utils",
 ]
 
 cc_library_shared {
