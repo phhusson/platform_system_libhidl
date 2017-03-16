@@ -53,19 +53,23 @@ namespace hardware {
 
 sp<IServiceManager> defaultServiceManager() {
 
-    if (gDefaultServiceManager != NULL) return gDefaultServiceManager;
-    if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
-        // HwBinder not available on this device or not accessible to
-        // this process.
-        return nullptr;
-    }
     {
         AutoMutex _l(gDefaultServiceManagerLock);
+        if (gDefaultServiceManager != NULL) {
+            return gDefaultServiceManager;
+        }
+        if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
+            // HwBinder not available on this device or not accessible to
+            // this process.
+            return nullptr;
+        }
         while (gDefaultServiceManager == NULL) {
-            gDefaultServiceManager = fromBinder<IServiceManager, BpHwServiceManager, BnHwServiceManager>(
-                ProcessState::self()->getContextObject(NULL));
-            if (gDefaultServiceManager == NULL)
+            gDefaultServiceManager =
+                    fromBinder<IServiceManager, BpHwServiceManager, BnHwServiceManager>(
+                        ProcessState::self()->getContextObject(NULL));
+            if (gDefaultServiceManager == NULL) {
                 sleep(1);
+            }
         }
     }
 
