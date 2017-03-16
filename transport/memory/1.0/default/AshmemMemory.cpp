@@ -46,6 +46,16 @@ Return<void> AshmemMemory::updateRange(uint64_t /* start */, uint64_t /* length 
     return Void();
 }
 
+Return<void> AshmemMemory::read() {
+    // NOOP (since non-remoted memory)
+    return Void();
+}
+
+Return<void> AshmemMemory::readRange(uint64_t /* start */, uint64_t /* length */) {
+    // NOOP (since non-remoted memory)
+    return Void();
+}
+
 Return<void> AshmemMemory::commit() {
     // NOOP (since non-remoted memory)
     return Void();
