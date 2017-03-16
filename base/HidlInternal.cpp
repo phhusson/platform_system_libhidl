@@ -32,7 +32,7 @@ namespace android {
 namespace hardware {
 namespace details {
 
-void hidl_log_base::logAlwaysFatal(const char *message) const {
+void logAlwaysFatal(const char *message) {
     LOG(FATAL) << message;
 }
 
