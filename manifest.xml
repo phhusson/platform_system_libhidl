@@ -27,6 +27,15 @@
         </interface>
     </hal>
     <hal>
+        <name>android.hidl.token</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>ITokenManager</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    <hal>
         <name>android.frameworks.sensorservice</name>
         <transport>hwbinder</transport>
         <version>1.0</version>
