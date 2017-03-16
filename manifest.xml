@@ -1,5 +1,3 @@
-<!-- TODO(b/35434793): move to frameworks/interfaces -->
-
 <manifest version="1.0">
     <hal>
         <name>android.hidl.manager</name>
