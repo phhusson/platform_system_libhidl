@@ -19,6 +19,7 @@
 
 #include <android-base/macros.h>
 #include <cutils/native_handle.h>
+#include <hidl/HidlInternal.h>
 #include <hidl/HidlSupport.h>
 #include <utils/Log.h>
 
@@ -116,7 +117,9 @@ struct MQDescriptor {
     //TODO(b/34160777) Identify a better solution that supports remoting.
     static inline size_t alignToWordBoundary(size_t length) {
         constexpr size_t kAlignmentSize = 64;
-        LOG_ALWAYS_FATAL_IF(kAlignmentSize % __WORDSIZE != 0, "Incompatible word size");
+        if (kAlignmentSize % __WORDSIZE != 0) {
+            details::logAlwaysFatal("Incompatible word size");
+        }
         return (length + kAlignmentSize/8 - 1) & ~(kAlignmentSize/8 - 1U);
     }
 
@@ -161,8 +164,9 @@ MQDescriptor<T, flavor>::MQDescriptor(
       mFlags(flavor) {
     mGrantors.resize(grantors.size());
     for (size_t i = 0; i < grantors.size(); ++i) {
-        LOG_ALWAYS_FATAL_IF(isAlignedToWordBoundary(grantors[i].offset) == false,
-                            "Grantor offsets need to be aligned");
+        if (isAlignedToWordBoundary(grantors[i].offset) == false) {
+            details::logAlwaysFatal("Grantor offsets need to be aligned");
+        }
         mGrantors[i] = grantors[i];
     }
 }

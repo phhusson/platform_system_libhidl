@@ -28,12 +28,9 @@ namespace android {
 namespace hardware {
 namespace details {
 
-// hidl_log_base is a base class that templatized
-// classes implemented in a header can inherit from,
-// to avoid creating dependencies on liblog.
-struct hidl_log_base {
-    void logAlwaysFatal(const char *message) const;
-};
+//Templated classes can use the below method
+//to avoid creating dependencies on liblog.
+void logAlwaysFatal(const char *message);
 
 // HIDL client/server code should *NOT* use this class.
 //
