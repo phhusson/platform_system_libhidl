@@ -34,7 +34,20 @@ interface IMemory {
     updateRange(uint64_t start, uint64_t length);
 
     /**
-     * Notify that you are done modifying this memory.
+     * Notify that you are about to start reading all of this memory.
+     */
+    read();
+
+    /**
+     * Notify that you are about to read the specific range.
+     *
+     * @param start Offset from start of buffer about to be read.
+     * @param length Number of bytes to be read.
+     */
+    readRange(uint64_t start, uint64_t length);
+
+    /**
+     * Notify that you are done reading and/or writing this memory.
      *
      * Must commit all previous update's and updateAll's.
      */
