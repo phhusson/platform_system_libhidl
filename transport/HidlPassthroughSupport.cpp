@@ -16,8 +16,8 @@
 #include <hidl/HidlPassthroughSupport.h>
 
 #include <hidl/HidlSupport.h>
-#include <hidl/Static.h>
 #include <hidl/HidlTransportUtils.h>
+#include <hidl/Static.h>
 
 namespace android {
 namespace hardware {
