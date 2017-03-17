@@ -26,4 +26,13 @@
             <instance>ashmem</instance>
         </interface>
     </hal>
+    <hal>
+        <name>android.frameworks.sensorservice</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>ISensorManager</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
 </manifest>
