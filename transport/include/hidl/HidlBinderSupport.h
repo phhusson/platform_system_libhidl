@@ -328,7 +328,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
             // interfaceDescriptor fails
             return nullptr;
         }
-        auto func = gBnConstructorMap.get(myDescriptor, nullptr);
+        auto func = details::gBnConstructorMap.get(myDescriptor, nullptr);
         if (!func) {
             return nullptr;
         }
