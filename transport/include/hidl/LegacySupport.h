@@ -36,6 +36,7 @@ void blockIfBinderizationDisabled(const std::string& interface,
  * Registers passthrough service implementation.
  */
 template<class Interface>
+__attribute__((warn_unused_result))
 status_t registerPassthroughServiceImplementation(
         std::string name = "default") {
     // TODO(b/34274385)
@@ -71,7 +72,8 @@ status_t registerPassthroughServiceImplementation(
  * Return value is exit status.
  */
 template<class Interface>
-int defaultPassthroughServiceImplementation(std::string name,
+__attribute__((warn_unused_result))
+status_t defaultPassthroughServiceImplementation(std::string name,
                                             size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
     status_t result = registerPassthroughServiceImplementation<Interface>(name);
@@ -84,7 +86,8 @@ int defaultPassthroughServiceImplementation(std::string name,
     return 0;
 }
 template<class Interface>
-int defaultPassthroughServiceImplementation(size_t maxThreads = 1) {
+__attribute__((warn_unused_result))
+status_t defaultPassthroughServiceImplementation(size_t maxThreads = 1) {
     return defaultPassthroughServiceImplementation<Interface>("default", maxThreads);
 }
 
