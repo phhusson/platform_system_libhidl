@@ -17,6 +17,7 @@
 #define ANDROID_HIDL_TASK_RUNNER_H
 
 #include "SynchronizedQueue.h"
+#include <memory>
 #include <thread>
 
 namespace android {
@@ -25,28 +26,28 @@ namespace details {
 
 /*
  * A background infinite loop that runs the Tasks push()'ed.
- * Just a simple single-threaded thread pool.
+ * Equivalent to a simple single-threaded Looper.
  */
 class TaskRunner {
 public:
+    using Task = std::function<void(void)>;
 
     /* Kicks off the loop immediately. */
     TaskRunner();
 
     /*
-     * Detaches the background thread and return immediately.
-     * Tasks in the queue will continue to be done sequentially, and _after_
-     * all tasks are done, the background thread releases the resources
-     * (the queue, the std::thread object, etc.)
+     * Notify the background thread to terminate and return immediately.
+     * Tasks in the queue will continue to be done sequentially in background
+     * until all tasks are finished.
      */
     ~TaskRunner();
 
     /*
      * Add a task. Return true if successful, false if
-     * the queue's size exceeds limit.
+     * the queue's size exceeds limit or t doesn't contain a callable target.
      */
-    inline bool push(const std::function<void(void)> &t) {
-        return this->mQueue->push(t);
+    inline bool push(const Task &t) {
+        return (!!t) && this->mQueue->push(t);
     }
 
     /*
@@ -56,11 +57,7 @@ public:
         this->mQueue->setLimit(limit);
     }
 private:
-
-    // resources managed by the background thread.
-    bool *mRunning;
-    SynchronizedQueue<std::function<void(void)>> *mQueue;
-    std::thread *mThread;
+    std::shared_ptr<SynchronizedQueue<Task>> mQueue;
 };
 
 } // namespace details

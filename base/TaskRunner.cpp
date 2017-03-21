@@ -22,26 +22,20 @@ namespace hardware {
 namespace details {
 
 TaskRunner::TaskRunner() {
-    bool *running = mRunning = new bool();
-    SynchronizedQueue<std::function<void(void)>> *q
-            = mQueue = new SynchronizedQueue<std::function<void(void)>>();
-    mThread = new std::thread([running, q] {
-        *running = true;
-        while (*running) {
-            (q->wait_pop())();
+    mQueue = std::make_shared<SynchronizedQueue<Task>>();
+
+    // Allow the thread to continue running in background;
+    // TaskRunner do not care about the std::thread object.
+    std::thread{[q = mQueue] {
+        Task nextTask;
+        while (!!(nextTask = q->wait_pop())) {
+            nextTask();
         }
-        delete q;
-        delete running;
-    });
+    }}.detach();
 }
+
 TaskRunner::~TaskRunner() {
-    bool *running = mRunning;
-    std::thread *t = mThread;
-    mThread->detach();
-    mQueue->push([running, t] {
-        *running = false;
-        delete t;
-    });
+    mQueue->push(nullptr);
 }
 
 } // namespace details
