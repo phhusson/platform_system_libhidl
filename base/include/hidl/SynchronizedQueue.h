@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_SYNCHRONIZED_QUEUE_H
-#define ANDROID_SYNCHRONIZED_QUEUE_H
+#ifndef ANDROID_HIDL_SYNCHRONIZED_QUEUE_H
+#define ANDROID_HIDL_SYNCHRONIZED_QUEUE_H
 
 #include <condition_variable>
 #include <mutex>
@@ -24,6 +24,7 @@
 
 namespace android {
 namespace hardware {
+namespace details {
 /* Threadsafe queue.
  */
 template <typename T>
@@ -100,7 +101,8 @@ void SynchronizedQueue<T>::setLimit(size_t limit) {
     mQueueLimit = limit;
 }
 
+} // namespace details
 } // namespace hardware
 } // namespace android
 
-#endif
+#endif // ANDROID_HIDL_SYNCHRONIZED_QUEUE_H

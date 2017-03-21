@@ -19,6 +19,7 @@
 
 namespace android {
 namespace hardware {
+namespace details {
 
 TaskRunner::TaskRunner() {
     bool *running = mRunning = new bool();
@@ -43,6 +44,7 @@ TaskRunner::~TaskRunner() {
     });
 }
 
+} // namespace details
 } // namespace hardware
 } // namespace android
 

@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ANDROID_TASK_RUNNER_H
-#define ANDROID_TASK_RUNNER_H
+#ifndef ANDROID_HIDL_TASK_RUNNER_H
+#define ANDROID_HIDL_TASK_RUNNER_H
 
 #include "SynchronizedQueue.h"
 #include <thread>
 
 namespace android {
 namespace hardware {
+namespace details {
 
 /*
  * A background infinite loop that runs the Tasks push()'ed.
@@ -62,7 +63,8 @@ private:
     std::thread *mThread;
 };
 
+} // namespace details
 } // namespace hardware
 } // namespace android
 
-#endif // ANDROID_TASK_RUNNER_H
+#endif // ANDROID_HIDL_TASK_RUNNER_H
