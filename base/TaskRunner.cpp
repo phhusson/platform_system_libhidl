@@ -22,7 +22,10 @@ namespace hardware {
 namespace details {
 
 TaskRunner::TaskRunner() {
-    mQueue = std::make_shared<SynchronizedQueue<Task>>();
+}
+
+void TaskRunner::start(size_t limit) {
+    mQueue = std::make_shared<SynchronizedQueue<Task>>(limit);
 
     // Allow the thread to continue running in background;
     // TaskRunner do not care about the std::thread object.
@@ -35,7 +38,9 @@ TaskRunner::TaskRunner() {
 }
 
 TaskRunner::~TaskRunner() {
-    mQueue->push(nullptr);
+    if (mQueue) {
+        mQueue->push(nullptr);
+    }
 }
 
 } // namespace details

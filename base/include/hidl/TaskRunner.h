@@ -32,7 +32,7 @@ class TaskRunner {
 public:
     using Task = std::function<void(void)>;
 
-    /* Kicks off the loop immediately. */
+    /* Create an empty task runner. Nothing will be done until start() is called. */
     TaskRunner();
 
     /*
@@ -43,19 +43,19 @@ public:
     ~TaskRunner();
 
     /*
+     * Sets the queue limit. Fails the push operation once the limit is reached.
+     * Then kicks off the loop.
+     */
+    void start(size_t limit);
+
+    /*
      * Add a task. Return true if successful, false if
      * the queue's size exceeds limit or t doesn't contain a callable target.
      */
     inline bool push(const Task &t) {
-        return (!!t) && this->mQueue->push(t);
+        return (mQueue != nullptr) && (!!t) && this->mQueue->push(t);
     }
 
-    /*
-     * Sets the queue limit. Fails the push operation once the limit is reached.
-     */
-    inline void setLimit(size_t limit) {
-        this->mQueue->setLimit(limit);
-    }
 private:
     std::shared_ptr<SynchronizedQueue<Task>> mQueue;
 };

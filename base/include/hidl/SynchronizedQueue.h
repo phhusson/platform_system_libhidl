@@ -29,6 +29,7 @@ namespace details {
  */
 template <typename T>
 struct SynchronizedQueue {
+    SynchronizedQueue(size_t limit);
 
     /* Gets an item from the front of the queue.
      *
@@ -44,17 +45,16 @@ struct SynchronizedQueue {
      */
     size_t size();
 
-    /* Sets the limit to the queue. Will fail
-     * the push operation if the limit is reached.
-     */
-    void setLimit(size_t limit);
-
 private:
     std::condition_variable mCondition;
     std::mutex mMutex;
     std::queue<T> mQueue;
-    size_t mQueueLimit = SIZE_MAX;
+    const size_t mQueueLimit;
 };
+
+template <typename T>
+SynchronizedQueue<T>::SynchronizedQueue(size_t limit) : mQueueLimit(limit) {
+}
 
 template <typename T>
 T SynchronizedQueue<T>::wait_pop() {
@@ -92,13 +92,6 @@ size_t SynchronizedQueue<T>::size() {
     std::unique_lock<std::mutex> lock(mMutex);
 
     return mQueue.size();
-}
-
-template <typename T>
-void SynchronizedQueue<T>::setLimit(size_t limit) {
-    std::unique_lock<std::mutex> lock(mMutex);
-
-    mQueueLimit = limit;
 }
 
 } // namespace details
