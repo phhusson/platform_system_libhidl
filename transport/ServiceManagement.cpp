@@ -123,6 +123,7 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
         LOG(WARNING) << "Could not registerReference for "
                      << interfaceName << "/" << instanceName
                      << ": " << ret.description();
+        return;
     }
     LOG(VERBOSE) << "Successfully registerReference for "
                  << interfaceName << "/" << instanceName;
