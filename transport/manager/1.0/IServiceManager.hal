@@ -113,11 +113,19 @@ interface IServiceManager {
         generates (bool success);
 
     /**
+     * Special values for InstanceDebugInfo pids.
+     */
+    enum PidConstant : int32_t {
+        NO_PID = -1,
+    };
+
+    /**
      * Returned object for debugDump().
      */
     struct InstanceDebugInfo {
         string interfaceName;
         string instanceName;
+        int32_t pid; // PidConstants:NO_PID if unavailable
         vec<int32_t> clientPids;
         Architecture arch;
     };
