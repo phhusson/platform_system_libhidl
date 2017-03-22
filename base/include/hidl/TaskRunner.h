@@ -13,56 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ANDROID_TASK_RUNNER_H
-#define ANDROID_TASK_RUNNER_H
+#ifndef ANDROID_HIDL_TASK_RUNNER_H
+#define ANDROID_HIDL_TASK_RUNNER_H
 
 #include "SynchronizedQueue.h"
+#include <memory>
 #include <thread>
 
 namespace android {
 namespace hardware {
+namespace details {
 
 /*
  * A background infinite loop that runs the Tasks push()'ed.
- * Just a simple single-threaded thread pool.
+ * Equivalent to a simple single-threaded Looper.
  */
 class TaskRunner {
 public:
+    using Task = std::function<void(void)>;
 
-    /* Kicks off the loop immediately. */
+    /* Create an empty task runner. Nothing will be done until start() is called. */
     TaskRunner();
 
     /*
-     * Detaches the background thread and return immediately.
-     * Tasks in the queue will continue to be done sequentially, and _after_
-     * all tasks are done, the background thread releases the resources
-     * (the queue, the std::thread object, etc.)
+     * Notify the background thread to terminate and return immediately.
+     * Tasks in the queue will continue to be done sequentially in background
+     * until all tasks are finished.
      */
     ~TaskRunner();
 
     /*
-     * Add a task. Return true if successful, false if
-     * the queue's size exceeds limit.
+     * Sets the queue limit. Fails the push operation once the limit is reached.
+     * Then kicks off the loop.
      */
-    inline bool push(const std::function<void(void)> &t) {
-        return this->mQueue->push(t);
-    }
+    void start(size_t limit);
 
     /*
-     * Sets the queue limit. Fails the push operation once the limit is reached.
+     * Add a task. Return true if successful, false if
+     * the queue's size exceeds limit or t doesn't contain a callable target.
      */
-    inline void setLimit(size_t limit) {
-        this->mQueue->setLimit(limit);
+    inline bool push(const Task &t) {
+        return (mQueue != nullptr) && (!!t) && this->mQueue->push(t);
     }
-private:
 
-    // resources managed by the background thread.
-    bool *mRunning;
-    SynchronizedQueue<std::function<void(void)>> *mQueue;
-    std::thread *mThread;
+private:
+    std::shared_ptr<SynchronizedQueue<Task>> mQueue;
 };
 
+} // namespace details
 } // namespace hardware
 } // namespace android
 
-#endif // ANDROID_TASK_RUNNER_H
+#endif // ANDROID_HIDL_TASK_RUNNER_H

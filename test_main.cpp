@@ -255,8 +255,9 @@ TEST_F(LibHidlTest, ArrayTest) {
 }
 
 TEST_F(LibHidlTest, TaskRunnerTest) {
-    using android::hardware::TaskRunner;
+    using android::hardware::details::TaskRunner;
     TaskRunner tr;
+    tr.start(1 /* limit */);
     bool flag = false;
     tr.push([&] {
         usleep(1000);
