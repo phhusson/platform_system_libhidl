@@ -19,30 +19,31 @@
 
 namespace android {
 namespace hardware {
+namespace details {
 
 TaskRunner::TaskRunner() {
-    bool *running = mRunning = new bool();
-    SynchronizedQueue<std::function<void(void)>> *q
-            = mQueue = new SynchronizedQueue<std::function<void(void)>>();
-    mThread = new std::thread([running, q] {
-        *running = true;
-        while (*running) {
-            (q->wait_pop())();
-        }
-        delete q;
-        delete running;
-    });
-}
-TaskRunner::~TaskRunner() {
-    bool *running = mRunning;
-    std::thread *t = mThread;
-    mThread->detach();
-    mQueue->push([running, t] {
-        *running = false;
-        delete t;
-    });
 }
 
+void TaskRunner::start(size_t limit) {
+    mQueue = std::make_shared<SynchronizedQueue<Task>>(limit);
+
+    // Allow the thread to continue running in background;
+    // TaskRunner do not care about the std::thread object.
+    std::thread{[q = mQueue] {
+        Task nextTask;
+        while (!!(nextTask = q->wait_pop())) {
+            nextTask();
+        }
+    }}.detach();
+}
+
+TaskRunner::~TaskRunner() {
+    if (mQueue) {
+        mQueue->push(nullptr);
+    }
+}
+
+} // namespace details
 } // namespace hardware
 } // namespace android
 
