@@ -49,18 +49,22 @@ status_t registerPassthroughServiceImplementation(
     sp<Interface> service = Interface::getService(name, true /* getStub */);
 
     if (service == nullptr) {
-        ALOGE("Could not get passthrough implementation for %s.", name.c_str());
+        ALOGE("Could not get passthrough implementation for %s/%s.",
+            Interface::descriptor, name.c_str());
         return EXIT_FAILURE;
     }
 
-    LOG_FATAL_IF(service->isRemote(), "Implementation of %s is remote!", name.c_str());
+    LOG_FATAL_IF(service->isRemote(), "Implementation of %s/%s is remote!",
+            Interface::descriptor, name.c_str());
 
     status_t status = service->registerAsService(name);
 
     if (status == OK) {
-        ALOGI("Registration complete for %s.", name.c_str());
+        ALOGI("Registration complete for %s/%s.",
+            Interface::descriptor, name.c_str());
     } else {
-        ALOGE("Could not register service %s (%d).", name.c_str(), status);
+        ALOGE("Could not register service %s/%s (%d).",
+            Interface::descriptor, name.c_str(), status);
     }
 
     return status;
