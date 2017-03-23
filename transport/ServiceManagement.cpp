@@ -29,6 +29,7 @@
 #include <hidl/Status.h>
 
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <hidl-util/FQName.h>
 #include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
@@ -41,6 +42,8 @@
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
 static const std::regex gLibraryFileNamePattern("(" RE_PATH "@[0-9]+[.][0-9]+)-impl(.*?).so");
+
+using android::base::WaitForProperty;
 
 using android::hidl::manager::V1_0::IServiceManager;
 using android::hidl::manager::V1_0::IServiceNotification;
@@ -55,6 +58,12 @@ extern Mutex gDefaultServiceManagerLock;
 extern sp<android::hidl::manager::V1_0::IServiceManager> gDefaultServiceManager;
 }  // namespace details
 
+static const char* kHwServicemanagerReadyProperty = "hwservicemanager.ready";
+
+void waitForHwServiceManager() {
+    while (!WaitForProperty(kHwServicemanagerReadyProperty, "true", std::chrono::milliseconds::max())) {}
+}
+
 sp<IServiceManager> defaultServiceManager() {
 
     {
@@ -67,11 +76,15 @@ sp<IServiceManager> defaultServiceManager() {
             // this process.
             return nullptr;
         }
+
+        waitForHwServiceManager();
+
         while (details::gDefaultServiceManager == NULL) {
             details::gDefaultServiceManager =
                     fromBinder<IServiceManager, BpHwServiceManager, BnHwServiceManager>(
                         ProcessState::self()->getContextObject(NULL));
             if (details::gDefaultServiceManager == NULL) {
+                LOG(ERROR) << "Waited for hwservicemanager, but got nullptr.";
                 sleep(1);
             }
         }
