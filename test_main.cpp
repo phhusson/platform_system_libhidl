@@ -94,6 +94,12 @@ TEST_F(LibHidlTest, StringTest) {
     EXPECT_EQ(myString, "great");
     EXPECT_STREQ(anotherCString, "great");
 
+    const hidl_string t = "not so great";
+    std::string myTString = t;
+    const char * anotherTCString = t;
+    EXPECT_EQ(myTString, "not so great");
+    EXPECT_STREQ(anotherTCString, "not so great");
+
     // Comparisons
     const char * cstr1 = "abc";
     std::string string1(cstr1);
