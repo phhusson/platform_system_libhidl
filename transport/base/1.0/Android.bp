@@ -30,6 +30,7 @@ genrule {
     ],
     out: [
         "android/hidl/base/1.0/types.h",
+        "android/hidl/base/1.0/hwtypes.h",
         "android/hidl/base/1.0/IBase.h",
         "android/hidl/base/1.0/IHwBase.h",
         "android/hidl/base/1.0/BnHwBase.h",
