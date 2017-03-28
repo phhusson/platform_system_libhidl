@@ -41,7 +41,7 @@ interface IBase {
      *     package android.hardware.foo@1.0;
      *     interface IParent {};
      *     interface IChild extends IParent {};
-     * Calling interfaceChain on an IChild object will yield the following:
+     * Calling interfaceChain on an IChild object must yield the following:
      *     ["android.hardware.foo@1.0::IChild",
      *      "android.hardware.foo@1.0::IParent"
      *      "android.hidl.base@1.0::IBase"]
@@ -57,7 +57,7 @@ interface IBase {
      *     package android.hardware.foo@1.0;
      *     interface IParent {};
      *     interface IChild extends IParent {};
-     * Calling interfaceDescriptor on an IChild object will yield
+     * Calling interfaceDescriptor on an IChild object must yield
      *     "android.hardware.foo@1.0::IChild"
      *
      * @return descriptor a descriptor of the run-time type of the
@@ -116,4 +116,23 @@ interface IBase {
      *                Must support empty for default debug information.
      */
     debug(handle fd, vec<string> options);
+
+    /*
+     * Returns hashes of the source HAL files that define the interfaces of the
+     * runtime type information on the object.
+     * For example, for the following interface definition:
+     *     package android.hardware.foo@1.0;
+     *     interface IParent {};
+     *     interface IChild extends IParent {};
+     * Calling interfaceChain on an IChild object must yield the following:
+     *     [(hash of IChild.hal),
+     *      (hash of IParent.hal)
+     *      (hash of IBase.hal)].
+     *
+     * SHA-256 is used as the hashing algorithm. Each hash has 32 bytes
+     * according to SHA-256 standard.
+     *
+     * @return hashchain a vector of SHA-1 digests
+     */
+    getHashChain() generates (vec<uint8_t[32]> hashchain);
 };
