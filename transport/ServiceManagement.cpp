@@ -300,11 +300,23 @@ struct Waiter : IServiceNotification {
         return Void();
     }
 
-    void wait() {
+    void wait(const std::string &interface, const std::string &instanceName) {
+        using std::literals::chrono_literals::operator""s;
+
         std::unique_lock<std::mutex> lock(mMutex);
-        mCondition.wait(lock, [this]{
-            return mRegistered;
-        });
+        while(true) {
+            mCondition.wait_for(lock, 1s, [this]{
+                return mRegistered;
+            });
+
+            if (mRegistered) {
+                break;
+            }
+
+            LOG(WARNING) << "Waited one second for "
+                         << interface << "/" << instanceName
+                         << ". Waiting another...";
+        }
     }
 
 private:
@@ -338,7 +350,7 @@ void waitForHwService(
         return;
     }
 
-    waiter->wait();
+    waiter->wait(interface, instanceName);
 }
 
 }; // namespace details
