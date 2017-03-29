@@ -44,4 +44,13 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <hal>
+        <name>android.system.wifi.keystore</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IKeystore</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
 </manifest>
