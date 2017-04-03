@@ -123,8 +123,8 @@ struct hidl_handle {
 private:
     void freeHandle();
 
-    details::hidl_pointer<const native_handle_t> mHandle;
-    bool mOwnsHandle;
+    details::hidl_pointer<const native_handle_t> mHandle __attribute__ ((aligned(8)));
+    bool mOwnsHandle __attribute ((aligned(8)));
 };
 
 struct hidl_string {
