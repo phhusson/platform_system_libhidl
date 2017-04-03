@@ -257,8 +257,9 @@ hidl_string::operator std::string() const {
     return std::string(mBuffer, mSize);
 }
 
-hidl_string::operator const char *() const {
-    return mBuffer;
+std::ostream& operator<<(std::ostream& os, const hidl_string& str) {
+    os << str.c_str();
+    return os;
 }
 
 void hidl_string::copyFrom(const char *data, size_t size) {
