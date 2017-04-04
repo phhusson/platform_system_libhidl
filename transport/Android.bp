@@ -60,7 +60,6 @@ cc_library_shared {
         "HidlBinderSupport.cpp",
         "HidlPassthroughSupport.cpp",
         "HidlTransportSupport.cpp",
-        "LegacySupport.cpp",
         "ServiceManagement.cpp",
         "Static.cpp"
     ],
