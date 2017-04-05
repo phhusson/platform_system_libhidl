@@ -25,14 +25,17 @@ namespace details {
 
 /*
  * Verifies the interface chain of 'interface' contains 'castTo'
+ * @param emitError if emitError is false, return Return<bool>{false} on error; if emitError
+ * is true, the Return<bool> object contains the actual error.
  */
-inline bool canCastInterface(::android::hidl::base::V1_0::IBase* interface, const char* castTo) {
+inline Return<bool> canCastInterface(::android::hidl::base::V1_0::IBase* interface,
+        const char* castTo, bool emitError = false) {
     if (interface == nullptr) {
         return false;
     }
 
     bool canCast = false;
-    auto ret = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
+    auto chainRet = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
         for (size_t i = 0; i < types.size(); i++) {
             if (types[i] == castTo) {
                 canCast = true;
@@ -40,7 +43,15 @@ inline bool canCastInterface(::android::hidl::base::V1_0::IBase* interface, cons
             }
         }
     });
-    return ret.isOk() && canCast;
+
+    if (!chainRet.isOk()) {
+        // call fails, propagate the error if emitError
+        return emitError
+                ? details::StatusOf<void, bool>(chainRet)
+                : Return<bool>(false);
+    }
+
+    return canCast;
 }
 
 inline std::string getDescriptor(::android::hidl::base::V1_0::IBase* interface) {

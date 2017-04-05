@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include <android-base/macros.h>
+#include <hidl/HidlInternal.h>
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
 
@@ -129,11 +130,16 @@ private:
 // For gtest output logging
 std::ostream& operator<< (std::ostream& stream, const Status& s);
 
+template<typename T> class Return;
+
 namespace details {
     class return_status {
     private:
         Status mStatus {};
         mutable bool mCheckedStatus = false;
+
+        template <typename T, typename U>
+        friend Return<U> StatusOf(const Return<T> &other);
     protected:
         void assertOk() const;
     public:
@@ -153,6 +159,12 @@ namespace details {
         bool isOk() const {
             mCheckedStatus = true;
             return mStatus.isOk();
+        }
+
+        // Check if underlying error is DEAD_OBJECT.
+        // Does not set mCheckedStatus.
+        bool isDeadObject() const {
+            return mStatus.transactionError() == DEAD_OBJECT;
         }
 
         // For debugging purposes only
@@ -228,6 +240,18 @@ public:
 static inline Return<void> Void() {
     return Return<void>();
 }
+
+namespace details {
+// Create a Return<U> from the Status of Return<T>. The provided
+// Return<T> must have an error status and have it checked.
+template <typename T, typename U>
+Return<U> StatusOf(const Return<T> &other) {
+    if (other.mStatus.isOk() || !other.mCheckedStatus) {
+        details::logAlwaysFatal("cannot call statusOf on an OK Status or an unchecked status");
+    }
+    return Return<U>{other.mStatus};
+}
+}  // namespace details
 
 }  // namespace hardware
 }  // namespace android
