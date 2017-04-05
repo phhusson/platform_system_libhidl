@@ -50,16 +50,28 @@ void joinRpcThreadpool();
 namespace details {
 
 // cast the interface IParent to IChild.
-// Return nullptr if parent is null or any failure.
+// Return nonnull if cast successful.
+// Return nullptr if:
+// 1. parent is null
+// 2. cast failed because IChild is not a child type of IParent.
+// 3. !emitError, calling into parent fails.
+// Return an error Return object if:
+// 1. emitError, calling into parent fails.
 template<typename IChild, typename IParent, typename BpChild, typename BpParent>
-sp<IChild> castInterface(sp<IParent> parent, const char *childIndicator) {
+Return<sp<IChild>> castInterface(sp<IParent> parent, const char *childIndicator, bool emitError) {
     if (parent.get() == nullptr) {
         // casts always succeed with nullptrs.
         return nullptr;
     }
-    bool canCast = details::canCastInterface(parent.get(), childIndicator);
+    Return<bool> canCastRet = details::canCastInterface(parent.get(), childIndicator, emitError);
+    if (!canCastRet.isOk()) {
+        // call fails, propagate the error if emitError
+        return emitError
+                ? details::StatusOf<bool, sp<IChild>>(canCastRet)
+                : Return<sp<IChild>>(sp<IChild>(nullptr));
+    }
 
-    if (!canCast) {
+    if (!canCastRet) {
         return sp<IChild>(nullptr); // cast failed.
     }
     // TODO b/32001926 Needs to be fixed for socket mode.
