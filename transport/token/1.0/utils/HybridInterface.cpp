@@ -89,19 +89,17 @@ sp<HInterface> retrieveHalInterface(const HalToken& token) {
 }
 
 bool createHalToken(const sp<HInterface>& interface, HalToken* token) {
-    hardware::Return<HalToken> transaction(false);
+    hardware::Return<void> transaction;
     {
         std::lock_guard<std::mutex> lock(gTokenManagerLock);
         if (isBadTokenManager()) {
             return false;
         }
-        transaction = gTokenManager->createToken(interface);
-        if (isBadTransaction(transaction)) {
-            return false;
-        }
+        transaction = gTokenManager->createToken(interface, [&](const HalToken &newToken) {
+            *token = newToken;
+        });
     }
-    *token = static_cast<HalToken>(transaction);
-    return true;
+    return !isBadTransaction(transaction);
 }
 
 bool deleteHalToken(const HalToken& token) {
