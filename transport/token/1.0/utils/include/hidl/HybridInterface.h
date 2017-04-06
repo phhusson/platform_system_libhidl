@@ -96,7 +96,7 @@
 
 namespace android {
 
-typedef uint64_t HalToken;
+typedef ::android::hardware::hidl_vec<uint8_t> HalToken;
 typedef ::android::hidl::base::V1_0::IBase HInterface;
 
 constexpr uint32_t DEFAULT_GET_HAL_TOKEN_TRANSACTION_CODE =
@@ -247,7 +247,7 @@ status_t H2BConverter<HINTERFACE, INTERFACE, BNINTERFACE, GETTOKEN>::
             ALOGE("H2BConverter: Failed to create HAL token.");
         }
         reply->writeBool(result);
-        reply->writeUint64(token);
+        reply->writeByteArray(token.size(), token.data());
         return NO_ERROR;
     }
     return BNINTERFACE::onTransact(code, data, reply, flags);
@@ -313,7 +313,11 @@ HpInterface<BPINTERFACE, CONVERTER, GETTOKEN>::HpInterface(
     data.writeInterfaceToken(BaseInterface::getInterfaceDescriptor());
     if (mImpl->transact(GET_HAL_TOKEN, data, &reply) == NO_ERROR) {
         bool tokenCreated = reply.readBool();
-        HalToken token = reply.readUint64();
+
+        std::vector<uint8_t> tokenVector;
+        reply.readByteVector(&tokenVector);
+        HalToken token = HalToken(tokenVector);
+
         if (tokenCreated) {
             sp<HInterface> hBase = retrieveHalInterface(token);
             if (hBase != nullptr) {
