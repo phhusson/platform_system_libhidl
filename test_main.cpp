@@ -62,7 +62,7 @@ TEST_F(LibHidlTest, StringTest) {
     hidl_string s2("s2"); // copy constructor from cstr
     EXPECT_STREQ(s2.c_str(), "s2");
     hidl_string s2a(nullptr); // copy constructor from null cstr
-    EXPECT_STREQ("", s2a);
+    EXPECT_STREQ("", s2a.c_str());
     s2a = nullptr; // = from nullptr cstr
     EXPECT_STREQ(s2a.c_str(), "");
     hidl_string s3 = hidl_string("s3"); // move =
@@ -72,33 +72,43 @@ TEST_F(LibHidlTest, StringTest) {
     hidl_string s5(hidl_string(hidl_string("s5"))); // move constructor
     EXPECT_STREQ(s5.c_str(), "s5");
     hidl_string s6(std::string("s6")); // copy constructor from std::string
-    EXPECT_STREQ(s6, "s6");
+    EXPECT_STREQ(s6.c_str(), "s6");
     hidl_string s7 = std::string("s7"); // copy = from std::string
-    EXPECT_STREQ(s7, "s7");
+    EXPECT_STREQ(s7.c_str(), "s7");
     hidl_string s8(s7); // copy constructor
-    EXPECT_STREQ(s8, "s7");
+    EXPECT_STREQ(s8.c_str(), "s7");
     hidl_string s9 = s8; // copy =
-    EXPECT_STREQ(s9, "s7");
+    EXPECT_STREQ(s9.c_str(), "s7");
     char myCString[20] = "myCString";
     s.setToExternal(&myCString[0], strlen(myCString));
-    EXPECT_STREQ(s, "myCString");
+    EXPECT_STREQ(s.c_str(), "myCString");
     myCString[2] = 'D';
-    EXPECT_STREQ(s, "myDString");
+    EXPECT_STREQ(s.c_str(), "myDString");
     s.clear(); // should not affect myCString
     EXPECT_STREQ(myCString, "myDString");
 
     // casts
     s = "great";
     std::string myString = s;
-    const char *anotherCString = s;
+    const char *anotherCString = s.c_str();
     EXPECT_EQ(myString, "great");
     EXPECT_STREQ(anotherCString, "great");
 
     const hidl_string t = "not so great";
     std::string myTString = t;
-    const char * anotherTCString = t;
+    const char * anotherTCString = t.c_str();
     EXPECT_EQ(myTString, "not so great");
     EXPECT_STREQ(anotherTCString, "not so great");
+
+    // Assignment from hidl_string to std::string
+    std::string tgt;
+    hidl_string src("some stuff");
+    tgt = src;
+    EXPECT_STREQ(tgt.c_str(), "some stuff");
+
+    // Stream output operator
+    hidl_string msg("hidl_string works with operator<<");
+    std::cout << msg;
 
     // Comparisons
     const char * cstr1 = "abc";
