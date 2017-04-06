@@ -73,6 +73,22 @@ interface IServiceManager {
      */
     add(string name, interface service) generates (bool success);
 
+    enum Transport : uint8_t {
+        EMPTY,
+        HWBINDER,
+        PASSTHROUGH,
+    };
+
+    /**
+     * Get the transport of a service.
+     *
+     * @param fqName     Fully-qualified interface name.
+     * @param name       Instance name. Same as in IServiceManager::add
+     *
+     * @return transport Transport of service if known.
+     */
+    getTransport(string fqName, string name) generates (Transport transport);
+
     /**
      * List all registered services. Must be sorted.
      *
