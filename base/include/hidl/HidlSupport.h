@@ -149,9 +149,6 @@ struct hidl_string {
     hidl_string &operator=(hidl_string &&other);
     // cast to std::string.
     operator std::string() const;
-    // cast to C-style string. Caller is responsible
-    // to maintain this hidl_string alive.
-    operator const char *() const;
 
     void clear();
 
@@ -194,6 +191,10 @@ HIDL_STRING_OPERATOR(>)
 HIDL_STRING_OPERATOR(>=)
 
 #undef HIDL_STRING_OPERATOR
+
+// Send our content to the output stream
+std::ostream& operator<<(std::ostream& os, const hidl_string& str);
+
 
 // hidl_memory is a structure that can be used to transfer
 // pieces of shared memory between processes. The assumption
