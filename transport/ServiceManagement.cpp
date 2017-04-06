@@ -218,6 +218,12 @@ struct PassthroughServiceManager : IServiceManager {
         return false;
     }
 
+    Return<Transport> getTransport(const hidl_string& /* fqName */,
+                                   const hidl_string& /* name */) {
+        LOG(FATAL) << "Cannot getTransport with passthrough service manager.";
+        return Transport::EMPTY;
+    }
+
     Return<void> list(list_cb /* _hidl_cb */) override {
         LOG(FATAL) << "Cannot list services with passthrough service manager.";
         return Void();
