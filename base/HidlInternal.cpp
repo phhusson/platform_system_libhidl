@@ -24,7 +24,6 @@
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
 #include <dirent.h>
 #include <dlfcn.h>
-#include <hidl-util/FQName.h>
 #include <regex>
 #endif
 
@@ -111,14 +110,25 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                     const char *,
                     const char *,
                     std::vector<void *> *);
-            FQName package_name = FQName(mInstrumentationLibPackage);
+            std::string package = mInstrumentationLibPackage;
+            for (size_t i = 0; i < package.size(); i++) {
+                if (package[i] == '.') {
+                    package[i] = '_';
+                    continue;
+                }
+
+                if (package[i] == '@') {
+                    package[i] = '_';
+                    package.insert(i + 1, "V");
+                    continue;
+                }
+            }
             auto cb = (cb_fun)dlsym(handle, ("HIDL_INSTRUMENTATION_FUNCTION_"
-                        + package_name.tokenName() + "_"
-                        + mInterfaceName).c_str());
+                        + package + "_" + mInterfaceName).c_str());
             if ((error = dlerror()) != NULL) {
                 LOG(WARNING)
                     << "couldn't find symbol: HIDL_INSTRUMENTATION_FUNCTION_"
-                    << mInterfaceName << ", error: " << error;
+                    << package << "_" << mInterfaceName << ", error: " << error;
                 continue;
             }
             instrumentationCallbacks->push_back(cb);
