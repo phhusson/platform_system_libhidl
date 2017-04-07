@@ -18,7 +18,6 @@ cc_library_shared {
     shared_libs: [
         "libbase",
         "libcutils",
-        "libhidl-gen-utils",
         "liblog",
         "libutils",
     ],
