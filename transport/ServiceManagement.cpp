@@ -30,8 +30,6 @@
 
 #include <android-base/logging.h>
 #include <android-base/properties.h>
-#include <hidl-util/FQName.h>
-#include <hidl-util/StringHelper.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
 
@@ -97,6 +95,16 @@ sp<IServiceManager> defaultServiceManager() {
     return details::gDefaultServiceManager;
 }
 
+bool endsWith(const std::string &in, const std::string &suffix) {
+    return in.size() >= suffix.size() &&
+           in.substr(in.size() - suffix.size()) == suffix;
+}
+
+bool startsWith(const std::string &in, const std::string &prefix) {
+    return in.size() >= prefix.size() &&
+           in.substr(0, prefix.size()) == prefix;
+}
+
 std::vector<std::string> search(const std::string &path,
                               const std::string &prefix,
                               const std::string &suffix) {
@@ -109,8 +117,8 @@ std::vector<std::string> search(const std::string &path,
     while ((dp = readdir(dir.get())) != nullptr) {
         std::string name = dp->d_name;
 
-        if (StringHelper::StartsWith(name, prefix) &&
-                StringHelper::EndsWith(name, suffix)) {
+        if (startsWith(name, prefix) &&
+                endsWith(name, suffix)) {
             results.push_back(name);
         }
     }
@@ -148,18 +156,23 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
 
 struct PassthroughServiceManager : IServiceManager {
     Return<sp<IBase>> get(const hidl_string& fqName,
-                     const hidl_string& name) override {
-        const FQName iface(fqName);
+                          const hidl_string& name) override {
+        std::string stdFqName(fqName.c_str());
 
-        if (!iface.isValid() ||
-            !iface.isFullyQualified() ||
-            iface.isIdentifier()) {
+        //fqName looks like android.hardware.foo@1.0::IFoo
+        size_t idx = stdFqName.find("::");
+
+        if (idx == std::string::npos ||
+                idx + strlen("::") + 1 >= stdFqName.size()) {
             LOG(ERROR) << "Invalid interface name passthrough lookup: " << fqName;
             return nullptr;
         }
 
-        const std::string prefix = iface.getPackageAndVersion().string() + "-impl";
-        const std::string sym = "HIDL_FETCH_" + iface.name();
+        std::string packageAndVersion = stdFqName.substr(0, idx);
+        std::string ifaceName = stdFqName.substr(idx + strlen("::"));
+
+        const std::string prefix = packageAndVersion + "-impl";
+        const std::string sym = "HIDL_FETCH_" + ifaceName;
 
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
