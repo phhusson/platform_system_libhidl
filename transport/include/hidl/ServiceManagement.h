@@ -39,6 +39,12 @@ sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
 sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
 
 namespace details {
+// e.x.: android.hardware.foo@1.0, IFoo, default
+void onRegistration(const std::string &packageName,
+                    const std::string &interfaceName,
+                    const std::string &instanceName);
+
+// e.x.: android.hardware.foo@1.0::IFoo, default
 void waitForHwService(const std::string &interface, const std::string &instanceName);
 };
 
