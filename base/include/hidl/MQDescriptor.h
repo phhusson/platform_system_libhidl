@@ -21,7 +21,6 @@
 #include <cutils/native_handle.h>
 #include <hidl/HidlInternal.h>
 #include <hidl/HidlSupport.h>
-#include <utils/Log.h>
 
 namespace android {
 namespace hardware {
