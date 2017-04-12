@@ -25,6 +25,7 @@ subdirs = [
 
 cc_library_shared {
     name: "libhidltransport",
+    vendor_available: true,
     cflags: libhidl_flags,
     shared_libs: [
         "libbase",
