@@ -262,7 +262,7 @@ struct PassthroughServiceManager : IServiceManager {
                     continue;
                 }
 
-                IBase *interface = (*generator)(name);
+                IBase *interface = (*generator)(name.c_str());
 
                 if (interface == nullptr) {
                     dlclose(handle);
