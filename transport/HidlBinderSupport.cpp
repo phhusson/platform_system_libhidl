@@ -33,7 +33,7 @@ const size_t hidl_memory::kOffsetOfName = offsetof(hidl_memory, mName);
 static_assert(hidl_memory::kOffsetOfHandle == 0, "wrong offset");
 static_assert(hidl_memory::kOffsetOfName == 24, "wrong offset");
 
-status_t readEmbeddedFromParcel(hidl_memory * /* memory */,
+status_t readEmbeddedFromParcel(const hidl_memory& memory,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
     const native_handle_t *handle;
     ::android::status_t _hidl_err = parcel.readNullableEmbeddedNativeHandle(
@@ -43,7 +43,7 @@ status_t readEmbeddedFromParcel(hidl_memory * /* memory */,
 
     if (_hidl_err == ::android::OK) {
         _hidl_err = readEmbeddedFromParcel(
-                (hidl_string*) nullptr,
+                memory.name(),
                 parcel,
                 parentHandle,
                 parentOffset + hidl_memory::kOffsetOfName);
@@ -73,14 +73,28 @@ status_t writeEmbeddedToParcel(const hidl_memory &memory,
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 static_assert(hidl_string::kOffsetOfBuffer == 0, "wrong offset");
 
-status_t readEmbeddedFromParcel(hidl_string * /* string */,
+status_t readEmbeddedFromParcel(const hidl_string &string ,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset) {
     const void *out;
-    return parcel.readEmbeddedBuffer(
+
+    status_t status = parcel.readEmbeddedBuffer(
+            string.size() + 1,
             nullptr /* buffer_handle */,
             parentHandle,
             parentOffset + hidl_string::kOffsetOfBuffer,
             &out);
+
+    if (status != OK) {
+        return status;
+    }
+
+    // Always safe to access out[string.size()] because we read size+1 bytes
+    if (static_cast<const char *>(out)[string.size()] != '\0') {
+        ALOGE("Received unterminated hidl_string buffer.");
+        return BAD_VALUE;
+    }
+
+    return OK;
 }
 
 status_t writeEmbeddedToParcel(const hidl_string &string,
