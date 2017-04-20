@@ -60,7 +60,7 @@ private:
 
 // ---------------------- hidl_memory
 
-status_t readEmbeddedFromParcel(hidl_memory *memory,
+status_t readEmbeddedFromParcel(const hidl_memory &memory,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset);
 
 status_t writeEmbeddedToParcel(const hidl_memory &memory,
@@ -68,7 +68,7 @@ status_t writeEmbeddedToParcel(const hidl_memory &memory,
 
 // ---------------------- hidl_string
 
-status_t readEmbeddedFromParcel(hidl_string *string,
+status_t readEmbeddedFromParcel(const hidl_string &string,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset);
 
 status_t writeEmbeddedToParcel(const hidl_string &string,
@@ -92,13 +92,14 @@ status_t writeToParcel(const Status &status, Parcel* parcel);
 
 template<typename T>
 status_t readEmbeddedFromParcel(
-        hidl_vec<T> * /*vec*/,
+        const hidl_vec<T> &vec,
         const Parcel &parcel,
         size_t parentHandle,
         size_t parentOffset,
         size_t *handle) {
     const void *out;
     return parcel.readNullableEmbeddedBuffer(
+            vec.size() * sizeof(T),
             handle,
             parentHandle,
             parentOffset + hidl_vec<T>::kOffsetOfBuffer,
@@ -129,7 +130,7 @@ status_t findInParcel(const hidl_vec<T> &vec, const Parcel &parcel, size_t *hand
 
 template<typename T, MQFlavor flavor>
 ::android::status_t readEmbeddedFromParcel(
-        MQDescriptor<T, flavor> *obj,
+        MQDescriptor<T, flavor> &obj,
         const ::android::hardware::Parcel &parcel,
         size_t parentHandle,
         size_t parentOffset) {
@@ -138,7 +139,7 @@ template<typename T, MQFlavor flavor>
     size_t _hidl_grantors_child;
 
     _hidl_err = ::android::hardware::readEmbeddedFromParcel(
-                &obj->grantors(),
+                obj.grantors(),
                 parcel,
                 parentHandle,
                 parentOffset + MQDescriptor<T, flavor>::kOffsetOfGrantors,
