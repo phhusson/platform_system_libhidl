@@ -25,6 +25,7 @@ cc_library_shared {
     export_shared_lib_headers: [
         "libbase",
         "libutils",
+        "libcutils", // for native_handle.h
     ],
     local_include_dirs: ["include"],
     export_include_dirs: ["include"],
