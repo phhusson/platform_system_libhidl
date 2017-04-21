@@ -27,8 +27,24 @@ namespace details {
  * Wrap the given interface with the smallest BsChild possible. Will return the
  * argument directly if nullptr or isRemote().
  */
+template<typename IType>
 sp<::android::hidl::base::V1_0::IBase> wrapPassthrough(
-        sp<::android::hidl::base::V1_0::IBase> iface);
+        sp<IType> iface) {
+    if (iface.get() == nullptr || iface->isRemote()) {
+        // doesn't know how to handle it.
+        return iface;
+    }
+    std::string myDescriptor = getDescriptor(iface.get());
+    if (myDescriptor.empty()) {
+        // interfaceDescriptor fails
+        return nullptr;
+    }
+    auto func = gBsConstructorMap.get(myDescriptor, nullptr);
+    if (!func) {
+        return nullptr;
+    }
+    return func(static_cast<void *>(iface.get()));
+}
 
 }  // namespace details
 }  // namespace hardware
