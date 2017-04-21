@@ -333,7 +333,7 @@ sp<IBinder> toBinder(sp<IType> iface) {
         if (!func) {
             return nullptr;
         }
-        return sp<IBinder>(func(reinterpret_cast<void *>(ifacePtr)));
+        return sp<IBinder>(func(static_cast<void *>(ifacePtr)));
     }
 }
 
