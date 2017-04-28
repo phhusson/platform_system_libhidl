@@ -201,7 +201,7 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
                      << ": null binderized manager.";
         return;
     }
-    auto ret = binderizedManager->registerPassthroughClient(interfaceName, instanceName, getpid());
+    auto ret = binderizedManager->registerPassthroughClient(interfaceName, instanceName);
     if (!ret.isOk()) {
         LOG(WARNING) << "Could not registerReference for "
                      << interfaceName << "/" << instanceName
@@ -369,7 +369,7 @@ struct PassthroughServiceManager : IServiceManager {
         return Void();
     }
 
-    Return<void> registerPassthroughClient(const hidl_string &, const hidl_string &, int32_t) override {
+    Return<void> registerPassthroughClient(const hidl_string &, const hidl_string &) override {
         // This makes no sense.
         LOG(FATAL) << "Cannot call registerPassthroughClient on passthrough service manager. "
                    << "Call it on defaultServiceManager() instead.";
