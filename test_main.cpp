@@ -363,6 +363,29 @@ TEST_F(LibHidlTest, ReturnMoveTest) {
     ret.isOk();
 }
 
+TEST_F(LibHidlTest, ReturnTest) {
+    using ::android::DEAD_OBJECT;
+    using ::android::hardware::Return;
+    using ::android::hardware::Status;
+    using ::android::hardware::hidl_string;
+
+    EXPECT_FALSE(Return<void>(Status::fromStatusT(DEAD_OBJECT)).isOk());
+    EXPECT_TRUE(Return<void>(Status::ok()).isOk());
+
+    hidl_string one = "1";
+    hidl_string two = "2";
+    Return<hidl_string> ret = Return<hidl_string>(Status::fromStatusT(DEAD_OBJECT));
+
+    EXPECT_EQ(one, Return<hidl_string>(one).withDefault(two));
+    EXPECT_EQ(two, ret.withDefault(two));
+
+    hidl_string&& moved = ret.withDefault(std::move(two));
+    EXPECT_EQ("2", moved);
+
+    const hidl_string three = "3";
+    EXPECT_EQ(three, ret.withDefault(three));
+}
+
 std::string toString(const ::android::hardware::Status &s) {
     using ::android::hardware::operator<<;
     std::ostringstream oss;
