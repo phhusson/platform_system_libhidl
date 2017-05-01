@@ -32,7 +32,6 @@ cc_library_shared {
         "libutils",
         "libhidlbase",
         "libhidltransport",
-        "android.hidl.base@1.0",
         "android.hidl.memory@1.0",
     ],
 }
