@@ -23,7 +23,6 @@ cc_library_shared {
         "libutils",
     ],
     export_shared_lib_headers: [
-        "libbase",
         "libutils",
         "libcutils", // for native_handle.h
     ],
