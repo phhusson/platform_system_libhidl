@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include <hidl/HidlTransportSupport.h>
-
 #include <hidl/HidlBinderSupport.h>
 
 namespace android {
@@ -27,6 +26,31 @@ void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin) {
 void joinRpcThreadpool() {
     // TODO(b/32756130) this should be transport-dependent
     joinBinderRpcThreadpool();
+}
+
+bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
+                           int policy, int priority) {
+    if (service->isRemote()) {
+        ALOGE("Can't set scheduler policy on remote service.");
+        return false;
+    }
+
+    if (policy != SCHED_NORMAL && policy != SCHED_FIFO && policy != SCHED_RR) {
+        ALOGE("Invalid scheduler policy %d", policy);
+        return false;
+    }
+
+    if (policy == SCHED_NORMAL && (priority < -20 || priority > 19)) {
+        ALOGE("Invalid priority for SCHED_NORMAL: %d", priority);
+        return false;
+    } else if (priority < 1 || priority > 99) {
+        ALOGE("Invalid priority for real-time policy: %d", priority);
+        return false;
+    }
+
+    details::gServicePrioMap.set(service, { policy, priority });
+
+    return true;
 }
 
 }
