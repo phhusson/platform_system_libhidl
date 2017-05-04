@@ -17,6 +17,7 @@
 #ifndef ANDROID_HIDL_TRANSPORT_SUPPORT_H
 #define ANDROID_HIDL_TRANSPORT_SUPPORT_H
 
+#include <android/hidl/base/1.0/IBase.h>
 #include <hidl/HidlBinderSupport.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportUtils.h>
@@ -46,6 +47,20 @@ void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin);
  * configureRpcThreadPool(x, true);
  */
 void joinRpcThreadpool();
+
+/**
+ * Sets a minimum scheduler policy for all transactions coming into this
+ * service.
+ *
+ * This method MUST be called before passing this service to another process
+ * and/or registering it with registerAsService().
+ *
+ * @param service the service to set the policy for
+ * @param policy scheduler policy as defined in linux UAPI
+ * @param priority priority. [-20..19] for SCHED_NORMAL, [1..99] for RT
+ */
+bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
+                           int policy, int priority);
 
 namespace details {
 
