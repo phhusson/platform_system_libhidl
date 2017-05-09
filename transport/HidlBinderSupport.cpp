@@ -85,7 +85,6 @@ status_t writeEmbeddedToParcel(const hidl_memory &memory,
 
     return _hidl_err;
 }
-// static
 const size_t hidl_string::kOffsetOfBuffer = offsetof(hidl_string, mBuffer);
 static_assert(hidl_string::kOffsetOfBuffer == 0, "wrong offset");
 
