@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# TODO(b/33276472)
-if [ ! -d system/libhidl/transport ] ; then
-  echo "Where is system/libhidl/transport?";
-  exit 1;
-fi
-
 packages=(
     android.hidl.allocator@1.0
     android.hidl.base@1.0
