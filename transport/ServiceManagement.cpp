@@ -35,6 +35,7 @@
 #include <android-base/properties.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
+#include <vndksupport/linker.h>
 
 #include <android/hidl/manager/1.0/IServiceManager.h>
 #include <android/hidl/manager/1.0/BpHwServiceManager.h>
@@ -43,10 +44,6 @@
 #define RE_COMPONENT    "[a-zA-Z_][a-zA-Z_0-9]*"
 #define RE_PATH         RE_COMPONENT "(?:[.]" RE_COMPONENT ")*"
 static const std::regex gLibraryFileNamePattern("(" RE_PATH "@[0-9]+[.][0-9]+)-impl(.*?).so");
-
-extern "C" {
-    android_namespace_t* android_get_exported_namespace(const char*);
-}
 
 using android::base::WaitForProperty;
 
@@ -232,7 +229,6 @@ struct PassthroughServiceManager : IServiceManager {
         const std::string prefix = packageAndVersion + "-impl";
         const std::string sym = "HIDL_FETCH_" + ifaceName;
 
-        const android_namespace_t* sphal_namespace = android_get_exported_namespace("sphal");
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
 
@@ -256,26 +252,9 @@ struct PassthroughServiceManager : IServiceManager {
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
 
-                // If sphal namespace is available, try to load from the
-                // namespace first. If it fails, fall back to the original
-                // dlopen, which loads from the current namespace.
-                if (sphal_namespace != nullptr && path != HAL_LIBRARY_PATH_SYSTEM) {
-                    const android_dlextinfo dlextinfo = {
-                        .flags = ANDROID_DLEXT_USE_NAMESPACE,
-                        // const_cast is dirty but required because
-                        // library_namespace field is non-const.
-                        .library_namespace = const_cast<android_namespace_t*>(sphal_namespace),
-                    };
-                    handle = android_dlopen_ext(fullPath.c_str(), dlMode, &dlextinfo);
-                    if (handle == nullptr) {
-                        const char* error = dlerror();
-                        LOG(WARNING) << "Failed to dlopen " << lib << " from sphal namespace:"
-                                     << (error == nullptr ? "unknown error" : error);
-                    } else {
-                        LOG(DEBUG) << lib << " loaded from sphal namespace.";
-                    }
-                }
-                if (handle == nullptr) {
+                if (path != HAL_LIBRARY_PATH_SYSTEM) {
+                    handle = android_load_sphal_library(fullPath.c_str(), dlMode);
+                } else {
                     handle = dlopen(fullPath.c_str(), dlMode);
                 }
 
