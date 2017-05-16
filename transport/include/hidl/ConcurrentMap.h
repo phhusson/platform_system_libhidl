@@ -50,7 +50,19 @@ public:
         return mMap.erase(k);
     }
 
-private:
+    std::unique_lock<std::mutex> lock() { return std::unique_lock<std::mutex>(mMutex); }
+
+    void setLocked(K&& k, V&& v) { mMap[std::forward<K>(k)] = std::forward<V>(v); }
+
+    const V& getLocked(const K& k, const V& def) const {
+        const_iterator iter = mMap.find(k);
+        if (iter == mMap.end()) {
+            return def;
+        }
+        return iter->second;
+    }
+
+   private:
     mutable std::mutex mMutex;
     std::map<K, V> mMap;
 };
