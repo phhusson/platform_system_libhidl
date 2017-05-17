@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <sstream>
 
-#include <android-base/macros.h>
 #include <hidl/HidlInternal.h>
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
