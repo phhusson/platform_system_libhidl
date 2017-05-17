@@ -55,11 +55,13 @@ sp<IMemory> mapMemory(const hidl_memory& memory) {
     sp<IMapper> mapper = getMapperService(memory.name());
 
     if (mapper == nullptr) {
-        LOG(FATAL) << "Could not fetch mapper for " << memory.name() << " shared memory";
+        LOG(ERROR) << "Could not fetch mapper for " << memory.name() << " shared memory";
+        return nullptr;
     }
 
     if (mapper->isRemote()) {
-        LOG(FATAL) << "IMapper must be a passthrough service.";
+        LOG(ERROR) << "IMapper must be a passthrough service.";
+        return nullptr;
     }
 
     // hidl_memory's size is stored in uint64_t, but mapMemory's mmap will map
@@ -74,7 +76,8 @@ sp<IMemory> mapMemory(const hidl_memory& memory) {
     Return<sp<IMemory>> ret = mapper->mapMemory(memory);
 
     if (!ret.isOk()) {
-        LOG(FATAL) << "hidl_memory map returned transport error.";
+        LOG(ERROR) << "hidl_memory map returned transport error.";
+        return nullptr;
     }
 
     return ret;
