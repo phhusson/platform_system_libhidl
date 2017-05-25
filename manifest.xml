@@ -71,4 +71,13 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <hal>
+      <name>android.hardware.graphics.composer</name>
+      <transport>hwbinder</transport>
+      <version>2.1</version>
+      <interface>
+          <name>IComposer</name>
+          <instance>vr</instance>
+      </interface>
+    </hal>
 </manifest>
