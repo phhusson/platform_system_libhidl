@@ -26,6 +26,7 @@
 
 #include <mutex>
 #include <regex>
+#include <set>
 
 #include <hidl/HidlBinderSupport.h>
 #include <hidl/ServiceManagement.h>
@@ -181,10 +182,11 @@ std::vector<std::string> search(const std::string &path,
     return results;
 }
 
-bool matchPackageName(const std::string &lib, std::string *matchedName) {
+bool matchPackageName(const std::string& lib, std::string* matchedName, std::string* implName) {
     std::smatch match;
     if (std::regex_match(lib, match, gLibraryFileNamePattern)) {
         *matchedName = match.str(1) + "::I*";
+        *implName = match.str(2);
         return true;
     }
     return false;
@@ -207,6 +209,44 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
     }
     LOG(VERBOSE) << "Successfully registerReference for "
                  << interfaceName << "/" << instanceName;
+}
+
+using InstanceDebugInfo = hidl::manager::V1_0::IServiceManager::InstanceDebugInfo;
+static inline void fetchPidsForPassthroughLibraries(
+    std::map<std::string, InstanceDebugInfo>* infos) {
+    static const std::string proc = "/proc/";
+
+    std::map<std::string, std::set<pid_t>> pids;
+    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(proc.c_str()), closedir);
+    if (!dir) return;
+    dirent* dp;
+    while ((dp = readdir(dir.get())) != nullptr) {
+        pid_t pid = strtoll(dp->d_name, NULL, 0);
+        if (pid == 0) continue;
+        std::string mapsPath = proc + dp->d_name + "/maps";
+        std::ifstream ifs{mapsPath};
+        if (!ifs.is_open()) continue;
+
+        for (std::string line; std::getline(ifs, line);) {
+            // The last token of line should look like
+            // vendor/lib64/hw/android.hardware.foo@1.0-impl-extra.so
+            // Use some simple filters to ignore bad lines before extracting libFileName
+            // and checking the key in info to make parsing faster.
+            if (line.back() != 'o') continue;
+            if (line.rfind('@') == std::string::npos) continue;
+
+            auto spacePos = line.rfind(' ');
+            if (spacePos == std::string::npos) continue;
+            auto libFileName = line.substr(spacePos + 1);
+            auto it = infos->find(libFileName);
+            if (it == infos->end()) continue;
+            pids[libFileName].insert(pid);
+        }
+    }
+    for (auto& pair : *infos) {
+        pair.second.clientPids =
+            std::vector<pid_t>{pids[pair.first].begin(), pids[pair.first].end()};
+    }
 }
 
 struct PassthroughServiceManager : IServiceManager {
@@ -318,6 +358,7 @@ struct PassthroughServiceManager : IServiceManager {
 
     Return<void> debugDump(debugDump_cb _hidl_cb) override {
         using Arch = ::android::hidl::base::V1_0::DebugInfo::Architecture;
+        using std::literals::string_literals::operator""s;
         static std::vector<std::pair<Arch, std::vector<const char *>>> sAllPaths{
             {Arch::IS_64BIT, {HAL_LIBRARY_PATH_ODM_64BIT,
                                       HAL_LIBRARY_PATH_VENDOR_64BIT,
@@ -326,23 +367,31 @@ struct PassthroughServiceManager : IServiceManager {
                                       HAL_LIBRARY_PATH_VENDOR_32BIT,
                                       HAL_LIBRARY_PATH_SYSTEM_32BIT}}
         };
-        std::vector<InstanceDebugInfo> vec;
+        std::map<std::string, InstanceDebugInfo> map;
         for (const auto &pair : sAllPaths) {
             Arch arch = pair.first;
             for (const auto &path : pair.second) {
                 std::vector<std::string> libs = search(path, "", ".so");
                 for (const std::string &lib : libs) {
                     std::string matchedName;
-                    if (matchPackageName(lib, &matchedName)) {
-                        vec.push_back({
-                            .interfaceName = matchedName,
-                            .instanceName = "*",
-                            .clientPids = {},
-                            .arch = arch
-                        });
+                    std::string implName;
+                    if (matchPackageName(lib, &matchedName, &implName)) {
+                        std::string instanceName{"* ("s + path + ")"s};
+                        if (!implName.empty()) instanceName += " ("s + implName + ")"s;
+                        map.emplace(path + lib, InstanceDebugInfo{.interfaceName = matchedName,
+                                                                  .instanceName = instanceName,
+                                                                  .clientPids = {},
+                                                                  .arch = arch});
                     }
                 }
             }
+        }
+        fetchPidsForPassthroughLibraries(&map);
+        hidl_vec<InstanceDebugInfo> vec;
+        vec.resize(map.size());
+        size_t idx = 0;
+        for (auto&& pair : map) {
+            vec[idx++] = std::move(pair.second);
         }
         _hidl_cb(vec);
         return Void();
