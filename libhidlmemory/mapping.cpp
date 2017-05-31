@@ -15,6 +15,10 @@
  */
 #define LOG_TAG "libhidlmemory"
 
+#include <map>
+#include <mutex>
+#include <string>
+
 #include <hidlmemory/mapping.h>
 
 #include <android-base/logging.h>
@@ -23,14 +27,31 @@
 
 using android::sp;
 using android::hidl::memory::V1_0::IMemory;
+using android::hidl::memory::V1_0::IMapper;
 
 namespace android {
 namespace hardware {
 
-sp<IMemory> mapMemory(const hidl_memory &memory) {
-    using android::hidl::memory::V1_0::IMapper;
+static std::map<std::string, sp<IMapper>> gMappersByName;
+static std::mutex gMutex;
 
-    sp<IMapper> mapper = IMapper::getService(memory.name(), true /* getStub */);
+static inline sp<IMapper> getMapperService(const std::string& name) {
+    std::unique_lock<std::mutex> _lock(gMutex);
+    auto iter = gMappersByName.find(name);
+    if (iter != gMappersByName.end()) {
+        return iter->second;
+    }
+
+    sp<IMapper> mapper = IMapper::getService(name, true /* getStub */);
+    if (mapper != nullptr) {
+        gMappersByName[name] = mapper;
+    }
+    return mapper;
+}
+
+sp<IMemory> mapMemory(const hidl_memory& memory) {
+
+    sp<IMapper> mapper = getMapperService(memory.name());
 
     if (mapper == nullptr) {
         LOG(FATAL) << "Could not fetch mapper for " << memory.name() << " shared memory";
