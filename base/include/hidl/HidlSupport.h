@@ -94,14 +94,14 @@ struct hidl_handle {
     hidl_handle(const hidl_handle &other);
 
     // move constructor.
-    hidl_handle(hidl_handle &&other);
+    hidl_handle(hidl_handle &&other) noexcept;
 
     // assignment operators
     hidl_handle &operator=(const hidl_handle &other);
 
     hidl_handle &operator=(const native_handle_t *native_handle);
 
-    hidl_handle &operator=(hidl_handle &&other);
+    hidl_handle &operator=(hidl_handle &&other) noexcept;
 
     void setTo(native_handle_t* handle, bool shouldOwn = false);
 
@@ -133,7 +133,7 @@ struct hidl_string {
     hidl_string(const std::string &);
 
     // move constructor.
-    hidl_string(hidl_string &&);
+    hidl_string(hidl_string &&) noexcept;
 
     const char *c_str() const;
     size_t size() const;
@@ -146,7 +146,7 @@ struct hidl_string {
     // copy from an std::string.
     hidl_string &operator=(const std::string &);
     // move assignment operator.
-    hidl_string &operator=(hidl_string &&other);
+    hidl_string &operator=(hidl_string &&other) noexcept;
     // cast to std::string.
     operator std::string() const;
 
@@ -235,12 +235,12 @@ struct hidl_memory {
     }
 
     // move constructor
-    hidl_memory(hidl_memory&& other) {
+    hidl_memory(hidl_memory&& other) noexcept {
         *this = std::move(other);
     }
 
     // move assignment
-    hidl_memory &operator=(hidl_memory &&other) {
+    hidl_memory &operator=(hidl_memory &&other) noexcept {
         if (this != &other) {
             mHandle = std::move(other.mHandle);
             mSize = other.mSize;
@@ -293,7 +293,7 @@ struct hidl_vec {
         *this = other;
     }
 
-    hidl_vec(hidl_vec<T> &&other)
+    hidl_vec(hidl_vec<T> &&other) noexcept
     : mOwnsBuffer(false) {
         *this = std::move(other);
     }
@@ -354,7 +354,7 @@ struct hidl_vec {
         return mBuffer;
     }
 
-    hidl_vec &operator=(hidl_vec &&other) {
+    hidl_vec &operator=(hidl_vec &&other) noexcept {
         if (mOwnsBuffer) {
             delete[] mBuffer;
         }
