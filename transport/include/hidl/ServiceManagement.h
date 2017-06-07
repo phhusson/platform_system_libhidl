@@ -32,12 +32,6 @@ namespace V1_0 {
 
 namespace hardware {
 
-// These functions are for internal use by hidl. If you want to get ahold
-// of an interface, the best way to do this is by calling IFoo::getService()
-
-sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
-sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
-
 namespace details {
 // e.x.: android.hardware.foo@1.0, IFoo, default
 void onRegistration(const std::string &packageName,
@@ -46,7 +40,25 @@ void onRegistration(const std::string &packageName,
 
 // e.x.: android.hardware.foo@1.0::IFoo, default
 void waitForHwService(const std::string &interface, const std::string &instanceName);
+
+void preloadPassthroughService(const std::string &descriptor);
 };
+
+// These functions are for internal use by hidl. If you want to get ahold
+// of an interface, the best way to do this is by calling IFoo::getService()
+sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
+sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
+
+/**
+ * Given a service that is in passthrough mode, this function will go ahead and load the
+ * required passthrough module library (but not call HIDL_FETCH_I* functions to instantiate it).
+ *
+ * E.x.: preloadPassthroughService<IFoo>();
+ */
+template<typename I>
+static inline void preloadPassthroughService() {
+    details::preloadPassthroughService(I::descriptor);
+}
 
 }; // namespace hardware
 }; // namespace android
