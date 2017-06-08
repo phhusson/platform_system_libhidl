@@ -29,4 +29,14 @@ interface IAllocator {
      * @return memory Unmapped memory object.
      */
     allocate(uint64_t size) generates (bool success, memory mem);
+
+    /**
+     * Return memory must have instance name corresponding to this type of memory.
+     *
+     * @param size Size of memory to allocate in bytes.
+     * @param count Number of memory instances to allocate.
+     * @return success Whether allocation succeeded (returns false if any allocation failed).
+     * @return batch Unmapped memory objects.
+     */
+    batchAllocate(uint64_t size, uint64_t count) generates (bool success, vec<memory> batch);
 };
