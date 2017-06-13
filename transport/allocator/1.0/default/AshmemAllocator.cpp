@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "AshmemAllocator"
+#include <android-base/logging.h>
+
 #include "AshmemAllocator.h"
 
 #include <cutils/ashmem.h>
@@ -24,21 +27,70 @@ namespace allocator {
 namespace V1_0 {
 namespace implementation {
 
-// Methods from ::android::hidl::allocator::V1_0::IAllocator follow.
-Return<void> AshmemAllocator::allocate(uint64_t size, allocate_cb _hidl_cb) {
+static hidl_memory allocateOne(uint64_t size) {
     int fd = ashmem_create_region("AshmemAllocator_hidl", size);
     if (fd < 0) {
-        _hidl_cb(false /* success */, hidl_memory());
-        return Void();
+        LOG(WARNING) << "ashmem_create_region(" << size << ") fails with " << fd;
+        return hidl_memory();
     }
 
     native_handle_t* handle = native_handle_create(1, 0);
     handle->data[0] = fd;
-    hidl_memory memory("ashmem", handle, size);
+    LOG(WARNING) << "ashmem_create_region(" << size << ") returning hidl_memory(" << handle
+            << ", " << size << ")";
+    return hidl_memory("ashmem", handle, size);
+}
 
-    _hidl_cb(true /* success */, memory);
-    native_handle_close(handle);
-    native_handle_delete(handle);
+static void cleanup(hidl_memory&& memory) {
+    if (memory.handle() == nullptr) {
+        return;
+    }
+
+    native_handle_close(const_cast<native_handle_t *>(memory.handle()));
+    native_handle_delete(const_cast<native_handle_t *>(memory.handle()));
+}
+
+Return<void> AshmemAllocator::allocate(uint64_t size, allocate_cb _hidl_cb) {
+    hidl_memory memory = allocateOne(size);
+    _hidl_cb(memory.handle() != nullptr /* success */, memory);
+    cleanup(std::move(memory));
+
+    return Void();
+}
+
+Return<void> AshmemAllocator::batchAllocate(uint64_t size, uint64_t count, batchAllocate_cb _hidl_cb) {
+    // resize fails if count > 2^32
+    if (count > UINT32_MAX) {
+        _hidl_cb(false /* success */, {});
+        return Void();
+    }
+
+    hidl_vec<hidl_memory> batch;
+    batch.resize(count);
+
+    uint64_t allocated;
+    for (allocated = 0; allocated < count; allocated++) {
+        batch[allocated] = allocateOne(size);
+
+        if (batch[allocated].handle() == nullptr) {
+            LOG(WARNING) << "batchAllocate(" << size << ", " << count << ") fails @ #" << allocated;
+            break;
+        }
+    }
+
+    // batch[i].handle() != nullptr for i in [0, allocated - 1].
+    // batch[i].handle() == nullptr for i in [allocated, count - 1].
+
+    if (allocated < count) {
+        _hidl_cb(false /* success */, {});
+    } else {
+        _hidl_cb(true /* success */, batch);
+    }
+
+    for (uint64_t i = 0; i < allocated; i++) {
+        cleanup(std::move(batch[i]));
+    }
+
     return Void();
 }
 
