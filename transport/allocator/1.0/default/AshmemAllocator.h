@@ -39,7 +39,7 @@ using ::android::sp;
 struct AshmemAllocator : public IAllocator {
     // Methods from ::android::hidl::allocator::V1_0::IAllocator follow.
     Return<void> allocate(uint64_t size, allocate_cb _hidl_cb) override;
-
+    Return<void> batchAllocate(uint64_t size, uint64_t count, batchAllocate_cb _hidl_cb) override;
 };
 
 }  // namespace implementation
