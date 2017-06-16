@@ -250,30 +250,26 @@ static inline void fetchPidsForPassthroughLibraries(
 }
 
 struct PassthroughServiceManager : IServiceManager {
-    Return<sp<IBase>> get(const hidl_string& fqName,
-                          const hidl_string& name) override {
-        std::string stdFqName(fqName.c_str());
-
+    static void openLibs(const std::string& fqName,
+            std::function<bool /* continue */(void* /* handle */,
+                const std::string& /* lib */, const std::string& /* sym */)> eachLib) {
         //fqName looks like android.hardware.foo@1.0::IFoo
-        size_t idx = stdFqName.find("::");
+        size_t idx = fqName.find("::");
 
         if (idx == std::string::npos ||
-                idx + strlen("::") + 1 >= stdFqName.size()) {
+                idx + strlen("::") + 1 >= fqName.size()) {
             LOG(ERROR) << "Invalid interface name passthrough lookup: " << fqName;
-            return nullptr;
+            return;
         }
 
-        std::string packageAndVersion = stdFqName.substr(0, idx);
-        std::string ifaceName = stdFqName.substr(idx + strlen("::"));
+        std::string packageAndVersion = fqName.substr(0, idx);
+        std::string ifaceName = fqName.substr(idx + strlen("::"));
 
         const std::string prefix = packageAndVersion + "-impl";
         const std::string sym = "HIDL_FETCH_" + ifaceName;
 
         const int dlMode = RTLD_LAZY;
         void *handle = nullptr;
-
-        // TODO: lookup in VINTF instead
-        // TODO(b/34135607): Remove HAL_LIBRARY_PATH_SYSTEM
 
         dlerror(); // clear
 
@@ -298,31 +294,41 @@ struct PassthroughServiceManager : IServiceManager {
                     continue;
                 }
 
-                IBase* (*generator)(const char* name);
-                *(void **)(&generator) = dlsym(handle, sym.c_str());
-                if(!generator) {
-                    const char* error = dlerror();
-                    LOG(ERROR) << "Passthrough lookup opened " << lib
-                               << " but could not find symbol " << sym << ": "
-                               << (error == nullptr ? "unknown error" : error);
-                    dlclose(handle);
-                    continue;
+                if (!eachLib(handle, lib, sym)) {
+                    return;
                 }
-
-                IBase *interface = (*generator)(name.c_str());
-
-                if (interface == nullptr) {
-                    dlclose(handle);
-                    continue; // this module doesn't provide this instance name
-                }
-
-                registerReference(fqName, name);
-
-                return interface;
             }
         }
+    }
 
-        return nullptr;
+    Return<sp<IBase>> get(const hidl_string& fqName,
+                          const hidl_string& name) override {
+        sp<IBase> ret = nullptr;
+
+        openLibs(fqName, [&](void* handle, const std::string &lib, const std::string &sym) {
+            IBase* (*generator)(const char* name);
+            *(void **)(&generator) = dlsym(handle, sym.c_str());
+            if(!generator) {
+                const char* error = dlerror();
+                LOG(ERROR) << "Passthrough lookup opened " << lib
+                           << " but could not find symbol " << sym << ": "
+                           << (error == nullptr ? "unknown error" : error);
+                dlclose(handle);
+                return true;
+            }
+
+            ret = (*generator)(name.c_str());
+
+            if (ret == nullptr) {
+                dlclose(handle);
+                return true; // this module doesn't provide this instance name
+            }
+
+            registerReference(fqName, name);
+            return false;
+        });
+
+        return ret;
     }
 
     Return<bool> add(const hidl_string& /* name */,
@@ -412,6 +418,14 @@ sp<IServiceManager> getPassthroughServiceManager() {
 }
 
 namespace details {
+
+void preloadPassthroughService(const std::string &descriptor) {
+    PassthroughServiceManager::openLibs(descriptor,
+        [&](void* /* handle */, const std::string& /* lib */, const std::string& /* sym */) {
+            // do nothing
+            return true; // open all libs
+        });
+}
 
 struct Waiter : IServiceNotification {
     Return<void> onRegistration(const hidl_string& /* fqName */,
