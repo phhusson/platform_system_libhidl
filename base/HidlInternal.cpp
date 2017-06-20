@@ -37,21 +37,21 @@ void logAlwaysFatal(const char *message) {
 
 // ----------------------------------------------------------------------
 // HidlInstrumentor implementation.
-HidlInstrumentor::HidlInstrumentor(
-        const std::string &package,
-        const std::string &interface)
-        : mInstrumentationLibPackage(package), mInterfaceName(interface) {
+HidlInstrumentor::HidlInstrumentor(const std::string& package, const std::string& interface)
+    : mEnableInstrumentation(false),
+      mInstrumentationLibPackage(package),
+      mInterfaceName(interface) {
     configureInstrumentation(false);
 }
 
 HidlInstrumentor:: ~HidlInstrumentor() {}
 
 void HidlInstrumentor::configureInstrumentation(bool log) {
-    bool enable_instrumentation = property_get_bool(
+    bool enableInstrumentation = property_get_bool(
             "hal.instrumentation.enable",
             false);
-    if (enable_instrumentation != mEnableInstrumentation) {
-        mEnableInstrumentation = enable_instrumentation;
+    if (enableInstrumentation != mEnableInstrumentation) {
+        mEnableInstrumentation = enableInstrumentation;
         if (mEnableInstrumentation) {
             if (log) {
                 LOG(INFO) << "Enable instrumentation.";
@@ -70,11 +70,11 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
         std::vector<InstrumentationCallback> *instrumentationCallbacks) {
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
     std::vector<std::string> instrumentationLibPaths;
-    char instrumentation_lib_path[PROPERTY_VALUE_MAX];
+    char instrumentationLibPath[PROPERTY_VALUE_MAX];
     if (property_get("hal.instrumentation.lib.path",
-                     instrumentation_lib_path,
+                     instrumentationLibPath,
                      "") > 0) {
-        instrumentationLibPaths.push_back(instrumentation_lib_path);
+        instrumentationLibPaths.push_back(instrumentationLibPath);
     } else {
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_SYSTEM);
         instrumentationLibPaths.push_back(HAL_LIBRARY_PATH_VENDOR);
@@ -103,7 +103,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
 
             dlerror(); /* Clear any existing error */
 
-            using cb_fun = void (*)(
+            using cbFun = void (*)(
                     const InstrumentationEvent,
                     const char *,
                     const char *,
@@ -123,7 +123,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
                     continue;
                 }
             }
-            auto cb = (cb_fun)dlsym(handle, ("HIDL_INSTRUMENTATION_FUNCTION_"
+            auto cb = (cbFun)dlsym(handle, ("HIDL_INSTRUMENTATION_FUNCTION_"
                         + package + "_" + mInterfaceName).c_str());
             if ((error = dlerror()) != NULL) {
                 LOG(WARNING)
