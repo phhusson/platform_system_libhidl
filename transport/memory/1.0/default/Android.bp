@@ -23,12 +23,10 @@ cc_library_shared {
         "HidlFetch.cpp"
     ],
     shared_libs: [
-        "liblog",
         "libcutils",
         "libhardware",
         "libhwbinder",
         "libbase",
-        "libcutils",
         "libutils",
         "libhidlbase",
         "libhidltransport",
