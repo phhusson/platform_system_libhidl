@@ -35,9 +35,10 @@ hidl_binder_death_recipient::hidl_binder_death_recipient(const sp<hidl_death_rec
 
 void hidl_binder_death_recipient::binderDied(const wp<IBinder>& /*who*/) {
     sp<hidl_death_recipient> recipient = mRecipient.promote();
-    if (recipient != nullptr) {
+    if (recipient != nullptr && mBase != nullptr) {
         recipient->serviceDied(mCookie, mBase);
     }
+    mBase = nullptr;
 }
 
 wp<hidl_death_recipient> hidl_binder_death_recipient::getRecipient() {
