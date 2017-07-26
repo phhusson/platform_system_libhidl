@@ -277,9 +277,21 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 
         dlerror(); // clear
 
-        for (const std::string &path : {
-            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
-        }) {
+        std::vector<std::string> paths = {HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
+                                          HAL_LIBRARY_PATH_SYSTEM};
+#ifdef LIBHIDL_TARGET_DEBUGGABLE
+        const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
+        const bool trebleTestingOverride = env && !strcmp(env, "true");
+        if (trebleTestingOverride) {
+            const char* vtsRootPath = std::getenv("VTS_ROOT_PATH");
+            if (vtsRootPath && strlen(vtsRootPath) > 0) {
+                const std::string halLibraryPathVtsOverride =
+                    std::string(vtsRootPath) + HAL_LIBRARY_PATH_SYSTEM;
+                paths.push_back(halLibraryPathVtsOverride);
+            }
+        }
+#endif
+        for (const std::string& path : paths) {
             std::vector<std::string> libs = search(path, prefix, ".so");
 
             for (const std::string &lib : libs) {
