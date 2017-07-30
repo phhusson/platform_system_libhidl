@@ -50,6 +50,20 @@ public:
         return mMap.erase(k);
     }
 
+    size_type eraseIfEqual(const K& k, const V& v) {
+        std::unique_lock<std::mutex> _lock(mMutex);
+        const_iterator iter = mMap.find(k);
+        if (iter == mMap.end()) {
+            return 0;
+        }
+        if (iter->second == v) {
+            mMap.erase(iter);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     std::unique_lock<std::mutex> lock() { return std::unique_lock<std::mutex>(mMutex); }
 
     void setLocked(K&& k, V&& v) { mMap[std::forward<K>(k)] = std::forward<V>(v); }
