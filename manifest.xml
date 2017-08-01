@@ -62,6 +62,15 @@
             <instance>default</instance>
         </interface>
     </hal>
+        <hal format="hidl">
+        <name>android.system.net.netd</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>INetd</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
     <hal>
         <name>android.system.wifi.keystore</name>
         <transport>hwbinder</transport>
