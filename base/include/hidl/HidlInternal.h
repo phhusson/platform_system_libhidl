@@ -148,7 +148,13 @@ struct HidlInstrumentor {
             const std::string &insterface);
     virtual ~HidlInstrumentor();
 
- protected:
+   public:
+    const std::vector<InstrumentationCallback>& getInstrumentationCallbacks() {
+        return mInstrumentationCallbacks;
+    }
+    bool isInstrumentationEnabled() { return mEnableInstrumentation; }
+
+   protected:
     // Set mEnableInstrumentation based on system property
     // hal.instrumentation.enable, register/de-register instrumentation
     // callbacks if mEnableInstrumentation is true/false.
