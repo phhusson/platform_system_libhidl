@@ -17,6 +17,7 @@ cc_library_shared {
     vendor_available: true,
     vndk: {
         enabled: true,
+        support_system_process: true,
     },
     cflags: libhidl_flags,
     shared_libs: [
