@@ -35,7 +35,7 @@ genrule {
     ],
 }
 
-cc_library_shared {
+cc_library {
     name: "android.hidl.token@1.0",
     defaults: ["hidl-module-defaults"],
     generated_sources: ["android.hidl.token@1.0_genc++"],
