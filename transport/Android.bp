@@ -27,6 +27,10 @@ subdirs = [
 cc_library_shared {
     name: "libhidltransport",
     vendor_available: true,
+    vndk: {
+        enabled: true,
+        support_system_process: true,
+    },
     defaults: ["hidl-module-defaults"],
     cflags: libhidl_flags,
     shared_libs: [
