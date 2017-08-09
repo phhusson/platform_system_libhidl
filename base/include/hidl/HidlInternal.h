@@ -95,18 +95,22 @@ private:
 };
 
 #define HAL_LIBRARY_PATH_SYSTEM_64BIT "/system/lib64/hw/"
+#define HAL_LIBRARY_PATH_VNDK_SP_64BIT "/system/lib64/vndk-sp/hw/"
 #define HAL_LIBRARY_PATH_VENDOR_64BIT "/vendor/lib64/hw/"
 #define HAL_LIBRARY_PATH_ODM_64BIT    "/odm/lib64/hw/"
 #define HAL_LIBRARY_PATH_SYSTEM_32BIT "/system/lib/hw/"
+#define HAL_LIBRARY_PATH_VNDK_SP_32BIT "/system/lib/vndk-sp/hw/"
 #define HAL_LIBRARY_PATH_VENDOR_32BIT "/vendor/lib/hw/"
 #define HAL_LIBRARY_PATH_ODM_32BIT    "/odm/lib/hw/"
 
 #if defined(__LP64__)
 #define HAL_LIBRARY_PATH_SYSTEM HAL_LIBRARY_PATH_SYSTEM_64BIT
+#define HAL_LIBRARY_PATH_VNDK_SP HAL_LIBRARY_PATH_VNDK_SP_64BIT
 #define HAL_LIBRARY_PATH_VENDOR HAL_LIBRARY_PATH_VENDOR_64BIT
 #define HAL_LIBRARY_PATH_ODM    HAL_LIBRARY_PATH_ODM_64BIT
 #else
 #define HAL_LIBRARY_PATH_SYSTEM HAL_LIBRARY_PATH_SYSTEM_32BIT
+#define HAL_LIBRARY_PATH_VNDK_SP HAL_LIBRARY_PATH_VNDK_SP_32BIT
 #define HAL_LIBRARY_PATH_VENDOR HAL_LIBRARY_PATH_VENDOR_32BIT
 #define HAL_LIBRARY_PATH_ODM    HAL_LIBRARY_PATH_ODM_32BIT
 #endif
@@ -153,9 +157,10 @@ struct HidlInstrumentor {
     // libraries and registers the instrumentation callback functions.
     //
     // The instrumentation libraries should be stored under any of the following
-    // directories: HAL_LIBRARY_PATH_SYSTEM, HAL_LIBRARY_PATH_VENDOR and
-    // HAL_LIBRARY_PATH_ODM. The name of instrumentation libraries should
-    // follow pattern: ^profilerPrefix(.*).profiler.so$
+    // directories: HAL_LIBRARY_PATH_SYSTEM, HAL_LIBRARY_PATH_VNDK_SP,
+    // HAL_LIBRARY_PATH_VENDOR and HAL_LIBRARY_PATH_ODM.
+    // The name of instrumentation libraries should follow pattern:
+    // ^profilerPrefix(.*).profiler.so$
     //
     // Each instrumentation library is expected to implement the instrumentation
     // function called HIDL_INSTRUMENTATION_FUNCTION.
