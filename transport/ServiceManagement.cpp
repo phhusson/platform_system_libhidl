@@ -278,7 +278,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         dlerror(); // clear
 
         std::vector<std::string> paths = {HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
-                                          HAL_LIBRARY_PATH_SYSTEM};
+                                          HAL_LIBRARY_PATH_VNDK_SP, HAL_LIBRARY_PATH_SYSTEM};
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
         const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
         const bool trebleTestingOverride = env && !strcmp(env, "true");
@@ -381,14 +381,13 @@ struct PassthroughServiceManager : IServiceManager1_1 {
     Return<void> debugDump(debugDump_cb _hidl_cb) override {
         using Arch = ::android::hidl::base::V1_0::DebugInfo::Architecture;
         using std::literals::string_literals::operator""s;
-        static std::vector<std::pair<Arch, std::vector<const char *>>> sAllPaths{
-            {Arch::IS_64BIT, {HAL_LIBRARY_PATH_ODM_64BIT,
-                                      HAL_LIBRARY_PATH_VENDOR_64BIT,
-                                      HAL_LIBRARY_PATH_SYSTEM_64BIT}},
-            {Arch::IS_32BIT, {HAL_LIBRARY_PATH_ODM_32BIT,
-                                      HAL_LIBRARY_PATH_VENDOR_32BIT,
-                                      HAL_LIBRARY_PATH_SYSTEM_32BIT}}
-        };
+        static std::vector<std::pair<Arch, std::vector<const char*>>> sAllPaths{
+            {Arch::IS_64BIT,
+             {HAL_LIBRARY_PATH_ODM_64BIT, HAL_LIBRARY_PATH_VENDOR_64BIT,
+              HAL_LIBRARY_PATH_VNDK_SP_64BIT, HAL_LIBRARY_PATH_SYSTEM_64BIT}},
+            {Arch::IS_32BIT,
+             {HAL_LIBRARY_PATH_ODM_32BIT, HAL_LIBRARY_PATH_VENDOR_32BIT,
+              HAL_LIBRARY_PATH_VNDK_SP_32BIT, HAL_LIBRARY_PATH_SYSTEM_32BIT}}};
         std::map<std::string, InstanceDebugInfo> map;
         for (const auto &pair : sAllPaths) {
             Arch arch = pair.first;
