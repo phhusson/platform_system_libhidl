@@ -44,15 +44,9 @@ struct hidl_pointer {
     hidl_pointer()
         : _pad(0) {
     }
-    hidl_pointer(T* ptr)
-        : mPointer(ptr) {
-    }
-    hidl_pointer(const hidl_pointer<T>& other) {
-        mPointer = other.mPointer;
-    }
-    hidl_pointer(hidl_pointer<T>&& other) {
-        *this = std::move(other);
-    }
+    hidl_pointer(T* ptr) : hidl_pointer() { mPointer = ptr; }
+    hidl_pointer(const hidl_pointer<T>& other) : hidl_pointer() { mPointer = other.mPointer; }
+    hidl_pointer(hidl_pointer<T>&& other) : hidl_pointer() { *this = std::move(other); }
 
     hidl_pointer &operator=(const hidl_pointer<T>& other) {
         mPointer = other.mPointer;
