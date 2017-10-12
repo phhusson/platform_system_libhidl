@@ -102,5 +102,6 @@
             device compatibility matrix.
         -->
         <version>1.0</version>
+        <transport/>
     </hal>
 </manifest>
