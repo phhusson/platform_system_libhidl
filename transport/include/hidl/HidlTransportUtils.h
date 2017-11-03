@@ -34,6 +34,12 @@ inline Return<bool> canCastInterface(::android::hidl::base::V1_0::IBase* interfa
         return false;
     }
 
+    // b/68217907
+    // Every HIDL interface is a base interface.
+    if (std::string(::android::hidl::base::V1_0::IBase::descriptor) == castTo) {
+        return true;
+    }
+
     bool canCast = false;
     auto chainRet = interface->interfaceChain([&](const hidl_vec<hidl_string> &types) {
         for (size_t i = 0; i < types.size(); i++) {
