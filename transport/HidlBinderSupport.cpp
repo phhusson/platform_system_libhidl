@@ -19,6 +19,7 @@
 #include <hidl/HidlBinderSupport.h>
 
 // C includes
+#include <inttypes.h>
 #include <unistd.h>
 
 // C++ includes
@@ -47,6 +48,15 @@ status_t readEmbeddedFromParcel(const hidl_memory& memory,
                 parcel,
                 parentHandle,
                 parentOffset + hidl_memory::kOffsetOfName);
+    }
+
+    // hidl_memory's size is stored in uint64_t, but mapMemory's mmap will map
+    // size in size_t. If size is over SIZE_MAX, mapMemory could succeed
+    // but the mapped memory's actual size will be smaller than the reported size.
+    if (memory.size() > SIZE_MAX) {
+        ALOGE("Cannot use memory with %" PRId64 " bytes because it is too large.", memory.size());
+        android_errorWriteLog(0x534e4554, "79376389");
+        return BAD_VALUE;
     }
 
     return _hidl_err;
