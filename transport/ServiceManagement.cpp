@@ -242,7 +242,14 @@ struct PassthroughServiceManager : IServiceManager {
         dlerror(); // clear
 
         for (const std::string &path : {
-            HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR, HAL_LIBRARY_PATH_SYSTEM
+            HAL_LIBRARY_PATH_ODM,
+	    HAL_LIBRARY_PATH_VENDOR,
+#if defined(__LP64__)
+	    "/system/lib64/vndk-sp-26/hw/",
+#else
+	    "/system/lib/vndk-sp-26/hw/",
+#endif
+	    HAL_LIBRARY_PATH_SYSTEM
         }) {
             std::vector<std::string> libs = search(path, prefix, ".so");
 
