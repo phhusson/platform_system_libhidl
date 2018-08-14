@@ -277,8 +277,16 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 
         dlerror(); // clear
 
-        std::vector<std::string> paths = {HAL_LIBRARY_PATH_ODM, HAL_LIBRARY_PATH_VENDOR,
-                                          HAL_LIBRARY_PATH_VNDK_SP, HAL_LIBRARY_PATH_SYSTEM};
+        std::vector<std::string> paths = {
+		HAL_LIBRARY_PATH_ODM,
+		HAL_LIBRARY_PATH_VENDOR,
+#if defined(__LP64__)
+		"/system/lib64/vndk-sp-27/hw/",
+#else
+		"/system/lib/vndk-sp-27/hw/",
+#endif
+		HAL_LIBRARY_PATH_VNDK_SP,
+		HAL_LIBRARY_PATH_SYSTEM};
 #ifdef LIBHIDL_TARGET_DEBUGGABLE
         const char* env = std::getenv("TREBLE_TESTING_OVERRIDE");
         const bool trebleTestingOverride = env && !strcmp(env, "true");
