@@ -62,6 +62,18 @@ void joinRpcThreadpool();
 bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
                            int policy, int priority);
 
+/**
+ * Sets whether or not this object should request security contexts to be populatd for incoming
+ * calls (e.g. with getCallingSid).
+ *
+ * This method MUST be called before passing this service to another process
+ * and/or registering it with registerAsService().
+ *
+ * @param service the service to set the policy for
+ * @param requesting whether or not to request sid (default is false)
+ */
+bool setRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service, bool requesting);
+
 namespace details {
 
 // cast the interface IParent to IChild.
