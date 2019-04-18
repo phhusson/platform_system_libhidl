@@ -282,29 +282,32 @@ private:
 
 template<typename T>
 struct hidl_vec {
-    hidl_vec()
-        : mBuffer(NULL),
-          mSize(0),
-          mOwnsBuffer(true) {
+    hidl_vec() {
         static_assert(hidl_vec<T>::kOffsetOfBuffer == 0, "wrong offset");
+
+        memset(this, 0, sizeof(*this));
+        // mSize is 0
+        // mBuffer is nullptr
+
+        // this is for consistency with the original implementation
+        mOwnsBuffer = true;
     }
 
     hidl_vec(const hidl_vec<T> &other) : hidl_vec() {
         *this = other;
     }
 
-    hidl_vec(hidl_vec<T> &&other) noexcept
-    : mOwnsBuffer(false) {
+    hidl_vec(hidl_vec<T> &&other) noexcept : hidl_vec() {
         *this = std::move(other);
     }
 
-    hidl_vec(const std::initializer_list<T> list)
-            : mOwnsBuffer(true) {
+    hidl_vec(const std::initializer_list<T> list) : hidl_vec() {
         if (list.size() > UINT32_MAX) {
             details::logAlwaysFatal("hidl_vec can't hold more than 2^32 elements.");
         }
         mSize = static_cast<uint32_t>(list.size());
         mBuffer = new T[mSize];
+        mOwnsBuffer = true;
 
         size_t idx = 0;
         for (auto it = list.begin(); it != list.end(); ++it) {
@@ -774,7 +777,9 @@ private:
 // Version functions
 struct hidl_version {
 public:
-    constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {}
+    constexpr hidl_version(uint16_t major, uint16_t minor) : mMajor(major), mMinor(minor) {
+        static_assert(sizeof(*this) == 4, "wrong size");
+    }
 
     bool operator==(const hidl_version& other) const {
         return (mMajor == other.get_major() && mMinor == other.get_minor());

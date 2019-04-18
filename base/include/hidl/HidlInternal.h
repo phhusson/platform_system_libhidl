@@ -43,6 +43,7 @@ template<typename T>
 struct hidl_pointer {
     hidl_pointer()
         : _pad(0) {
+        static_assert(sizeof(*this) == 8, "wrong size");
     }
     hidl_pointer(T* ptr)
         : mPointer(ptr) {

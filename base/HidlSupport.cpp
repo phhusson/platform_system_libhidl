@@ -36,27 +36,28 @@ bool debuggable() {
 }  // namespace details
 
 hidl_handle::hidl_handle() {
-    mHandle = nullptr;
-    mOwnsHandle = false;
+    memset(this, 0, sizeof(*this));
+    // mHandle = nullptr;
+    // mOwnsHandle = false;
 }
 
 hidl_handle::~hidl_handle() {
     freeHandle();
 }
 
-hidl_handle::hidl_handle(const native_handle_t *handle) {
+hidl_handle::hidl_handle(const native_handle_t* handle) : hidl_handle() {
     mHandle = handle;
     mOwnsHandle = false;
 }
 
 // copy constructor.
-hidl_handle::hidl_handle(const hidl_handle &other) {
+hidl_handle::hidl_handle(const hidl_handle& other) : hidl_handle() {
     mOwnsHandle = false;
     *this = other;
 }
 
 // move constructor.
-hidl_handle::hidl_handle(hidl_handle &&other) {
+hidl_handle::hidl_handle(hidl_handle&& other) : hidl_handle() {
     mOwnsHandle = false;
     *this = std::move(other);
 }
@@ -137,10 +138,11 @@ void hidl_handle::freeHandle() {
 
 static const char *const kEmptyString = "";
 
-hidl_string::hidl_string()
-    : mBuffer(kEmptyString),
-      mSize(0),
-      mOwnsBuffer(false) {
+hidl_string::hidl_string() {
+    memset(this, 0, sizeof(*this));
+    // mSize is zero
+    // mOwnsBuffer is false
+    mBuffer = kEmptyString;
 }
 
 hidl_string::~hidl_string() {
