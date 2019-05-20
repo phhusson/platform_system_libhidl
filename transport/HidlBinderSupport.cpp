@@ -139,22 +139,6 @@ status_t readFromParcel(Status *s, const Parcel& parcel) {
         return status;
     }
 
-    // Skip over fat response headers.  Not used (or propagated) in native code.
-    if (exception == Status::EX_HAS_REPLY_HEADER) {
-        // Note that the header size includes the 4 byte size field.
-        const int32_t header_start = parcel.dataPosition();
-        int32_t header_size;
-        status = parcel.readInt32(&header_size);
-        if (status != OK) {
-            s->setFromStatusT(status);
-            return status;
-        }
-        parcel.setDataPosition(header_start + header_size);
-        // And fat response headers are currently only used when there are no
-        // exceptions, so act like there was no error.
-        exception = Status::EX_NONE;
-    }
-
     if (exception == Status::EX_NONE) {
         *s = Status::ok();
         return status;
